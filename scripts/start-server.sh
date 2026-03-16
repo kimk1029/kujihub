@@ -4,6 +4,15 @@
 PROJECT_DIR="${PROJECT_DIR:-/home/kimk1029/dev/kujihub}"
 cd "$PROJECT_DIR"
 
+echo "📦 의존성 설치 중..."
+for app_dir in server web; do
+  echo "   ${app_dir}: yarn install"
+  (
+    cd "$PROJECT_DIR/$app_dir" &&
+    yarn install
+  ) || exit 1
+done
+
 echo "🔄 Port 3000 사용 프로세스 종료 중..."
 for port in 3000; do
   if command -v fuser &>/dev/null; then
