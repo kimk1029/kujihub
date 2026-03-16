@@ -115,10 +115,10 @@ jobs:
           command -v yarn >/dev/null 2>&1 || npm install -g yarn
           command -v pm2 >/dev/null 2>&1 || npm install -g pm2
 
-          yarn install --immutable
           test -f server/.env || { echo "server/.env is missing"; exit 1; }
           (
             cd server
+            npm ci
             set -a
             . ./.env
             set +a
