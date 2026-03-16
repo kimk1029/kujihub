@@ -1,0 +1,70 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 9922 112.169.110.183 >> ~/.ssh/known_hosts
+
+      - name: Sync files to server
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          rsync -az --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'node_modules/' \
+            --exclude 'server/node_modules/' \
+            --exclude 'web/node_modules/' \
+            --exclude 'android/' \
+            --exclude 'ios/' \
+            --exclude 'web/dist/' \
+            --exclude 'server/.env' \
+            --exclude 'web/.env.production' \
+            -e "ssh -i ~/.ssh/deploy_key -p 9922" \
+            ./ "$DEPLOY_USER@112.169.110.183:$DEPLOY_PATH/"
+
+      - name: Deploy over SSH
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "bash -se" <<EOF
+          set -euo pipefail
+          export KUJIHUB_APP_DIR="$DEPLOY_PATH"
+
+          mkdir -p "$KUJIHUB_APP_DIR"
+          cd "$KUJIHUB_APP_DIR"
+          if [ -d .git ]; then
+            git fetch origin master
+            git checkout master
+            git pull --ff-only origin master
+          fi
+
+          yarn install --frozen-lockfile
+          (cd server && npx prisma migrate deploy)
+          yarn web:build
+
+          pm2 startOrReload ecosystem.config.cjs --update-env
+          pm2 save
+          EOF
