@@ -15,6 +15,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: serverPort,
+        NODE_PATH: path.join(appDir, 'node_modules'),
       },
     },
     {

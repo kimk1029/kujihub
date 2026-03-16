@@ -118,7 +118,7 @@ jobs:
           test -f server/.env || { echo "server/.env is missing"; exit 1; }
           (
             cd server
-            npm install
+            npm install --workspaces=false
             test -d node_modules/express || { echo "express not installed"; exit 1; }
             set -a
             . ./.env
@@ -133,7 +133,7 @@ jobs:
           )
           (
             cd web
-            npm install
+            npm install --workspaces=false
             npm run build
           )
 
