@@ -104,6 +104,7 @@ jobs:
           cd "$KUJIHUB_APP_DIR"
           mkdir -p server web
           DATABASE_URL=$(printf '%s' "$DATABASE_URL_B64" | base64 -d | tr -d '\r')
+          DATABASE_URL=${DATABASE_URL/localhost/127.0.0.1}
           WEB_API_BASE_URL=$(printf '%s' "$WEB_API_BASE_URL_B64" | base64 -d | tr -d '\r')
           printf 'DATABASE_URL=%s\nPORT=3000\nNODE_ENV=production\n' "$DATABASE_URL" > server/.env
           if [ -n "${WEB_API_BASE_URL:-}" ]; then
@@ -123,6 +124,11 @@ jobs:
             set -a
             . ./.env
             set +a
+            DB_HOST=$(printf '%s' "$DATABASE_URL" | sed -E 's#^postgres(ql)?://[^@]+@([^:/]+).*#\2#')
+            DB_PORT=$(printf '%s' "$DATABASE_URL" | sed -E 's#^postgres(ql)?://[^@]+@[^:/]+:([0-9]+).*#\2#')
+            [ "$DB_HOST" = "$DATABASE_URL" ] && DB_HOST=127.0.0.1
+            [ "$DB_PORT" = "$DATABASE_URL" ] && DB_PORT=5432
+            pg_isready -h "$DB_HOST" -p "$DB_PORT"
             npx prisma migrate deploy
           )
           yarn web:build
