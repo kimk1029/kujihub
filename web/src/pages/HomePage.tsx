@@ -127,7 +127,8 @@ export function HomePage() {
         </div>
         {loading && (
           <div className="calendar-loading">
-            <span>불러오는 중…</span>
+            <div className="loading-shimmer" style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, opacity: 0.5 }} />
+            <span style={{ position: 'relative', fontWeight: 700, color: 'var(--primary)' }}>스케줄 동기화 중…</span>
           </div>
         )}
       </section>
