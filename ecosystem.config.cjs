@@ -1,6 +1,6 @@
 const path = require('path');
 
-const appDir = process.env.KUJIHUB_APP_DIR || __dirname;
+const appDir = __dirname;
 const serverPort = '3000';
 const webPort = '8080';
 
