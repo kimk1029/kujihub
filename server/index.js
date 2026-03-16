@@ -5,7 +5,12 @@
  * → Windows에서 3000을 WSL로 포워딩해야 디바이스가 이 서버에 도달함
  */
 
-require('dotenv').config();
+try {
+  require('dotenv').config();
+} catch (error) {
+  if (error.code !== 'MODULE_NOT_FOUND') throw error;
+  console.warn('dotenv is not installed; continuing with process environment only');
+}
 
 const express = require('express');
 const cors = require('cors');
