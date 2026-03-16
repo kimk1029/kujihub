@@ -88,7 +88,9 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           WEB_API_BASE_URL: ${{ secrets.WEB_API_BASE_URL }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "export KUJIHUB_APP_DIR='$DEPLOY_PATH'; export DATABASE_URL='$DATABASE_URL'; export WEB_API_BASE_URL='${WEB_API_BASE_URL:-}'; bash -se" <<'EOF'
+          DATABASE_URL_B64=$(printf '%s' "$DATABASE_URL" | base64 -w0)
+          WEB_API_BASE_URL_B64=$(printf '%s' "${WEB_API_BASE_URL:-}" | base64 -w0)
+          ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "export KUJIHUB_APP_DIR='$DEPLOY_PATH'; export DATABASE_URL_B64='$DATABASE_URL_B64'; export WEB_API_BASE_URL_B64='$WEB_API_BASE_URL_B64'; bash -se" <<'EOF'
           set -euo pipefail
 
           export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
@@ -101,7 +103,9 @@ jobs:
 
           cd "$KUJIHUB_APP_DIR"
           mkdir -p server web
-          printf 'DATABASE_URL="%s"\nPORT=3000\nNODE_ENV=production\n' "$DATABASE_URL" > server/.env
+          DATABASE_URL=$(printf '%s' "$DATABASE_URL_B64" | base64 -d | tr -d '\r')
+          WEB_API_BASE_URL=$(printf '%s' "$WEB_API_BASE_URL_B64" | base64 -d | tr -d '\r')
+          printf 'DATABASE_URL=%s\nPORT=3000\nNODE_ENV=production\n' "$DATABASE_URL" > server/.env
           if [ -n "${WEB_API_BASE_URL:-}" ]; then
             printf 'VITE_API_BASE_URL=%s\n' "$WEB_API_BASE_URL" > web/.env.production
           fi
