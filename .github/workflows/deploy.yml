@@ -87,7 +87,13 @@ jobs:
           ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "export KUJIHUB_APP_DIR='$DEPLOY_PATH'; bash -se" <<'EOF'
           set -euo pipefail
 
+          export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
           cd "$KUJIHUB_APP_DIR"
+          command -v node >/dev/null 2>&1 || { echo "node is not installed on server"; exit 1; }
+          command -v npm >/dev/null 2>&1 || { echo "npm is not installed on server"; exit 1; }
+          command -v yarn >/dev/null 2>&1 || npm install -g yarn
+          command -v pm2 >/dev/null 2>&1 || npm install -g pm2
+
           yarn install --frozen-lockfile
           (cd server && npx prisma migrate deploy)
           yarn web:build
