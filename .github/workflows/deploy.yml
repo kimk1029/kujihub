@@ -41,6 +41,24 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p 9922 112.169.110.183 >> ~/.ssh/known_hosts
 
+      - name: Git pull over SSH
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "export KUJIHUB_APP_DIR='$DEPLOY_PATH'; bash -se" <<'EOF'
+          set -euo pipefail
+
+          mkdir -p "$KUJIHUB_APP_DIR"
+          git config --global --add safe.directory "$KUJIHUB_APP_DIR"
+          cd "$KUJIHUB_APP_DIR"
+          if [ -d .git ]; then
+            git fetch origin master
+            git checkout master
+            git pull --ff-only origin master
+          fi
+          EOF
+
       - name: Sync files to server
         env:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -60,7 +78,7 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key -p 9922" \
             ./ "$DEPLOY_USER@112.169.110.183:$DEPLOY_PATH/"
 
-      - name: Deploy over SSH
+      - name: Build and restart over SSH
         env:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
@@ -68,15 +86,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "export KUJIHUB_APP_DIR='$DEPLOY_PATH'; bash -se" <<'EOF'
           set -euo pipefail
 
-          mkdir -p "$KUJIHUB_APP_DIR"
-          git config --global --add safe.directory "$KUJIHUB_APP_DIR"
           cd "$KUJIHUB_APP_DIR"
-          if [ -d .git ]; then
-            git fetch origin master
-            git checkout master
-            git pull --ff-only origin master
-          fi
-
           yarn install --frozen-lockfile
           (cd server && npx prisma migrate deploy)
           yarn web:build
