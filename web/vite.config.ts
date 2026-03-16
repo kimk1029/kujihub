@@ -7,8 +7,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': { target: 'http://localhost:9001', changeOrigin: true },
-      '/health': { target: 'http://localhost:9001', changeOrigin: true },
+      '/api': { target: 'http://kimk1029.synology.me:9933', changeOrigin: true },
+      '/health': { target: 'http://kimk1029.synology.me:9933', changeOrigin: true },
     },
   },
 })
