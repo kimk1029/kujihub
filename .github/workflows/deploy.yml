@@ -101,15 +101,9 @@ jobs:
 
           cd "$KUJIHUB_APP_DIR"
           mkdir -p server web
-          cat > server/.env <<ENVFILE
-DATABASE_URL="$DATABASE_URL"
-PORT=3000
-NODE_ENV=production
-ENVFILE
+          printf 'DATABASE_URL="%s"\nPORT=3000\nNODE_ENV=production\n' "$DATABASE_URL" > server/.env
           if [ -n "${WEB_API_BASE_URL:-}" ]; then
-            cat > web/.env.production <<ENVFILE
-VITE_API_BASE_URL=$WEB_API_BASE_URL
-ENVFILE
+            printf 'VITE_API_BASE_URL=%s\n' "$WEB_API_BASE_URL" > web/.env.production
           fi
           command -v node >/dev/null 2>&1 || { echo "node is not installed on server"; exit 1; }
           command -v npm >/dev/null 2>&1 || { echo "npm is not installed on server"; exit 1; }
