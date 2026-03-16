@@ -69,6 +69,7 @@ jobs:
           set -euo pipefail
 
           mkdir -p "$KUJIHUB_APP_DIR"
+          git config --global --add safe.directory "$KUJIHUB_APP_DIR"
           cd "$KUJIHUB_APP_DIR"
           if [ -d .git ]; then
             git fetch origin master
