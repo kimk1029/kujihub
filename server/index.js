@@ -1,8 +1,8 @@
 /**
  * KujiHub API 서버
- * 포트: 9001
- * 디바이스 접속: adb reverse tcp:9001 tcp:9001 후 앱은 localhost:9001 사용
- * → Windows에서 9001을 WSL로 포워딩해야 디바이스가 이 서버에 도달함
+ * 포트: 3000
+ * 디바이스 접속: adb reverse tcp:3000 tcp:3000 후 앱은 localhost:3000 사용
+ * → Windows에서 3000을 WSL로 포워딩해야 디바이스가 이 서버에 도달함
  */
 
 require('dotenv').config();
@@ -12,7 +12,7 @@ const cors = require('cors');
 const os = require('os');
 
 const app = express();
-const PORT = process.env.PORT || 9001;
+const PORT = process.env.PORT || 3000;
 
 function getWslIp() {
   const ifaces = os.networkInterfaces();
@@ -113,7 +113,7 @@ app.listen(PORT, '0.0.0.0', () => {
   const wslIp = getWslIp();
   if (wslIp) {
     console.log('\n디바이스에서 접속하려면 Windows PowerShell(관리자)에서 한 번 실행:');
-    console.log(`  netsh interface portproxy add v4tov4 listenport=9001 listenaddress=0.0.0.0 connectport=9001 connectaddress=${wslIp}`);
-    console.log('  netsh advfirewall firewall add rule name="KujiHub API 9001" dir=in action=allow protocol=TCP localport=9001\n');
+    console.log(`  netsh interface portproxy add v4tov4 listenport=3000 listenaddress=0.0.0.0 connectport=3000 connectaddress=${wslIp}`);
+    console.log('  netsh advfirewall firewall add rule name="KujiHub API 3000" dir=in action=allow protocol=TCP localport=3000\n');
   }
 });
