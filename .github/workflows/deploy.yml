@@ -23,10 +23,12 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           test -n "$DEPLOY_USER" || { echo "DEPLOY_USER is empty"; exit 1; }
           test -n "$DEPLOY_PATH" || { echo "DEPLOY_PATH is empty"; exit 1; }
           test -n "$DEPLOY_SSH_KEY" || { echo "DEPLOY_SSH_KEY is empty"; exit 1; }
+          test -n "$DATABASE_URL" || { echo "DATABASE_URL is empty"; exit 1; }
           echo "Secrets look present"
 
       - name: Install rsync
@@ -83,8 +85,10 @@ jobs:
         env:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          WEB_API_BASE_URL: ${{ secrets.WEB_API_BASE_URL }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "export KUJIHUB_APP_DIR='$DEPLOY_PATH'; bash -se" <<'EOF'
+          ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "export KUJIHUB_APP_DIR='$DEPLOY_PATH'; export DATABASE_URL='$DATABASE_URL'; export WEB_API_BASE_URL='${WEB_API_BASE_URL:-}'; bash -se" <<'EOF'
           set -euo pipefail
 
           export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
@@ -96,6 +100,17 @@ jobs:
           fi
 
           cd "$KUJIHUB_APP_DIR"
+          mkdir -p server web
+          cat > server/.env <<ENVFILE
+DATABASE_URL="$DATABASE_URL"
+PORT=3000
+NODE_ENV=production
+ENVFILE
+          if [ -n "${WEB_API_BASE_URL:-}" ]; then
+            cat > web/.env.production <<ENVFILE
+VITE_API_BASE_URL=$WEB_API_BASE_URL
+ENVFILE
+          fi
           command -v node >/dev/null 2>&1 || { echo "node is not installed on server"; exit 1; }
           command -v npm >/dev/null 2>&1 || { echo "npm is not installed on server"; exit 1; }
           node -v
@@ -104,7 +119,14 @@ jobs:
           command -v pm2 >/dev/null 2>&1 || npm install -g pm2
 
           yarn install --frozen-lockfile
-          (cd server && npx prisma migrate deploy)
+          test -f server/.env || { echo "server/.env is missing"; exit 1; }
+          (
+            cd server
+            set -a
+            . ./.env
+            set +a
+            npx prisma migrate deploy
+          )
           yarn web:build
 
           pm2 startOrReload ecosystem.config.cjs --update-env
