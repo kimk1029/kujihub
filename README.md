@@ -1,5 +1,18 @@
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
+## 모노레포 구조
+
+이 저장소는 **앱(React Native) + 서버(Node) + 웹(Vite/React)** 모노레포입니다.
+
+| 경로 | 설명 |
+|------|------|
+| `/` | 앱 (React Native), 루트 package.json |
+| `server/` | API 서버 (Express, 포트 9001) — `yarn server` |
+| `web/` | 웹 클라이언트 (React 19, Vite) — `yarn web` |
+
+- **의존성**: 루트에서 `yarn install` 한 번 실행 시 워크스페이스(server, web) 포함 설치됩니다.
+- **공통 .gitignore**: 루트 `.gitignore`에 앱/서버/웹에서 올리면 안 되는 파일이 모두 포함되어 있습니다.
+
 # Getting Started
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.

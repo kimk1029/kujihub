@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Kuji {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  imageUrl    String?      @map("image_url")
+  price       Int
+  boardSize   Int          @default(80) @map("board_size")
+  status      String       @default("active") // active | sold_out | draft
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  prizes KujiPrize[]
+  slots  KujiSlot[]
+
+  @@map("kujis")
+}
+
+model KujiPrize {
+  id           Int    @id @default(autoincrement())
+  kujiId       Int    @map("kuji_id")
+  grade        String
+  name         String
+  color        String @default("#718096")
+  chance       Float  // 누적 확률 0.0 ~ 1.0
+  displayOrder Int    @default(0) @map("display_order")
+
+  kuji Kuji @relation(fields: [kujiId], references: [id], onDelete: Cascade)
+
+  @@map("kuji_prizes")
+}
+
+model KujiSlot {
+  kujiId       Int       @map("kuji_id")
+  slotNumber   Int       @map("slot_number")
+  status       String    // locked | drawn
+  grade        String?
+  gradeName    String?   @map("grade_name")
+  gradeColor   String?   @map("grade_color")
+  lockedAt     DateTime? @map("locked_at")
+  lockedUserId String?   @map("locked_user_id")
+  completedAt  DateTime? @map("completed_at")
+
+  kuji Kuji @relation(fields: [kujiId], references: [id], onDelete: Cascade)
+
+  @@id([kujiId, slotNumber])
+  @@map("kuji_slots")
+}

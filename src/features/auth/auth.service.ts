@@ -1,6 +1,3 @@
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { login as kakaoLogin } from '@react-native-kakao/user';
-// import { initializeKakaoSDK } from '@react-native-kakao/core';
 import { useAuthStore } from './auth.store';
 
 // TODO: Android - google-services.json에 webClientId 설정
@@ -13,8 +10,34 @@ const GOOGLE_WEB_CLIENT_ID = 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.c
 
 let kakaoInitialized = false;
 
+type GoogleSigninModule = {
+  configure: (config: { webClientId: string }) => void;
+  hasPlayServices: () => Promise<boolean>;
+  signIn: () => Promise<unknown>;
+  getTokens: () => Promise<{ idToken?: string | null }>;
+};
+
+type KakaoLoginFn = () => Promise<{ accessToken?: string | null } | null>;
+
+function getGoogleSigninModule(): GoogleSigninModule {
+  const mod = require('@react-native-google-signin/google-signin');
+  if (!mod?.GoogleSignin) {
+    throw new Error('Google SignIn 모듈을 찾을 수 없습니다.');
+  }
+  return mod.GoogleSignin as GoogleSigninModule;
+}
+
+function getKakaoLoginFn(): KakaoLoginFn {
+  const mod = require('@react-native-kakao/user');
+  if (!mod?.login) {
+    throw new Error('Kakao 로그인 모듈을 찾을 수 없습니다.');
+  }
+  return mod.login as KakaoLoginFn;
+}
+
 export async function initAuthServices() {
   try {
+    const GoogleSignin = getGoogleSigninModule();
     GoogleSignin.configure({
       webClientId: GOOGLE_WEB_CLIENT_ID,
     });
@@ -28,6 +51,7 @@ export async function initAuthServices() {
 
 export async function signInWithGoogle(): Promise<boolean> {
   try {
+    const GoogleSignin = getGoogleSigninModule();
     await GoogleSignin.hasPlayServices();
     await GoogleSignin.signIn();
     const tokens = await GoogleSignin.getTokens();
@@ -47,6 +71,7 @@ export async function signInWithKakao(): Promise<boolean> {
     if (!kakaoInitialized) {
       throw new Error('카카오 로그인 네이티브 설정이 필요합니다. (키 해시, URL Scheme 등)');
     }
+    const kakaoLogin = getKakaoLoginFn();
     const result = await kakaoLogin();
     if (result?.accessToken) {
       useAuthStore.getState().setAuth(true, 'kakao', result.accessToken);

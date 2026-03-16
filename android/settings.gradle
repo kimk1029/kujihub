@@ -6,7 +6,9 @@ include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    // Several RN libraries and the RN Gradle plugin still add project repositories.
+    // Prefer project repositories to avoid repeated repository-mode warnings during builds.
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
         google()
         mavenCentral()

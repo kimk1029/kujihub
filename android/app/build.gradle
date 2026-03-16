@@ -87,6 +87,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        // WSL2 등에서 adb reverse가 안 될 때 PC IP로 접속 (휴대폰과 PC가 같은 Wi-Fi여야 함)
+        resValue "string", "react_native_dev_server_ip", project.findProperty("REACT_NATIVE_PACKAGER_HOSTNAME") ?: "localhost"
     }
     signingConfigs {
         debug {
@@ -99,8 +101,10 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            manifestPlaceholders = [usesCleartextTraffic: "true"]
         }
         release {
+            manifestPlaceholders = [usesCleartextTraffic: "false"]
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
@@ -108,6 +112,11 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+}
+
+// Kakao SDK (react-native-kakao) 해상용 저장소
+repositories {
+    maven { url 'https://devrepo.kakao.com/nexus/content/groups/public/' }
 }
 
 dependencies {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, View, StyleSheet, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -10,7 +11,16 @@ interface ScreenProps {
 
 export function Screen({ children, scroll = true, style }: ScreenProps) {
   const insets = useSafeAreaInsets();
-  const containerStyle = [styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }, style];
+  const theme = useTheme();
+  const containerStyle = [
+    styles.container,
+    {
+      paddingTop: insets.top,
+      paddingBottom: insets.bottom,
+      backgroundColor: theme.colors.background,
+    },
+    style,
+  ];
 
   if (scroll) {
     return (
@@ -33,6 +43,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
   },
 });

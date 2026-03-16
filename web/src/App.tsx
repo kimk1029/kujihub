@@ -1,0 +1,22 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Layout } from './components/Layout';
+import { HomePage } from './pages/HomePage';
+import { CommunityListPage } from './pages/CommunityListPage';
+import { CommunityDetailPage } from './pages/CommunityDetailPage';
+import { CommunityPostFormPage } from './pages/CommunityPostFormPage';
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<HomePage />} />
+          <Route path="community" element={<CommunityListPage />} />
+          <Route path="community/new" element={<CommunityPostFormPage />} />
+          <Route path="community/edit/:id" element={<CommunityPostFormPage />} />
+          <Route path="community/:id" element={<CommunityDetailPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}

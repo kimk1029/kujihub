@@ -13,7 +13,12 @@ export function RootNavigator() {
   const isAuthed = useAuthStore((s) => s.isAuthed);
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#FFFBFE' },
+      }}
+    >
       {!isAuthed ? (
         <Stack.Screen name="Login" component={LoginScreen} />
       ) : (
