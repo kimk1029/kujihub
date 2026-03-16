@@ -6,10 +6,14 @@ cd "$PROJECT_DIR"
 
 echo "📦 의존성 설치 중..."
 for app_dir in server web; do
-  echo "   ${app_dir}: yarn install"
+  echo "   ${app_dir}: install"
   (
-    cd "$PROJECT_DIR/$app_dir" &&
-    yarn install
+    cd "$PROJECT_DIR/$app_dir" || exit 1
+    if [ -f package-lock.json ]; then
+      npm ci
+    else
+      yarn install --immutable
+    fi
   ) || exit 1
 done
 

@@ -55,10 +55,9 @@ jobs:
           git config --global --add safe.directory "$KUJIHUB_APP_DIR"
           cd "$KUJIHUB_APP_DIR"
           if [ -d .git ]; then
-            rm -f ecosystem.config.cjs
             git fetch origin master
             git checkout master
-            git pull --ff-only origin master
+            git reset --hard origin/master
           fi
           EOF
 
@@ -117,7 +116,7 @@ jobs:
           command -v yarn >/dev/null 2>&1 || npm install -g yarn
           command -v pm2 >/dev/null 2>&1 || npm install -g pm2
 
-          yarn install --frozen-lockfile
+          yarn install --immutable
           test -f server/.env || { echo "server/.env is missing"; exit 1; }
           (
             cd server
