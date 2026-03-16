@@ -53,6 +53,7 @@ jobs:
           git config --global --add safe.directory "$KUJIHUB_APP_DIR"
           cd "$KUJIHUB_APP_DIR"
           if [ -d .git ]; then
+            rm -f ecosystem.config.cjs
             git fetch origin master
             git checkout master
             git pull --ff-only origin master
