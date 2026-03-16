@@ -131,7 +131,11 @@ jobs:
             pg_isready -h "$DB_HOST" -p "$DB_PORT"
             npx prisma migrate deploy
           )
-          yarn web:build
+          (
+            cd web
+            npm ci
+            npm run build
+          )
 
           pm2 startOrReload ecosystem.config.cjs --update-env
           pm2 save
