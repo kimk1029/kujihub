@@ -127,6 +127,7 @@ jobs:
             [ "$DB_HOST" = "$DATABASE_URL" ] && DB_HOST=127.0.0.1
             [ "$DB_PORT" = "$DATABASE_URL" ] && DB_PORT=5432
             pg_isready -h "$DB_HOST" -p "$DB_PORT"
+            npx prisma generate
             npx prisma migrate deploy
           )
           (
@@ -137,4 +138,7 @@ jobs:
 
           pm2 startOrReload ecosystem.config.cjs --update-env
           pm2 save
+          pm2 list
+          curl -fsS http://127.0.0.1:3000/health >/dev/null
+          curl -fsSI http://127.0.0.1:8080 >/dev/null
           EOF
