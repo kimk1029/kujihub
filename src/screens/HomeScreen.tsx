@@ -258,8 +258,10 @@ export function HomeScreen() {
               </View>
             ) : (
               selectedEntries.map((entry, index) => {
-                const translatedTitle = translateKujiTitle(entry.item.title);
-                const translatedLabel = translateReleaseLabel(entry.label);
+                const translatedTitle = entry.item.translatedTitle || translateKujiTitle(entry.item.title);
+                const translatedLabel =
+                  (entry.type === 'store' ? entry.item.translatedStoreDate : entry.item.translatedOnlineDate) ||
+                  translateReleaseLabel(entry.label);
                 const saleType = entry.type === 'store' ? '오프라인 매장 판매' : '온라인 판매';
                 const rawTitleCaption =
                   translatedTitle !== entry.item.title ? `원문 제목: ${entry.item.title}` : undefined;

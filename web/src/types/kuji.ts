@@ -4,12 +4,16 @@ export interface KujiLineupItem {
   url: string;
   storeDate?: string;
   onlineDate?: string;
+  translatedTitle?: string;
+  translatedStoreDate?: string;
+  translatedOnlineDate?: string;
 }
 
 export interface KujiLineupMonth {
   year: number;
   month: number;
   items: KujiLineupItem[];
+  translationProvider?: 'papago' | 'fallback';
 }
 
 export interface ScheduleEntry {

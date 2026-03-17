@@ -85,6 +85,7 @@ app.delete('/api/posts/:id', (req, res) => {
 
 // ── 외부 API ───────────────────────────────────────────────────
 const { fetchLineupForMonth } = require('./kuji-lineup');
+const { hasPapagoConfig, translateLineupMonth } = require('./kuji-translate');
 const { fetchYouTubeSearch } = require('./youtube-search');
 
 app.get('/api/kuji-lineup', async (req, res) => {
@@ -92,7 +93,12 @@ app.get('/api/kuji-lineup', async (req, res) => {
   const month = parseInt(req.query.month, 10) || new Date().getMonth() + 1;
   if (month < 1 || month > 12) return res.status(400).json({ error: 'month must be 1-12' });
   try {
-    res.json(await fetchLineupForMonth(year, month));
+    const lineup = await fetchLineupForMonth(year, month);
+    const translatedLineup = await translateLineupMonth(lineup);
+    res.json({
+      ...translatedLineup,
+      translationProvider: hasPapagoConfig() ? 'papago' : 'fallback',
+    });
   } catch (e) {
     console.error('kuji-lineup:', e.message);
     res.status(502).json({ error: 'Failed to fetch lineup', message: e.message });
