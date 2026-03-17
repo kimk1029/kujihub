@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { KujiDrawStackParamList } from '../../navigation/types';
 import { api } from '../../shared/api';
+import { ensureKujiPlayer, type KujiPlayer } from './kujiPlayer';
 
 type KujiDetail = {
   id: string;
@@ -27,10 +28,15 @@ export function KujiPurchaseScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [player, setPlayer] = useState<KujiPlayer | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    api.get(`/api/kujis/${kujiId}`)
-      .then(res => setKuji(res.data))
+    Promise.all([api.get(`/api/kujis/${kujiId}`), ensureKujiPlayer()])
+      .then(([res, ensuredPlayer]) => {
+        setKuji(res.data);
+        setPlayer(ensuredPlayer);
+      })
       .catch(() => setError('쿠지 정보를 불러오지 못했습니다.'))
       .finally(() => setLoading(false));
   }, [kujiId]);
@@ -56,6 +62,7 @@ export function KujiPurchaseScreen() {
 
   const maxQty = Math.min(10, kuji.remaining);
   const total = quantity * kuji.price;
+  const canAfford = (player?.points ?? 0) >= total;
 
   return (
     <View style={styles.container}>
@@ -83,6 +90,12 @@ export function KujiPurchaseScreen() {
           </View>
           <Text variant="titleLarge" style={styles.kujiTitle}>{kuji.title}</Text>
           <Text variant="bodyMedium" style={styles.kujiDesc}>{kuji.description}</Text>
+          {player && (
+            <View style={styles.pointBalance}>
+              <MaterialCommunityIcons name="star-circle" size={18} color="#F9D71C" />
+              <Text style={styles.pointBalanceText}>보유 포인트 {player.points.toLocaleString()}P</Text>
+            </View>
+          )}
           <View style={styles.kujiMeta}>
             <View style={styles.metaItem}>
               <MaterialCommunityIcons name="ticket-confirmation" size={16} color="#F9D71C" />
@@ -139,13 +152,36 @@ export function KujiPurchaseScreen() {
 
         {/* 구매 버튼 */}
         <Pressable
-          style={[styles.buyBtn, kuji.remaining === 0 && styles.buyBtnDisabled]}
-          disabled={kuji.remaining === 0}
-          onPress={() => navigation.navigate('KujiBoardDraw', { kujiId, quantity })}
+          style={[styles.buyBtn, (kuji.remaining === 0 || !canAfford || submitting) && styles.buyBtnDisabled]}
+          disabled={kuji.remaining === 0 || !canAfford || submitting}
+          onPress={async () => {
+            if (!player || submitting) return;
+            setSubmitting(true);
+            try {
+              const { data } = await api.post(`/api/kujis/${kujiId}/purchase`, {
+                playerId: player.id,
+                quantity,
+              });
+              setPlayer(data.player);
+              navigation.navigate('KujiBoardDraw', {
+                kujiId,
+                quantity,
+                purchaseId: data.purchase.id,
+                playerId: player.id,
+              });
+            } catch (e: any) {
+              const apiError = e?.response?.data?.error;
+              if (apiError === 'insufficient_points') setError('포인트가 부족합니다.');
+              else if (apiError === 'not_enough_slots') setError('남은 슬롯이 부족합니다.');
+              else setError('결제 처리에 실패했습니다.');
+            } finally {
+              setSubmitting(false);
+            }
+          }}
         >
           <MaterialCommunityIcons name="lightning-bolt" size={22} color="#000000" />
           <Text style={styles.buyBtnText}>
-            {kuji.remaining === 0 ? '매진되었습니다' : `${total.toLocaleString()}원 결제하고 뽑기판으로!`}
+            {kuji.remaining === 0 ? '매진되었습니다' : !canAfford ? '포인트가 부족합니다' : submitting ? '결제 중...' : `${total.toLocaleString()}P 결제하고 뽑기판으로!`}
           </Text>
         </Pressable>
       </View>
@@ -181,6 +217,13 @@ const styles = StyleSheet.create({
   badgeText: { color: '#000000', fontWeight: '900' },
   kujiTitle: { color: '#FFFFFF', fontWeight: '800', lineHeight: 28, marginBottom: 6 },
   kujiDesc: { color: '#8A8A8A', marginBottom: 14 },
+  pointBalance: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 14,
+  },
+  pointBalanceText: { color: '#F9D71C', fontWeight: '800' },
   kujiMeta: {
     flexDirection: 'row',
     paddingTop: 12,

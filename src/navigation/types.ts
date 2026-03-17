@@ -19,10 +19,12 @@ export type KujiDrawStackParamList = {
   KujiList: undefined;
   KujiSelection: { kujiId: string };
   KujiPurchase: { kujiId: string };
-  KujiBoardDraw: { kujiId: string; quantity: number };
+  KujiBoardDraw: { kujiId: string; quantity: number; purchaseId: string; playerId: string };
   KujiResult: {
     kujiId: string;
     quantity: number;
+    purchaseId: string;
+    playerId: string;
     selectedSlots: number[];
     results: KujiDrawRevealResult[];
   };

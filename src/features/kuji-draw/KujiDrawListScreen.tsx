@@ -13,6 +13,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { KujiDrawStackParamList } from '../../navigation/types';
 import { api } from '../../shared/api';
+import { ensureKujiPlayer } from './kujiPlayer';
 
 type KujiListItem = {
   id: string;
@@ -24,6 +25,12 @@ type KujiListItem = {
   status: 'active' | 'sold_out' | 'draft';
 };
 
+type KujiPlayerSummary = {
+  id: string;
+  nickname: string;
+  points: number;
+};
+
 export function KujiDrawListScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<KujiDrawStackParamList>>();
 
@@ -31,12 +38,17 @@ export function KujiDrawListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [player, setPlayer] = useState<KujiPlayerSummary | null>(null);
 
   const fetchKujis = useCallback(async () => {
     try {
       setError(null);
-      const res = await api.get('/api/kujis');
+      const [res, ensuredPlayer] = await Promise.all([
+        api.get('/api/kujis'),
+        ensureKujiPlayer(),
+      ]);
       setKujis(res.data);
+      setPlayer(ensuredPlayer);
     } catch {
       setError('목록을 불러오지 못했습니다.');
     }
@@ -57,6 +69,12 @@ export function KujiDrawListScreen() {
       <View style={styles.header}>
         <Text variant="headlineMedium" style={styles.headerTitle}>ONLINE DRAW</Text>
         <Text variant="labelLarge" style={styles.headerSubtitle}>실시간 온라인 쿠지 뽑기</Text>
+        {player && (
+          <View style={styles.pointTag}>
+            <MaterialCommunityIcons name="star-circle" size={16} color="#F9D71C" />
+            <Text style={styles.pointText}>{player.points.toLocaleString()}P</Text>
+          </View>
+        )}
       </View>
 
       {loading ? (
@@ -150,6 +168,19 @@ const styles = StyleSheet.create({
   },
   headerTitle: { color: '#00E5FF', fontWeight: '900', fontStyle: 'italic', letterSpacing: 2 },
   headerSubtitle: { color: '#F9D71C', fontWeight: '700', marginTop: 4 },
+  pointTag: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    backgroundColor: '#101010',
+  },
+  pointText: { color: '#F9D71C', fontWeight: '900' },
   scrollContent: { padding: 20, gap: 16 },
   emptyText: { color: '#555', textAlign: 'center', marginTop: 40 },
   errorText: { color: '#FF3B30', fontSize: 15 },

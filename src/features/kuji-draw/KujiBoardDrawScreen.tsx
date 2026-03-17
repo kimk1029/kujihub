@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Dimensions, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -22,9 +22,8 @@ type SlotInfo = { status: SlotStatus; grade?: string; color?: string; name?: str
 export function KujiBoardDrawScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<KujiDrawStackParamList>>();
   const route = useRoute<RouteProp<KujiDrawStackParamList, 'KujiBoardDraw'>>();
-  const { kujiId, quantity } = route.params;
+  const { kujiId, quantity, purchaseId, playerId } = route.params;
 
-  const userId = useRef(`u-${Date.now()}-${Math.random().toString(36).slice(2)}`).current;
   const [boardSlots, setBoardSlots] = useState<Map<number, SlotInfo>>(new Map());
   const [loadingBoard, setLoadingBoard] = useState(true);
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
@@ -33,16 +32,26 @@ export function KujiBoardDrawScreen() {
   const readyToDraw = selectedSlots.length === quantity;
 
   useEffect(() => {
-    api.get(`/api/kujis/${kujiId}/board`)
-      .then(res => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const res = await api.get(`/api/kujis/${kujiId}/board`);
+        if (!mounted) return;
         const map = new Map<number, SlotInfo>();
         for (const [k, v] of Object.entries(res.data.slots ?? {})) {
           map.set(Number(k), v as SlotInfo);
         }
         setBoardSlots(map);
-      })
-      .catch(() => {})
-      .finally(() => setLoadingBoard(false));
+      } catch {}
+      if (mounted) setLoadingBoard(false);
+    };
+
+    load();
+    const timer = setInterval(load, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
   }, [kujiId]);
 
   async function refreshBoard() {
@@ -77,7 +86,8 @@ export function KujiBoardDrawScreen() {
     try {
       const res = await api.post(`/api/kujis/${kujiId}/reserve`, {
         slots: selectedSlots,
-        userId,
+        userId: playerId,
+        purchaseId,
       });
       const results: KujiDrawRevealResult[] = res.data.results.map((r: any) => ({
         slotNumber: r.slot,
@@ -86,7 +96,7 @@ export function KujiBoardDrawScreen() {
         color: r.color,
       }));
       const ordered = [...selectedSlots].sort((a, b) => a - b);
-      navigation.navigate('KujiResult', { kujiId, quantity, selectedSlots: ordered, results });
+      navigation.navigate('KujiResult', { kujiId, quantity, purchaseId, playerId, selectedSlots: ordered, results });
     } catch (e: any) {
       if (e?.response?.status === 409) {
         Alert.alert(

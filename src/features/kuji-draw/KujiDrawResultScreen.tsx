@@ -1,8 +1,7 @@
-import React, { useRef, useState } from 'react';
-import { View, StyleSheet, Animated, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Text, Surface, useTheme } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { KujiDrawStackParamList } from '../../navigation/types';
@@ -15,7 +14,7 @@ export function KujiDrawResultScreen() {
   const theme = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<KujiDrawStackParamList>>();
   const route = useRoute<RouteProp<KujiDrawStackParamList, 'KujiResult'>>();
-  const { kujiId, quantity, results, selectedSlots } = route.params;
+  const { kujiId, quantity, results, selectedSlots, purchaseId } = route.params;
 
   const [revealedCount, setRevealedCount] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
@@ -77,7 +76,7 @@ export function KujiDrawResultScreen() {
             activeOpacity={0.8}
             style={[styles.doneBtn, { backgroundColor: theme.colors.primary }]}
             onPress={async () => {
-              try { await api.post(`/api/kujis/${kujiId}/complete`, { slots: selectedSlots }); } catch {}
+              try { await api.post(`/api/kujis/${kujiId}/complete`, { purchaseId, slots: selectedSlots }); } catch {}
               navigation.popToTop();
             }}
           >

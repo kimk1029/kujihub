@@ -20,8 +20,40 @@ model Kuji {
 
   prizes KujiPrize[]
   slots  KujiSlot[]
+  purchases KujiPurchase[]
 
   @@map("kujis")
+}
+
+model KujiPlayer {
+  id        String         @id
+  nickname  String         @default("게스트")
+  points    Int            @default(100000)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  purchases KujiPurchase[]
+
+  @@map("kuji_players")
+}
+
+model KujiPurchase {
+  id           String     @id
+  kujiId       Int        @map("kuji_id")
+  playerId     String     @map("player_id")
+  quantity     Int
+  totalPrice   Int        @map("total_price")
+  status       String     @default("pending")
+  selectedSlots Json?     @map("selected_slots")
+  resultJson   Json?      @map("result_json")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  kuji   Kuji       @relation(fields: [kujiId], references: [id], onDelete: Cascade)
+  player KujiPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@index([kujiId, createdAt])
+  @@map("kuji_purchases")
 }
 
 model CommunityPost {

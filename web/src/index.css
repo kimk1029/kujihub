@@ -325,6 +325,172 @@ body {
   gap: 18px;
 }
 
+.kuji-web-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  padding: 0 18px 18px;
+}
+
+.kuji-web-card {
+  display: block;
+  padding: 18px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  background: #FFF;
+  box-shadow: var(--shadow-sm);
+}
+
+.kuji-web-card__header,
+.kuji-web-card__footer,
+.kuji-detail-meta,
+.kuji-total-row,
+.kuji-qty-row,
+.kuji-board-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.kuji-web-card__price {
+  color: #B08A1E;
+}
+
+.kuji-web-card__title {
+  margin: 14px 0 8px;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.kuji-web-card__body {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.kuji-web-card__footer {
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.kuji-purchase-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.05fr);
+  gap: 18px;
+}
+
+.kuji-detail-meta,
+.kuji-total-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #EDF0F3;
+}
+
+.kuji-qty-row {
+  margin-top: 18px;
+  justify-content: flex-start;
+}
+
+.kuji-prize-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kuji-prize-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kuji-prize-grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #111827;
+  font-weight: 900;
+}
+
+.kuji-board-grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.kuji-slot {
+  aspect-ratio: 1;
+  border: 1px solid #D8DDE6;
+  border-radius: 10px;
+  background: #FFF;
+  color: #111827;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.kuji-slot.selected {
+  background: #F8E7A0;
+  border-color: #B08A1E;
+}
+
+.kuji-slot.locked {
+  background: #F3F4F6;
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.kuji-slot.drawn {
+  background: #101828;
+  cursor: not-allowed;
+}
+
+.kuji-board-footer {
+  margin-top: 18px;
+  align-items: stretch;
+}
+
+.kuji-result-panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 120;
+}
+
+.kuji-result-panel__inner {
+  width: min(760px, 100%);
+  background: #FFF;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+.kuji-result-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.kuji-result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  background: #FAFBFC;
+}
+
 .home-calendar-flat,
 .home-release-flat {
   padding: 16px;
@@ -898,6 +1064,12 @@ body {
   }
   .home-grid-flat {
     grid-template-columns: 1fr;
+  }
+  .kuji-purchase-grid {
+    grid-template-columns: 1fr;
+  }
+  .kuji-board-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
   .board-header {
     display: none;
