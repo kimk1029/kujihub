@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import dayjs from 'dayjs';
 import { ensureKujiPlayer, kujiDrawApi } from '../api/kujiDraw';
 import type { KujiBoardResponse, KujiPlayer, KujiReserveResult } from '../types/kujiDraw';
+import { Button, Card, Badge } from '../components/ui';
+import { KujiRevealModal } from '../components/KujiRevealModal';
 
 function sortNumeric(values: number[]) {
   return [...values].sort((a, b) => a - b);
@@ -45,63 +47,124 @@ export function KujiBoardPage() {
     return 80 - Object.values(board.slots).filter((slot) => slot.status === 'drawn').length;
   }, [board]);
 
-  if (loading) return <div className="page centered"><div className="loading-shimmer" style={{ width: '60px', height: '60px', borderRadius: '50%' }} /></div>;
+  const handleFinishReveal = async () => {
+    if (!id || !purchaseId) return;
+    try {
+      await kujiDrawApi.complete(id, purchaseId, selectedSlots);
+      navigate('/kuji');
+    } catch (e) {
+      console.error('Failed to complete draw', e);
+      navigate('/kuji');
+    }
+  };
+
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+      <div className="neu-flat" style={{ padding: '40px', textAlign: 'center' }}>
+        <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '20px' }}>LOADING BOARD...</div>
+        <p style={{ color: 'var(--text-muted)' }}>Synchronizing with server data</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="page kuji-page">
-      <section className="board-shell" style={{ padding: '18px' }}>
-        <div className="portal-hero__header" style={{ marginBottom: '16px' }}>
-          <div>
-            <div className="portal-hero__eyebrow" style={{ color: 'var(--primary)' }}>DRAW BOARD</div>
-            <h1 className="portal-hero__title" style={{ color: '#111827', marginTop: '8px', fontSize: '2rem' }}>쿠지 보드</h1>
-            <p className="portal-hero__body" style={{ color: 'var(--text-muted)', marginTop: '10px' }}>
-              {remaining}칸 남음 · {quantity}칸 선택 후 뽑기 진행
-            </p>
-          </div>
-          <div className="board-pill">{player ? `${player.points.toLocaleString()}P` : '0P'}</div>
+    <div className="animate-in">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">KUJI BOARD</h1>
+          <p style={{ color: 'var(--text-muted)', fontWeight: 700, marginTop: '4px' }}>
+            {remaining} SLOTS REMAINING
+          </p>
         </div>
-
-        {error && <div className="error-box">{error}</div>}
-
-        <div className="kuji-board-grid">
-          {Array.from({ length: 80 }, (_, i) => i + 1).map((slot) => {
-            const info = board?.slots?.[String(slot)];
-            const isDrawn = info?.status === 'drawn';
-            const isLocked = info?.status === 'locked';
-            const isSelected = selectedSlots.includes(slot);
-            return (
-              <button
-                key={slot}
-                type="button"
-                className={`kuji-slot ${isDrawn ? 'drawn' : ''} ${isLocked ? 'locked' : ''} ${isSelected ? 'selected' : ''}`}
-                style={isDrawn ? { borderColor: info?.color ?? '#666', color: info?.color ?? '#666' } : undefined}
-                disabled={isDrawn || isLocked}
-                onClick={() =>
-                  setSelectedSlots((prev) => {
-                    if (prev.includes(slot)) return prev.filter((value) => value !== slot);
-                    if (prev.length >= quantity) return prev;
-                    return [...prev, slot];
-                  })
-                }
-              >
-                {isDrawn ? info?.grade : isLocked ? '...' : slot}
-              </button>
-            );
-          })}
+        <div className="card stat-card" style={{ marginBottom: 0, padding: '12px 24px' }}>
+          <span className="stat-label">YOUR POINTS</span>
+          <span className="stat-value" style={{ fontSize: '1.2rem' }}>{player?.points.toLocaleString()} P</span>
         </div>
+      </header>
 
-        <div className="kuji-board-footer">
-          <div className="portal-panel" style={{ flex: 1 }}>
-            <h2 className="portal-panel__title">선택 상태</h2>
-            <p className="portal-panel__body">선택 슬롯: {selectedSlots.length ? sortNumeric(selectedSlots).join(', ') : '없음'}</p>
-            <p className="portal-panel__body">현재 시각: {dayjs().format('HH:mm:ss')}</p>
+      <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 300px' }}>
+        <section className="card" style={{ padding: '32px' }}>
+          <div className="kuji-board-grid" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(10, 1fr)', 
+            gap: '12px',
+            background: 'var(--bg)',
+            padding: '20px',
+            boxShadow: 'var(--neu-inset-dark), var(--neu-inset-light)'
+          }}>
+            {Array.from({ length: 80 }, (_, i) => i + 1).map((slot) => {
+              const info = board?.slots?.[String(slot)];
+              const isDrawn = info?.status === 'drawn';
+              const isLocked = info?.status === 'locked';
+              const isSelected = selectedSlots.includes(slot);
+              
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  className={`kuji-slot ${isDrawn ? 'drawn' : ''} ${isLocked ? 'locked' : ''} ${isSelected ? 'selected' : ''}`}
+                  style={{
+                    aspectRatio: '1',
+                    fontSize: isDrawn ? '0.8rem' : '1rem',
+                    fontWeight: 900,
+                    border: 'none',
+                    backgroundColor: isSelected ? 'var(--primary)' : isDrawn ? '#cbd5e0' : 'var(--surface)',
+                    color: isSelected ? 'white' : isDrawn ? '#718096' : 'var(--text-main)',
+                    boxShadow: isSelected || isDrawn || isLocked 
+                      ? 'var(--neu-inset-dark), var(--neu-inset-light)' 
+                      : 'var(--neu-dark-shadow-sm), var(--neu-light-shadow-sm)',
+                    cursor: isDrawn || isLocked ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.1s'
+                  }}
+                  disabled={isDrawn || isLocked}
+                  onClick={() =>
+                    setSelectedSlots((prev) => {
+                      if (prev.includes(slot)) return prev.filter((value) => value !== slot);
+                      if (prev.length >= quantity) return prev;
+                      return [...prev, slot];
+                    })
+                  }
+                >
+                  {isDrawn ? info?.grade : isLocked ? '...' : slot}
+                </button>
+              );
+            })}
           </div>
-          <div className="editor-actions" style={{ alignItems: 'stretch' }}>
-            <Link to={`/kuji/${id}`} className="btn outlined">뒤로</Link>
-            <button
-              type="button"
-              className="btn dark"
-              disabled={reserving || selectedSlots.length !== quantity || !id || !purchaseId || !player}
+
+          {error && (
+            <div className="card" style={{ marginTop: '24px', backgroundColor: '#fff5f5', border: '1px solid var(--error)' }}>
+              <p style={{ color: 'var(--error)', fontWeight: 800 }}>{error}</p>
+            </div>
+          )}
+        </section>
+
+        <aside className="portal-side">
+          <Card title="SELECTION INFO">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <span className="stat-label">REQUIRED</span>
+                <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{quantity} SLOTS</div>
+              </div>
+              <div>
+                <span className="stat-label">SELECTED</span>
+                <div style={{ fontSize: '1.5rem', fontWeight: 900, color: selectedSlots.length === quantity ? 'var(--success)' : 'var(--primary)' }}>
+                  {selectedSlots.length} / {quantity}
+                </div>
+              </div>
+              {selectedSlots.length > 0 && (
+                <div className="neu-flat-sm" style={{ padding: '12px', fontSize: '0.8rem', fontWeight: 700, maxHeight: '100px', overflowY: 'auto' }}>
+                  {sortNumeric(selectedSlots).join(', ')}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <Button 
+              variant="primary" 
+              size="lg" 
+              fullWidth 
+              disabled={reserving || selectedSlots.length !== quantity}
               onClick={async () => {
                 if (!id || !purchaseId || !player) return;
                 setReserving(true);
@@ -111,49 +174,28 @@ export function KujiBoardPage() {
                   setResults(reserveResults);
                 } catch (e: any) {
                   const apiError = e?.response?.data?.error;
-                  if (apiError === 'slot_taken') setError('이미 다른 사용자가 선택한 칸이 있어 보드를 새로고침하세요.');
-                  else setError('뽑기에 실패했습니다.');
+                  if (apiError === 'slot_taken') setError('SLOTS ALREADY TAKEN. REFRESHING...');
+                  else setError('FAILED TO INITIATE DRAW.');
                 } finally {
                   setReserving(false);
                 }
               }}
             >
-              {reserving ? '처리 중...' : selectedSlots.length === quantity ? '뽑기 시작' : `${quantity - selectedSlots.length}칸 더 선택`}
-            </button>
+              {reserving ? 'PROCESSING...' : 'INITIATE DRAW'}
+            </Button>
+            <Link to={`/kuji/${id}`} style={{ width: '100%' }}>
+              <Button variant="neu" fullWidth>CANCEL</Button>
+            </Link>
           </div>
-        </div>
+        </aside>
+      </div>
 
-        {results.length > 0 && (
-          <div className="kuji-result-panel">
-            <div className="kuji-result-panel__inner">
-              <h2 className="portal-hero__title" style={{ color: '#111827', marginTop: 0, fontSize: '1.6rem' }}>당첨 결과</h2>
-              <p className="portal-hero__body" style={{ color: 'var(--text-muted)', marginTop: '10px' }}>카드를 드래그하는 대신 결과를 순서대로 공개합니다.</p>
-              <div className="kuji-result-list">
-                {results.map((result) => (
-                  <div key={result.slotNumber} className="kuji-result-card">
-                    <span className="kuji-prize-grade" style={{ backgroundColor: result.color }}>{result.grade}</span>
-                    <strong>{result.name}</strong>
-                    <span>{result.slotNumber}번</span>
-                  </div>
-                ))}
-              </div>
-              <div className="editor-actions" style={{ marginTop: '16px' }}>
-                <button
-                  type="button"
-                  className="btn dark"
-                  onClick={async () => {
-                    if (!id || !purchaseId) return;
-                    await kujiDrawApi.complete(id, purchaseId, selectedSlots);
-                    navigate('/kuji');
-                  }}
-                >
-                  확인 완료
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
+      {results.length > 0 && (
+        <KujiRevealModal 
+          results={results} 
+          onFinish={handleFinishReveal} 
+        />
+      )}
     </div>
   );
 }
