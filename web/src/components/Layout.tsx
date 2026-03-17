@@ -5,6 +5,7 @@ export function Layout() {
   const loc = useLocation();
   const isHome = loc.pathname === '/';
   const isCommunity = loc.pathname.startsWith('/community');
+  const isProfile = loc.pathname === '/profile';
 
   return (
     <div className="layout">
@@ -16,6 +17,7 @@ export function Layout() {
         <nav className="nav">
           <Link to="/" className={isHome ? 'active' : ''}>홈</Link>
           <Link to="/community" className={isCommunity ? 'active' : ''}>커뮤니티</Link>
+          <Link to="/profile" className={isProfile ? 'active' : ''}>MY</Link>
         </nav>
       </header>
       <main className="main">

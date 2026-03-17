@@ -164,14 +164,14 @@ a:hover {
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.kuji-card {
+.kuji-card, .post-card, .profile-card {
   animation: cardEntrance 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
 }
 
-.kuji-card:nth-child(2) { animation-delay: 0.05s; }
-.kuji-card:nth-child(3) { animation-delay: 0.1s; }
-.kuji-card:nth-child(4) { animation-delay: 0.15s; }
-.kuji-card:nth-child(n+5) { animation-delay: 0.2s; }
+.kuji-card:nth-child(2), .post-card:nth-child(2) { animation-delay: 0.05s; }
+.kuji-card:nth-child(3), .post-card:nth-child(3) { animation-delay: 0.1s; }
+.kuji-card:nth-child(4), .post-card:nth-child(4) { animation-delay: 0.15s; }
+.kuji-card:nth-child(n+5), .post-card:nth-child(n+5) { animation-delay: 0.2s; }
 
 /* Calendar day selected glow */
 .calendar-day.selected {
@@ -182,19 +182,19 @@ a:hover {
 }
 
 /* Glassmorphism for sections */
-.calendar-section, .lineup-section, .post-card {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+.calendar-section, .lineup-section, .post-card, .profile-section, .detail-container {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline);
+  box-shadow: var(--shadow-md);
 }
 
 /* Calendar Section - Trendy Gacha Look */
 .calendar-section {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
   padding: 24px;
   margin-bottom: 32px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--outline);
 }
 
 .calendar-header {
@@ -254,7 +254,7 @@ a:hover {
   align-items: center;
   justify-content: center;
   border: 2px solid transparent;
-  background: #F9FAFB;
+  background: rgba(249, 250, 251, 0.5);
   border-radius: var(--radius-md);
   font-size: 1rem;
   font-weight: 600;
@@ -293,20 +293,9 @@ a:hover {
   background: white;
 }
 
-@media (max-width: 480px) {
-  .calendar-section {
-    padding: 16px;
-  }
-  .calendar-grid {
-    gap: 4px;
-  }
-  .calendar-day {
-    font-size: 0.875rem;
-  }
-}
-
 /* Kuji Cards */
 .lineup-section {
+  padding: 24px;
   margin-top: 40px;
 }
 
@@ -332,12 +321,6 @@ a:hover {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
-}
-
-@media (max-width: 640px) {
-  .lineup-list {
-    grid-template-columns: 1fr;
-  }
 }
 
 .kuji-card {
@@ -382,6 +365,142 @@ a:hover {
   color: var(--text-muted);
 }
 
+/* Community & Post Cards */
+.post-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.post-card {
+  padding: 20px;
+  text-decoration: none;
+  color: var(--on-surface);
+  transition: all 0.2s;
+}
+
+.post-card:hover {
+  border-color: var(--primary);
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.post-card__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.post-card__meta {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 8px;
+}
+
+/* Detail Page */
+.detail-container {
+  padding: 32px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.detail-title {
+  font-size: 2rem;
+  font-weight: 900;
+  margin: 0 0 16px;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.detail-meta {
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--outline);
+  margin-bottom: 24px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.detail-body {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  color: var(--on-surface);
+}
+
+.detail-actions {
+  margin-top: 40px;
+  display: flex;
+  gap: 12px;
+}
+
+/* Profile Page */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+  padding: 32px;
+}
+
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: white;
+  box-shadow: var(--shadow-lg);
+  border: 4px solid white;
+}
+
+.profile-info h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 900;
+}
+
+.profile-info p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-item {
+  background: white;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  text-align: center;
+  border: 1px solid var(--outline);
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -408,8 +527,26 @@ a:hover {
   box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
 }
 
-.btn.primary:active {
-  transform: translateY(0);
+.btn.outlined {
+  background: white;
+  border: 2px solid var(--outline);
+  color: var(--on-surface);
+}
+
+.btn.outlined:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn.danger {
+  background: #FEF2F2;
+  color: var(--error);
+  border: 1px solid #FEE2E2;
+}
+
+.btn.danger:hover {
+  background: var(--error);
+  color: white;
 }
 
 /* Floating Action Button */
@@ -429,6 +566,7 @@ a:hover {
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
   text-decoration: none;
   transition: all 0.3s;
+  z-index: 99;
 }
 
 .fab:hover {
@@ -436,35 +574,16 @@ a:hover {
   box-shadow: 0 12px 32px rgba(99, 102, 241, 0.6);
 }
 
-/* Post Cards in Community */
-.post-card {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  border: 1px solid var(--outline);
-  margin-bottom: 12px;
-  transition: all 0.2s;
-}
-
-.post-card:hover {
-  border-color: var(--primary);
-  background: #F9FAFB;
-}
-
-.post-card__title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: var(--on-surface);
-}
-
-/* Responsive adjustments */
 @media (max-width: 640px) {
-  .fab {
-    right: 16px;
-    bottom: 16px;
-    width: 50px;
-    height: 50px;
+  .detail-container {
+    padding: 20px;
+  }
+  .detail-title {
     font-size: 1.5rem;
+  }
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
   }
 }

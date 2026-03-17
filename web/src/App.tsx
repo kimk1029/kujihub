@@ -4,6 +4,7 @@ import { HomePage } from './pages/HomePage';
 import { CommunityListPage } from './pages/CommunityListPage';
 import { CommunityDetailPage } from './pages/CommunityDetailPage';
 import { CommunityPostFormPage } from './pages/CommunityPostFormPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="community/new" element={<CommunityPostFormPage />} />
           <Route path="community/edit/:id" element={<CommunityPostFormPage />} />
           <Route path="community/:id" element={<CommunityDetailPage />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>
