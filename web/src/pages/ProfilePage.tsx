@@ -69,7 +69,7 @@ export function ProfilePage() {
             <h3 className="card-title">MY COLLECTION</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
               {[1, 2, 4, 8].map((i) => (
-                <div key={i} className="neu-flat-sm" style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '2rem' }}>
+                <div key={i} className="neu-flat-sm" style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>
                   {['🎁', '🏆', '🧸', '🎮'][i % 4]}
                 </div>
               ))}
