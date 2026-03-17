@@ -80,7 +80,7 @@ export function CommunityPostFormPage() {
         <div className="editor-hero__eyebrow">{editId ? 'EDIT POST' : 'NEW POST'}</div>
         <h1 className="editor-hero__title">{editId ? '게시글 수정하기' : '새 게시글 작성하기'}</h1>
         <p className="editor-hero__body">
-          클리앙식 게시판 톤에 맞춰 제목과 첫 문장이 먼저 읽히는 글이 좋습니다. 한 줄 제목과 문단 구성이 핵심입니다.
+          제목과 첫 문장이 먼저 읽히는 글이 좋습니다. 한 줄 제목과 문단 구성이 핵심입니다.
         </p>
         <div className="editor-hero__meta">
           <span className="board-pill">자유게시판</span>

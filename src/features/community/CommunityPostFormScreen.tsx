@@ -88,7 +88,7 @@ export function CommunityPostFormScreen() {
         <Text style={styles.heroEyebrow}>{editId ? 'EDIT POST' : 'NEW POST'}</Text>
         <Text style={styles.heroTitle}>{editId ? '기존 글 다듬기' : '새 글 작성하기'}</Text>
         <Text style={styles.heroBody}>
-          클리앙식 보드 톤에 맞춰 제목과 요지가 먼저 보이는 글이 잘 읽힙니다. 제목은 짧고 명확하게, 본문은 정보 위주로 정리하면 좋습니다.
+          제목과 요지가 먼저 보이는 글이 읽기 좋습니다. 제목은 짧고 명확하게, 본문은 정보 위주로 정리하면 좋습니다.
         </Text>
         <View style={styles.heroMetaRow}>
           <Chip compact style={styles.heroChip} textStyle={styles.heroChipText}>자유게시판</Chip>

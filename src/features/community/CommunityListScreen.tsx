@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
 import { Text, FAB, ActivityIndicator, Surface, Chip } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -39,11 +39,6 @@ export function CommunityListScreen() {
     const unsubscribe = navigation.addListener('focus', () => fetchList());
     return unsubscribe;
   }, [navigation, fetchList]);
-
-  const latestDateLabel = useMemo(() => {
-    if (posts.length === 0) return '아직 글이 없습니다';
-    return dayjs(posts[0].createdAt).format('YYYY.MM.DD HH:mm');
-  }, [posts]);
 
   const renderItem = ({ item, index }: { item: CommunityPost; index: number }) => (
     <TouchableOpacity
@@ -88,8 +83,8 @@ export function CommunityListScreen() {
         <View style={styles.loadingWrap}>
           <Surface style={styles.loadingCard} elevation={2}>
             <ActivityIndicator size="large" color="#151926" />
-            <Text style={styles.loadingTitle}>커뮤니티 포털 불러오는 중</Text>
-            <Text style={styles.loadingBody}>최신 글과 메타 정보를 정리하고 있습니다.</Text>
+            <Text style={styles.loadingTitle}>게시판 목록 불러오는 중</Text>
+            <Text style={styles.loadingBody}>최신 글 순서대로 정리하고 있습니다.</Text>
           </Surface>
         </View>
       </View>
@@ -108,10 +103,10 @@ export function CommunityListScreen() {
             <Surface style={styles.heroCard} elevation={3}>
               <View style={styles.heroGlowA} />
               <View style={styles.heroGlowB} />
-              <Text style={styles.heroEyebrow}>KOOJI COMMUNITY</Text>
-              <Text style={styles.heroTitle}>쿠지 포털</Text>
+              <Text style={styles.heroEyebrow}>COMMUNITY BOARD</Text>
+              <Text style={styles.heroTitle}>게시판</Text>
               <Text style={styles.heroBody}>
-                클리앙처럼 제목과 메타가 먼저 보이는 보드형 레이아웃으로, 최신 글을 빠르게 읽고 이동할 수 있게 정리했습니다.
+                제목과 작성 시각이 먼저 보이도록 정리한 목록 화면입니다. 필요한 글을 빠르게 훑고 바로 상세로 이동할 수 있습니다.
               </Text>
               <View style={styles.heroFooter}>
                 <View style={styles.heroStat}>
@@ -121,7 +116,9 @@ export function CommunityListScreen() {
                 <View style={styles.heroDivider} />
                 <View style={styles.heroStat}>
                   <Text style={styles.heroStatLabel}>최신 등록</Text>
-                  <Text style={styles.heroStatSmall}>{latestDateLabel}</Text>
+                  <Text style={styles.heroStatSmall}>
+                    {posts[0] ? dayjs(posts[0].createdAt).format('YYYY.MM.DD HH:mm') : '아직 글이 없습니다'}
+                  </Text>
                 </View>
               </View>
             </Surface>
@@ -144,7 +141,7 @@ export function CommunityListScreen() {
             <Surface style={styles.emptyCard} elevation={1}>
               <MaterialCommunityIcons name="post-outline" size={42} color="#D4AF37" />
               <Text style={styles.emptyTitle}>아직 등록된 글이 없습니다</Text>
-              <Text style={styles.emptyBody}>오른쪽 아래 버튼으로 첫 글을 작성해 커뮤니티 보드를 시작해보세요.</Text>
+              <Text style={styles.emptyBody}>오른쪽 아래 버튼으로 첫 글을 작성해 게시판을 시작해보세요.</Text>
             </Surface>
           ) : null
         }

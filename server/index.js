@@ -36,52 +36,9 @@ app.use(express.json());
 const kujiRouter = require('./kuji');
 app.use('/api/kujis', kujiRouter);
 
-// ── 커뮤니티 게시판 (인메모리) ─────────────────────────────────
-let posts = [];
-let nextId = 1;
-
-app.get('/api/posts', (_req, res) => {
-  res.json([...posts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-});
-
-app.get('/api/posts/:id', (req, res) => {
-  const post = posts.find((p) => p.id === Number(req.params.id));
-  if (!post) return res.status(404).json({ error: 'Not found' });
-  res.json(post);
-});
-
-app.post('/api/posts', (req, res) => {
-  const { title, content, author = '익명' } = req.body || {};
-  if (!title || !String(title).trim()) return res.status(400).json({ error: 'title is required' });
-  const post = {
-    id: nextId++,
-    title: String(title).trim(),
-    content: String(content ?? '').trim(),
-    author: String(author ?? '익명').trim(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  posts.push(post);
-  res.status(201).json(post);
-});
-
-app.put('/api/posts/:id', (req, res) => {
-  const post = posts.find((p) => p.id === Number(req.params.id));
-  if (!post) return res.status(404).json({ error: 'Not found' });
-  const { title, content, author } = req.body || {};
-  if (title !== undefined) post.title = String(title).trim();
-  if (content !== undefined) post.content = String(content).trim();
-  if (author !== undefined) post.author = String(author).trim();
-  post.updatedAt = new Date().toISOString();
-  res.json(post);
-});
-
-app.delete('/api/posts/:id', (req, res) => {
-  const idx = posts.findIndex((p) => p.id === Number(req.params.id));
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  posts.splice(idx, 1);
-  res.status(204).send();
-});
+// ── 커뮤니티 (PostgreSQL) ─────────────────────────────────────
+const communityRouter = require('./community');
+app.use('/api/community', communityRouter);
 
 // ── 외부 API ───────────────────────────────────────────────────
 const { fetchLineupForMonth } = require('./kuji-lineup');

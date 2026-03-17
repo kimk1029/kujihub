@@ -24,6 +24,35 @@ model Kuji {
   @@map("kujis")
 }
 
+model CommunityPost {
+  id        Int                 @id @default(autoincrement())
+  category  String              @default("자유")
+  title     String
+  content   String              @default("")
+  author    String              @default("익명")
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+  feedItems CommunityFeedItem[]
+
+  @@map("community_posts")
+}
+
+model CommunityFeedItem {
+  id        Int            @id @default(autoincrement())
+  type      String
+  source    String         @default("community")
+  title     String
+  body      String
+  author    String?
+  link      String?
+  postId    Int?           @map("post_id")
+  createdAt DateTime       @default(now()) @map("created_at")
+  post      CommunityPost? @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("community_feed_items")
+}
+
 model KujiPrize {
   id           Int    @id @default(autoincrement())
   kujiId       Int    @map("kuji_id")

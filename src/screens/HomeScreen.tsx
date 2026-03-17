@@ -1,16 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  TouchableOpacity,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  Dimensions,
-  Image,
-} from 'react-native';
-import { Text, Surface, Chip, useTheme, Avatar } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
+import { Text, Surface, Chip, useTheme } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -22,17 +13,11 @@ import type { ScheduleByDate } from '../features/kuji-lineup/kujiLineup.api';
 import type { ScheduleEntry } from '../features/kuji-lineup/kujiLineup.types';
 import { buildOriginalLabel, translateKujiTitle, translateReleaseLabel } from '../features/kuji-lineup/translateKujiText';
 import { communityApi } from '../features/community/community.api';
-import type { CommunityPost } from '../features/community/community.types';
+import type { CommunityFeedItem, CommunityOverview, CommunityPost } from '../features/community/community.types';
 
 dayjs.locale('ko');
 
 const { width } = Dimensions.get('window');
-
-const BANNERS = [
-  { id: 'b1', title: '이번 주 라인업', subtitle: '신규 발매 일정을 한 눈에 확인', icon: 'calendar-star', colors: ['#FFFFFF', '#F1F5F9'] }, 
-  { id: 'b2', title: '쿠지 제보 리워드', subtitle: '현장 제보 작성하고 포인트 받기', icon: 'gift', colors: ['#FFFBEB', '#FEF3C7'] }, 
-  { id: 'b3', title: '커뮤니티 핫토픽', subtitle: '인기 게시글을 빠르게 탐색', icon: 'fire', colors: ['#FEF2F2', '#FEE2E2'] }, 
-];
 
 const CALENDAR_THEME = {
   backgroundColor: 'transparent',
@@ -53,26 +38,34 @@ const CALENDAR_THEME = {
   textDayHeaderFontWeight: '700' as const,
 };
 
+function feedIconName(item: CommunityFeedItem): string {
+  if (item.type === 'post_created') return 'post-outline';
+  if (item.type === 'post_updated') return 'pencil-outline';
+  if (item.type === 'post_deleted') return 'delete-outline';
+  if (item.type === 'lineup_alert') return 'calendar-star';
+  return 'rss';
+}
+
 export function HomeScreen() {
+  const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const isWide = width >= 420;
 
   const [year, setYear] = useState(() => dayjs().year());
   const [month, setMonth] = useState(() => dayjs().month() + 1);
   const [scheduleByDate, setScheduleByDate] = useState<ScheduleByDate>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [bannerIndex, setBannerIndex] = useState(0);
-  const [popularPosts, setPopularPosts] = useState<CommunityPost[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(() => dayjs().format('YYYY-MM-DD'));
+  const [overview, setOverview] = useState<CommunityOverview | null>(null);
 
   const loadMonth = useCallback(async (y: number, m: number) => {
     setLoading(true);
     setError(null);
     try {
       const data = await fetchLineup(y, m);
-      const schedule = buildScheduleByDate(data);
-      setScheduleByDate(schedule);
+      setScheduleByDate(buildScheduleByDate(data));
     } catch (e) {
       setScheduleByDate({});
       setError(e instanceof Error ? e.message : '스케줄을 불러올 수 없습니다.');
@@ -81,27 +74,22 @@ export function HomeScreen() {
     }
   }, []);
 
+  const loadOverview = useCallback(async () => {
+    try {
+      const data = await communityApi.getOverview(6, 10);
+      setOverview(data);
+    } catch {
+      setOverview(null);
+    }
+  }, []);
+
   useEffect(() => {
     loadMonth(year, month);
   }, [year, month, loadMonth]);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const posts = await communityApi.getList();
-        if (cancelled) return;
-        setPopularPosts(posts.slice(0, 5));
-      } catch {
-        if (cancelled) return;
-        setPopularPosts([]);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    loadOverview();
+  }, [loadOverview]);
 
   const currentMonthKey = useMemo(
     () => `${year}-${String(month).padStart(2, '0')}-01`,
@@ -123,89 +111,141 @@ export function HomeScreen() {
     return marked;
   }, [scheduleByDate, selectedDate]);
 
-  const onMonthChange = useCallback(
-    (nextMonth: { year: number; month: number }) => {
-      setYear(nextMonth.year);
-      setMonth(nextMonth.month);
-      setSelectedDate(null);
+  const onMonthChange = useCallback((nextMonth: { year: number; month: number }) => {
+    setYear(nextMonth.year);
+    setMonth(nextMonth.month);
+    setSelectedDate(null);
+  }, []);
+
+  const selectedEntries: ScheduleEntry[] = selectedDate ? scheduleByDate[selectedDate] || [] : [];
+  const recentPosts: CommunityPost[] = overview?.posts ?? [];
+  const feedItems: CommunityFeedItem[] = overview?.feed ?? [];
+
+  const openPost = useCallback(
+    (postId: number) => {
+      navigation.navigate('Community', {
+        screen: 'CommunityDetail',
+        params: { id: postId },
+      });
     },
-    [],
+    [navigation],
   );
-
-  const selectedEntries: ScheduleEntry[] = selectedDate
-    ? scheduleByDate[selectedDate] || []
-    : [];
-
-  const onBannerScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const x = e.nativeEvent.contentOffset.x;
-    const w = e.nativeEvent.layoutMeasurement.width;
-    const idx = Math.round(x / w);
-    setBannerIndex(Math.max(0, Math.min(BANNERS.length - 1, idx)));
-  };
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20 }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 18 }]}
+      >
         <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <View>
-              <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>KOOJI HUB</Text>
-              <Text style={styles.headerSubtitle}>Ichiban Kuji radar</Text>
-            </View>
-            <TouchableOpacity style={[styles.notificationBtn, { backgroundColor: theme.colors.surface }]}>
-              <MaterialCommunityIcons name="bell-outline" size={24} color={theme.colors.primary} />
-              <View style={[styles.notificationBadge, { borderColor: theme.colors.surface }]} />
-            </TouchableOpacity>
-          </View>
-          
-          <Surface style={styles.heroCard} elevation={2}>
-            <Image 
-              source={require('../assets/images/Gemini_Generated_Image_brlmgybrlmgybrlm.png')} 
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
-            <View style={styles.heroOverlay}>
-              <Text style={styles.heroText}>오늘의 인기 쿠지는?</Text>
-            </View>
-          </Surface>
+          <Text style={[styles.headerEyebrow, { color: theme.colors.secondary }]}>MAIN</Text>
+          <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>KOOJI HUB</Text>
+          <Text style={styles.headerSubtitle}>
+            발매 일정, 게시판 글 목록, 실시간 피드를 한 화면에서 보는 메인 포털입니다.
+          </Text>
         </View>
 
-        <View style={styles.bannerSection}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={onBannerScrollEnd}
-            decelerationRate="fast"
-            snapToInterval={width - 40 + 12}
-          >
-            {BANNERS.map((banner) => (
-              <View key={banner.id} style={[styles.bannerCard, { backgroundColor: banner.colors[0] }]}>
-                <View style={styles.bannerContent}>
-                  <Text style={[styles.bannerTitle, banner.id === 'b2' && styles.bannerTitleDark]}>
-                    {banner.title}
-                  </Text>
-                  <Text style={[styles.bannerSubtitle, banner.id === 'b2' && styles.bannerSubtitleDark]}>
-                    {banner.subtitle}
-                  </Text>
-                </View>
-                <View style={styles.bannerIconWrap}>
-                  <MaterialCommunityIcons name={banner.icon} size={64} color="rgba(0,0,0,0.1)" />
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-          <View style={styles.dots}>
-            {BANNERS.map((banner, idx) => (
-              <View key={banner.id} style={[styles.dot, idx === bannerIndex && [styles.dotActive, { backgroundColor: theme.colors.primary }]]} />
-            ))}
+        <Surface style={styles.portalHero} elevation={3}>
+          <View style={styles.portalGlowTop} />
+          <View style={styles.portalGlowBottom} />
+          <View style={styles.portalHeroTop}>
+            <View>
+              <Text style={styles.portalEyebrow}>HOME OVERVIEW</Text>
+              <Text style={styles.portalTitle}>오늘의 흐름</Text>
+              <Text style={styles.portalBody}>
+                최근 게시글과 실시간 피드를 먼저 보고, 아래에서 발매 캘린더와 일정 상세를 바로 확인할 수 있습니다.
+              </Text>
+            </View>
+            <View style={styles.portalIconWrap}>
+              <MaterialCommunityIcons name="view-dashboard-outline" size={44} color="#F8E7A0" />
+            </View>
           </View>
+          <View style={styles.portalStats}>
+            <View style={styles.portalStatCard}>
+              <Text style={styles.portalStatLabel}>게시글</Text>
+              <Text style={styles.portalStatValue}>{overview?.stats.postCount ?? 0}</Text>
+            </View>
+            <View style={styles.portalStatCard}>
+              <Text style={styles.portalStatLabel}>실시간 피드</Text>
+              <Text style={styles.portalStatValue}>{overview?.stats.feedCount ?? 0}</Text>
+            </View>
+            <View style={styles.portalStatCard}>
+              <Text style={styles.portalStatLabel}>선택 일정</Text>
+              <Text style={styles.portalStatSmall}>{selectedDate ? dayjs(selectedDate).format('M월 D일') : '없음'}</Text>
+            </View>
+          </View>
+        </Surface>
+
+        <View style={[styles.portalRow, isWide && styles.portalRowWide]}>
+          <Surface style={[styles.portalPanel, isWide && styles.portalPanelWide]} elevation={1}>
+            <View style={styles.panelHeader}>
+              <Text style={styles.panelTitle}>커뮤니티</Text>
+              <Chip compact style={styles.headerChip} textStyle={styles.headerChipText}>최신 글</Chip>
+            </View>
+
+            {recentPosts.length === 0 ? (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons name="post-outline" size={34} color="#D4AF37" />
+                <Text style={styles.emptyText}>게시글이 아직 없습니다</Text>
+              </View>
+            ) : (
+              recentPosts.map((post, index) => (
+                <TouchableOpacity key={post.id} style={styles.boardRow} activeOpacity={0.78} onPress={() => openPost(post.id)}>
+                  <Text style={styles.boardIndex}>{String(index + 1).padStart(2, '0')}</Text>
+                  <View style={styles.boardBody}>
+                    <Text numberOfLines={1} style={styles.boardTitle}>{post.title}</Text>
+                    <Text numberOfLines={1} style={styles.boardMeta}>
+                      {post.author} · {dayjs(post.createdAt).format('MM.DD HH:mm')}
+                    </Text>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={18} color="#7C8799" />
+                </TouchableOpacity>
+              ))
+            )}
+          </Surface>
+
+          <Surface style={[styles.portalPanel, isWide && styles.portalPanelWide]} elevation={1}>
+            <View style={styles.panelHeader}>
+              <Text style={styles.panelTitle}>실시간 피드</Text>
+              <Chip compact style={styles.headerChip} textStyle={styles.headerChipText}>LIVE</Chip>
+            </View>
+
+            {feedItems.length === 0 ? (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons name="rss" size={34} color="#D4AF37" />
+                <Text style={styles.emptyText}>표시할 피드가 없습니다</Text>
+              </View>
+            ) : (
+              feedItems.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.feedRow}
+                  activeOpacity={item.postId ? 0.78 : 1}
+                  disabled={!item.postId}
+                  onPress={() => item.postId && openPost(item.postId)}
+                >
+                  <View style={styles.feedIconWrap}>
+                    <MaterialCommunityIcons name={feedIconName(item)} size={16} color="#B08A1E" />
+                  </View>
+                  <View style={styles.feedBody}>
+                    <Text numberOfLines={1} style={styles.feedTitle}>{item.title}</Text>
+                    <Text numberOfLines={2} style={styles.feedMeta}>
+                      {item.body}
+                    </Text>
+                  </View>
+                  <Text style={styles.feedTime}>{dayjs(item.createdAt).format('HH:mm')}</Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </Surface>
         </View>
 
         <Surface style={[styles.sectionCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]} elevation={1}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>발매 캘린더</Text>
-            <Chip compact style={[styles.chip, { backgroundColor: theme.colors.surfaceVariant }]} textStyle={styles.chipText}>{year}년 {month}월</Chip>
+            <Chip compact style={[styles.chip, { backgroundColor: theme.colors.surfaceVariant }]} textStyle={styles.chipText}>
+              {year}년 {month}월
+            </Chip>
           </View>
           <View style={styles.calendarContainer}>
             <Calendar
@@ -227,10 +267,10 @@ export function HomeScreen() {
           </View>
         </Surface>
 
-        <Surface style={[styles.sectionCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]} elevation={1}>
+        <Surface style={[styles.sectionCard, styles.lastCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]} elevation={1}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {selectedDate ? `${dayjs(selectedDate).format('M월 D일')} 일정` : '발매 일정'}
+              {selectedDate ? `${dayjs(selectedDate).format('M월 D일')} 발매 일정` : '발매 일정'}
             </Text>
             {selectedDate && <MaterialCommunityIcons name="calendar-check" size={22} color={theme.colors.secondary} />}
           </View>
@@ -281,38 +321,6 @@ export function HomeScreen() {
             )}
           </View>
         </Surface>
-
-        <Surface style={[styles.sectionCard, styles.lastCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]} elevation={1}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.titleWithIcon}>
-              <Text style={styles.sectionTitle}>인기 핫토픽</Text>
-              <MaterialCommunityIcons name="fire" size={22} color={theme.colors.primary} style={styles.fireIcon} />
-            </View>
-            <TouchableOpacity>
-              <Text style={[styles.moreText, { color: theme.colors.secondary }]}>더보기</Text>
-            </TouchableOpacity>
-          </View>
-
-          {popularPosts.length === 0 ? (
-            <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="comment-text-outline" size={56} color="#333333" />
-              <Text style={styles.emptyText}>아직 인기 게시물이 없습니다</Text>
-            </View>
-          ) : (
-            popularPosts.map((post, idx) => (
-              <TouchableOpacity key={post.id} activeOpacity={0.7} style={styles.postRow}>
-                <Text style={[styles.rankText, idx < 3 && [styles.topRankText, { color: theme.colors.secondary }]]}>{idx + 1}</Text>
-                <View style={styles.postBody}>
-                  <Text numberOfLines={1} style={styles.postTitle}>{post.title}</Text>
-                  <Text numberOfLines={1} style={styles.postMeta}>
-                    {post.author} · {dayjs(post.createdAt).format('MM.DD')}
-                  </Text>
-                </View>
-                <MaterialCommunityIcons name="chevron-right" size={20} color="#333333" />
-              </TouchableOpacity>
-            ))
-          )}
-        </Surface>
       </ScrollView>
     </View>
   );
@@ -321,146 +329,220 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: '#F6F1E8',
   },
   scrollContent: {
     paddingBottom: 120,
   },
   header: {
     paddingHorizontal: 20,
-    paddingBottom: 28,
+    paddingBottom: 16,
   },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+  headerEyebrow: {
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1.4,
   },
   headerTitle: {
+    marginTop: 6,
     fontWeight: '900',
-    fontSize: 30,
+    fontSize: 32,
     letterSpacing: -1.5,
   },
   headerSubtitle: {
-    color: '#94A3B8',
-    marginTop: -2,
-    fontWeight: '700',
+    marginTop: 10,
+    color: '#64748B',
     fontSize: 14,
-    textTransform: 'uppercase',
+    lineHeight: 22,
+    fontWeight: '700',
   },
-  notificationBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#E63946',
-    borderWidth: 2,
-  },
-  heroCard: {
-    width: '100%',
-    height: 180,
-    borderRadius: 24,
+  portalHero: {
     overflow: 'hidden',
-    position: 'relative',
+    marginHorizontal: 20,
+    borderRadius: 30,
+    padding: 22,
+    backgroundColor: '#151926',
   },
-  heroImage: {
-    width: '100%',
-    height: '100%',
-  },
-  heroOverlay: {
+  portalGlowTop: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    top: -46,
+    right: -14,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: '#263041',
   },
-  heroText: {
+  portalGlowBottom: {
+    position: 'absolute',
+    bottom: -72,
+    left: -30,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: '#1E2533',
+  },
+  portalHeroTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  portalEyebrow: {
+    color: '#F8E7A0',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+  },
+  portalTitle: {
+    marginTop: 10,
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 31,
     fontWeight: '900',
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
   },
-  bannerSection: {
-    marginBottom: 28,
+  portalBody: {
+    marginTop: 12,
+    color: '#CBD5E1',
+    fontSize: 15,
+    lineHeight: 24,
+    maxWidth: 260,
   },
-  bannerCard: {
-    width: width - 40,
-    marginLeft: 20,
-    marginRight: 12,
-    height: 120,
-    borderRadius: 24,
-    padding: 20,
+  portalIconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  portalStats: {
+    marginTop: 24,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  portalStatCard: {
+    flex: 1,
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  portalStatLabel: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  portalStatValue: {
+    marginTop: 6,
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  portalStatSmall: {
+    marginTop: 7,
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  portalRow: {
+    marginTop: 18,
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  portalRowWide: {
+    flexDirection: 'row',
+  },
+  portalPanel: {
+    borderRadius: 26,
+    padding: 18,
+    backgroundColor: '#FFFDF8',
+  },
+  portalPanelWide: {
+    flex: 1,
+  },
+  panelHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    overflow: 'hidden',
+    marginBottom: 14,
   },
-  bannerContent: {
-    flex: 1,
-    zIndex: 2,
-  },
-  bannerTitle: {
-    color: '#1E293B',
-    fontWeight: '900',
+  panelTitle: {
+    color: '#151926',
     fontSize: 20,
-    marginBottom: 4,
+    fontWeight: '900',
     letterSpacing: -0.5,
   },
-  bannerTitleDark: {
-    color: '#1E293B',
+  headerChip: {
+    backgroundColor: '#F4EDDC',
   },
-  bannerSubtitle: {
-    color: '#64748B',
-    fontWeight: '700',
-    fontSize: 13,
+  headerChipText: {
+    color: '#8B6B12',
+    fontWeight: '800',
   },
-  bannerSubtitleDark: {
-    color: '#64748B',
-  },
-  bannerIconWrap: {
-    position: 'absolute',
-    right: 10,
-    bottom: -15,
-    opacity: 0.1,
-  },
-  dots: {
-    marginTop: 14,
+  boardRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#EEE7D8',
+  },
+  boardIndex: {
+    width: 28,
+    color: '#C59717',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  boardBody: {
+    flex: 1,
+  },
+  boardTitle: {
+    color: '#141B2D',
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  boardMeta: {
+    marginTop: 4,
+    color: '#7C8799',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  feedRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#EEE7D8',
+  },
+  feedIconWrap: {
+    marginTop: 2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#F8F3E9',
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E2E8F0',
+  feedBody: {
+    flex: 1,
   },
-  dotActive: {
-    width: 24,
+  feedTitle: {
+    color: '#141B2D',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  feedMeta: {
+    marginTop: 4,
+    color: '#5B6472',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  feedTime: {
+    color: '#9AA3B2',
+    fontSize: 11,
+    fontWeight: '800',
+    marginTop: 2,
   },
   sectionCard: {
     borderRadius: 24,
     marginHorizontal: 20,
-    marginBottom: 20,
+    marginTop: 18,
     padding: 24,
     borderWidth: 1,
   },
@@ -472,13 +554,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
-  },
-  titleWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  fireIcon: {
-    marginLeft: 6,
   },
   sectionTitle: {
     color: '#1E293B',
@@ -493,10 +568,6 @@ const styles = StyleSheet.create({
     color: '#D4AF37',
     fontWeight: '800',
     fontSize: 12,
-  },
-  moreText: {
-    fontWeight: '800',
-    fontSize: 14,
   },
   calendarContainer: {
     borderRadius: 16,
@@ -525,57 +596,23 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#B91C1C',
     fontWeight: '800',
-    fontSize: 14,
   },
   hintText: {
-    color: '#EF4444',
-    marginTop: 2,
-    fontSize: 12,
-    fontWeight: '600',
+    color: '#7F1D1D',
+    marginTop: 3,
   },
   list: {
-    minHeight: 100,
+    gap: 14,
   },
   emptyState: {
-    paddingVertical: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 28,
   },
   emptyText: {
-    color: '#94A3B8',
-    marginTop: 16,
+    marginTop: 12,
+    color: '#5B6472',
     fontWeight: '700',
-    fontSize: 15,
-  },
-  postRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  rankText: {
-    width: 32,
-    color: '#94A3B8',
-    fontWeight: '900',
-    fontSize: 18,
-  },
-  topRankText: {
-    // color determined in-line
-  },
-  postBody: {
-    flex: 1,
-    paddingRight: 16,
-  },
-  postTitle: {
-    color: '#1E293B',
-    fontWeight: '700',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  postMeta: {
-    color: '#64748B',
-    fontWeight: '600',
-    fontSize: 13,
+    textAlign: 'center',
   },
 });

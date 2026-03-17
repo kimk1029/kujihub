@@ -46,6 +46,52 @@ const KUJIS = [
   },
 ];
 
+const COMMUNITY_POSTS = [
+  {
+    category: '정보',
+    title: '홍대입구 근처 편의점에 이번 주 신상 쿠지 입고됐습니다',
+    content: '오전 11시 기준으로 재고 확인했습니다.\n원피스 라인업이 먼저 들어왔고, 계산대 옆 진열대로 빠져 있습니다.\n혹시 방문하실 분은 오후 전에 가는 편이 좋아 보입니다.',
+    author: 'kuji_scout',
+  },
+  {
+    category: '후기',
+    title: '오늘 뽑은 드래곤볼 EX 결과 공유합니다',
+    content: '총 8회 뽑았고 B상 1개, D상 2개 나왔습니다.\n생각보다 하위상 퀄리티도 괜찮았고, 뱃지 세트 만족도가 높았습니다.',
+    author: '손오공덕후',
+  },
+  {
+    category: '질문',
+    title: '일본 온라인 한정 쿠지 배송대행 써보신 분 있나요?',
+    content: '처음 이용해보려고 하는데 관세나 합배송 이슈가 궁금합니다.\n실제 주문해보신 분 있으면 추천 업체와 주의점 부탁드립니다.',
+    author: '익명',
+  },
+  {
+    category: '정보',
+    title: '이번 달 발매 일정 중 온라인 판매 먼저 열리는 것 정리',
+    content: '라인업 캘린더 기준으로 온라인 판매가 빠른 상품만 모아봤습니다.\n원피스, 치이카와, 하이큐 쪽이 초반에 몰려 있습니다.',
+    author: 'calendar_lab',
+  },
+];
+
+const COMMUNITY_FEED = [
+  {
+    type: 'system_notice',
+    source: 'system',
+    title: '실시간 피드가 활성화되었습니다',
+    body: '새 게시글 등록, 수정, 삭제 이벤트가 이 영역에 순서대로 기록됩니다.',
+    author: 'KujiHub',
+    link: '/community',
+  },
+  {
+    type: 'lineup_alert',
+    source: 'lineup',
+    title: '이번 주 발매 일정 업데이트',
+    body: '라인업 캘린더가 최신 발매 정보로 새로고침되었습니다.',
+    author: 'KujiHub',
+    link: '/',
+  },
+];
+
 async function main() {
   console.log('🌱 시드 데이터 삽입 시작...');
 
@@ -65,6 +111,52 @@ async function main() {
       },
     });
     console.log(`  ✅ 생성: [${kuji.id}] ${kuji.title}`);
+  }
+
+  for (const postData of COMMUNITY_POSTS) {
+    const existing = await prisma.communityPost.findFirst({
+      where: {
+        title: postData.title,
+        author: postData.author,
+      },
+    });
+
+    if (existing) {
+      console.log(`  ⏭  이미 존재: ${postData.title}`);
+      continue;
+    }
+
+    const created = await prisma.communityPost.create({ data: postData });
+    console.log(`  ✅ 게시글 생성: [${created.id}] ${created.title}`);
+
+    await prisma.communityFeedItem.create({
+      data: {
+        type: 'post_created',
+        source: 'community',
+        title: created.title,
+        body: `${created.author}님이 새 글을 등록했습니다.`,
+        author: created.author,
+        link: `/community/${created.id}`,
+        postId: created.id,
+      },
+    });
+  }
+
+  for (const feedData of COMMUNITY_FEED) {
+    const existing = await prisma.communityFeedItem.findFirst({
+      where: {
+        type: feedData.type,
+        title: feedData.title,
+      },
+    });
+
+    if (existing) {
+      console.log(`  ⏭  이미 존재: ${feedData.title}`);
+      continue;
+    }
+
+    const created = await prisma.communityFeedItem.create({ data: feedData });
+    console.log(`  ✅ 피드 생성: [${created.id}] ${created.title}`);
   }
 
   console.log('🌱 시드 완료!');
