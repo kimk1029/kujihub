@@ -3,28 +3,50 @@ import logoImg from '../assets/logo.png';
 
 export function Layout() {
   const loc = useLocation();
-  const isHome = loc.pathname === '/';
-  const isKuji = loc.pathname.startsWith('/kuji');
-  const isFeed = loc.pathname.startsWith('/feed');
-  const isCommunity = loc.pathname.startsWith('/community');
-  const isProfile = loc.pathname === '/profile';
+  
+  const navItems = [
+    { path: '/', label: 'DASHBOARD', icon: '🏠' },
+    { path: '/kuji', label: 'KUJI LIST', icon: '🎰' },
+    { path: '/feed', label: 'LIVE FEED', icon: '📡' },
+    { path: '/community', label: 'COMMUNITY', icon: '👥' },
+    { path: '/profile', label: 'MY PORTAL', icon: '👤' },
+  ];
 
   return (
     <div className="layout">
-      <header className="header">
-        <Link to="/" className="logo-container">
-          <img src={logoImg} alt="KujiHub Logo" className="logo-img" />
-          <span className="logo-text">쿠지허브</span>
-        </Link>
-        <nav className="nav">
-          <Link to="/" className={isHome ? 'active' : ''}>홈</Link>
-          <Link to="/kuji" className={isKuji ? 'active' : ''}>쿠지</Link>
-          <Link to="/feed" className={isFeed ? 'active' : ''}>실시간 피드</Link>
-          <Link to="/community" className={isCommunity ? 'active' : ''}>커뮤니티</Link>
-          <Link to="/profile" className={isProfile ? 'active' : ''}>MY</Link>
+      <aside className="sidebar">
+        <div className="sidebar-header">
+          <Link to="/" className="logo-container">
+            <img src={logoImg} alt="KujiHub Logo" className="logo-img" />
+            <span className="logo-text">KUJIHUB</span>
+          </Link>
+        </div>
+        <nav className="sidebar-nav">
+          {navItems.map((item) => {
+            const isActive = item.path === '/' 
+              ? loc.pathname === '/' 
+              : loc.pathname.startsWith(item.path);
+            
+            return (
+              <Link 
+                key={item.path} 
+                to={item.path} 
+                className={`nav-item ${isActive ? 'active' : ''}`}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
-      </header>
-      <main className="main">
+        <div style={{ padding: '24px', borderTop: '1px solid #d1d9e6' }}>
+          <div className="btn btn-neu" style={{ width: '100%', fontSize: '0.8rem' }}>
+            LOGOUT
+          </div>
+        </div>
+      </aside>
+
+      <main className="main-content">
         <Outlet />
       </main>
     </div>

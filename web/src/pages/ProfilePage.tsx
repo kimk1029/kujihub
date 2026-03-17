@@ -1,34 +1,81 @@
 export function ProfilePage() {
   return (
-    <div className="page profile-page">
-      <div className="profile-header profile-section">
-        <div className="profile-avatar">👤</div>
-        <div className="profile-info">
-          <h1>내 프로필</h1>
-          <p>연결된 계정 정보가 표시될 예정입니다.</p>
-        </div>
-      </div>
+    <div className="animate-in">
+      <header className="page-header">
+        <h1 className="page-title">My Portal</h1>
+        <div className="btn btn-primary">EDIT PROFILE</div>
+      </header>
 
-      <div className="stats-grid">
-        <div className="stat-item">
-          <span className="stat-label">작성한 글</span>
-          <span className="stat-value">-</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">누적 뽑기</span>
-          <span className="stat-value">-</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">나의 컬렉션</span>
-          <span className="stat-value">-</span>
-        </div>
-      </div>
+      <div className="profile-dashboard">
+        {/* Sidebar / Profile Summary */}
+        <aside className="profile-sidebar">
+          <div className="card profile-avatar-container">
+            <div className="profile-avatar-large">👤</div>
+            <h2 className="profile-name">Kuji Enthusiast</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>Member since March 2026</p>
+          </div>
 
-      <div className="profile-section" style={{ padding: '24px' }}>
-        <h2 style={{ margin: '0 0 16px', fontSize: '1.25rem', fontWeight: 800 }}>최근 활동</h2>
-        <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '40px 0' }}>
-          최근 활동 내역이 없습니다.
-        </p>
+          <div className="card">
+            <h3 className="card-title">CREDITS</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '1.5rem', fontWeight: 900 }}>₩ 45,000</span>
+              <div className="btn btn-neu" style={{ padding: '8px 12px', fontSize: '0.7rem' }}>TOP UP</div>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="card-title">SETTINGS</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="btn btn-neu" style={{ justifyContent: 'flex-start', fontSize: '0.8rem' }}>🔔 NOTIFICATIONS</div>
+              <div className="btn btn-neu" style={{ justifyContent: 'flex-start', fontSize: '0.8rem' }}>🔒 SECURITY</div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content / Stats & Activity */}
+        <section className="profile-main">
+          <div className="dashboard-grid">
+            <div className="card stat-card">
+              <span className="stat-label">TOTAL DRAWS</span>
+              <span className="stat-value">124</span>
+            </div>
+            <div className="card stat-card">
+              <span className="stat-label">PRIZES WON</span>
+              <span className="stat-value">18</span>
+            </div>
+            <div className="card stat-card">
+              <span className="stat-label">POSTS</span>
+              <span className="stat-value">32</span>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="card-title">RECENT ACTIVITY</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="neu-flat-sm" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <p style={{ fontWeight: 800, fontSize: '0.95rem' }}>Ichiban Kuji: Dragon Ball Z</p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pulled 5 tickets • 2 hours ago</p>
+                  </div>
+                  <div style={{ fontWeight: 900, color: 'var(--primary)' }}>- ₩ 50,000</div>
+                </div>
+              ))}
+            </div>
+            <div className="btn btn-neu" style={{ width: '100%', marginTop: '20px', fontSize: '0.8rem' }}>VIEW ALL ACTIVITY</div>
+          </div>
+
+          <div className="card">
+            <h3 className="card-title">MY COLLECTION</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+              {[1, 2, 4, 8].map((i) => (
+                <div key={i} className="neu-flat-sm" style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '2rem' }}>
+                  {['🎁', '🏆', '🧸', '🎮'][i % 4]}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

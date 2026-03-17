@@ -1,112 +1,95 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
-import { fetchLineup, buildScheduleByDate } from '../api/kujiLineup';
-import type { ScheduleByDate, ScheduleEntry } from '../types/kuji';
-import { KujiCard } from '../components/KujiCard';
-
-dayjs.locale('ko');
+import { Link } from 'react-router-dom';
 
 export function HomePage() {
-  const [year, setYear] = useState(() => dayjs().year());
-  const [month, setMonth] = useState(() => dayjs().month() + 1);
-  const [scheduleByDate, setScheduleByDate] = useState<ScheduleByDate>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(dayjs().format('YYYY-MM-DD'));
-
-  const loadMonth = useCallback(async (y: number, m: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchLineup(y, m);
-      setScheduleByDate(buildScheduleByDate(data));
-    } catch (e) {
-      setScheduleByDate({});
-      setError(e instanceof Error ? e.message : '메인 데이터를 불러올 수 없습니다.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadMonth(year, month);
-  }, [year, month, loadMonth]);
-
-  const calendarDays = useMemo(() => {
-    const start = dayjs(`${year}-${String(month).padStart(2, '0')}-01`);
-    const daysInMonth = start.daysInMonth();
-    const firstDow = start.day();
-    const cells: { date: string; label: number; isCurrentMonth: boolean }[] = [];
-    const prevMonth = start.subtract(1, 'month');
-    const prevDays = prevMonth.daysInMonth();
-    for (let i = 0; i < firstDow; i++) {
-      const d = prevDays - firstDow + 1 + i;
-      cells.push({ date: prevMonth.date(d).format('YYYY-MM-DD'), label: d, isCurrentMonth: false });
-    }
-    for (let d = 1; d <= daysInMonth; d++) {
-      cells.push({ date: start.date(d).format('YYYY-MM-DD'), label: d, isCurrentMonth: true });
-    }
-    const rest = 42 - cells.length;
-    const nextMonth = start.add(1, 'month');
-    for (let i = 0; i < rest; i++) {
-      cells.push({ date: nextMonth.date(i + 1).format('YYYY-MM-DD'), label: i + 1, isCurrentMonth: false });
-    }
-    return cells;
-  }, [year, month]);
-
-  const selectedEntries: ScheduleEntry[] = selectedDate ? scheduleByDate[selectedDate] ?? [] : [];
-
   return (
-    <div className="page home-page">
-      <section className="home-hero-flat">
-        <div className="portal-hero__eyebrow" style={{ color: '#B08A1E' }}>HOME</div>
-        <h1 className="home-hero-flat__title">발매 일정 홈</h1>
-        <p className="home-hero-flat__body">메인에서는 발매 일정만 간결하게 보고, 커뮤니티와 피드는 GNB에서 각각 분리해서 확인합니다.</p>
-      </section>
+    <div className="animate-in">
+      <header className="page-header">
+        <h1 className="page-title">Operational Dashboard</h1>
+        <div className="btn btn-primary">GO TO SHOP</div>
+      </header>
 
-      <div className="home-grid-flat">
-        <section className="home-calendar-flat">
-          <div className="calendar-header">
-            <h2 className="calendar-title">{year}년 {month}월</h2>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="calendar-nav" onClick={() => { if (month === 1) { setYear((y) => y - 1); setMonth(12); } else setMonth((m) => m - 1); }}>‹</button>
-              <button className="calendar-nav" onClick={() => { if (month === 12) { setYear((y) => y + 1); setMonth(1); } else setMonth((m) => m + 1); }}>›</button>
+      <div className="dashboard-grid">
+        <div className="card stat-card">
+          <span className="stat-label">LIVE SESSIONS</span>
+          <span className="stat-value">1,204</span>
+        </div>
+        <div className="card stat-card">
+          <span className="stat-label">TOTAL KUJI LINEUPS</span>
+          <span className="stat-value">85</span>
+        </div>
+        <div className="card stat-card">
+          <span className="stat-label">ACTIVE DRAWERS</span>
+          <span className="stat-value">342</span>
+        </div>
+        <div className="card stat-card">
+          <span className="stat-label">SYSTEM STATUS</span>
+          <span className="stat-value" style={{ color: 'var(--success)' }}>ONLINE</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
+        <div className="card">
+          <h3 className="card-title">RECENT RELEASE CALENDAR</h3>
+          <div className="neu-flat-sm" style={{ padding: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center' }}>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
+                <div key={d} style={{ fontWeight: 900, fontSize: '0.8rem', color: 'var(--text-muted)' }}>{d}</div>
+              ))}
+              {Array.from({ length: 31 }).map((_, i) => (
+                <div 
+                  key={i} 
+                  className={i + 1 === 18 ? 'neu-pressed' : 'neu-flat-sm'}
+                  style={{ 
+                    aspectRatio: '1', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    fontSize: '0.9rem',
+                    fontWeight: i + 1 === 18 ? 900 : 700,
+                    color: i + 1 === 18 ? 'var(--primary)' : 'inherit'
+                  }}
+                >
+                  {i + 1}
+                </div>
+              ))}
             </div>
           </div>
-          <div className="calendar-grid home-calendar-flat__grid">
-            {['일', '월', '화', '수', '목', '금', '토'].map((d) => (
-              <div key={d} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', paddingBottom: '6px' }}>{d}</div>
-            ))}
-            {calendarDays.map((cell) => {
-              const hasSchedule = !!scheduleByDate[cell.date];
-              const isSelected = selectedDate === cell.date;
-              return (
-                <button key={cell.date} type="button" className={`calendar-day ${!cell.isCurrentMonth ? 'other-month' : ''} ${isSelected ? 'selected' : ''}`} onClick={() => setSelectedDate(cell.date)}>
-                  <span>{cell.label}</span>
-                  {hasSchedule && !isSelected && <span style={{ position: 'absolute', bottom: '5px', width: '4px', height: '4px', borderRadius: '50%', background: 'var(--primary)' }} />}
-                </button>
-              );
-            })}
-          </div>
-          {loading && <div className="home-flat-note">달력 불러오는 중…</div>}
-          {error && <div className="error-box">{error}</div>}
-        </section>
+        </div>
 
-        <section className="home-release-flat">
-          <div className="calendar-header" style={{ marginBottom: '14px' }}>
-            <h2 className="calendar-title">{selectedDate ? `${dayjs(selectedDate).format('M월 D일')} 발매 소식` : '발매 소식'}</h2>
-          </div>
-          <div className="kuji-grid">
-            {selectedEntries.length === 0 ? (
-              <div className="board-empty">
-                <p className="board-empty__title">선택한 날짜에 등록된 발매 정보가 없습니다.</p>
+        <div className="card">
+          <h3 className="card-title">LIVE FEED PREVIEW</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="neu-flat-sm" style={{ padding: '12px', display: 'flex', gap: '12px' }}>
+                <div style={{ width: '40px', height: '40px', background: '#ccc', flexShrink: 0 }}></div>
+                <div>
+                  <p style={{ fontSize: '0.85rem', fontWeight: 800 }}>User_{i}029 just pulled an A Prize!</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>5 mins ago</p>
+                </div>
               </div>
-            ) : (
-              selectedEntries.map((entry, i) => <KujiCard key={`${entry.item.slug}-${i}`} entry={entry} />)
-            )}
+            ))}
           </div>
-        </section>
+          <Link to="/feed" className="btn btn-neu" style={{ width: '100%', marginTop: '16px', fontSize: '0.8rem' }}>VIEW FULL FEED</Link>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: '24px' }}>
+        <h3 className="card-title">FEATURED KUJI</h3>
+        <div className="kuji-grid">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="card kuji-card">
+              <div className="kuji-card-img">🎁</div>
+              <div className="kuji-card-body">
+                <span style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--primary)' }}>HOT ITEM</span>
+                <h4 className="kuji-card-title">Ichiban Kuji: Premium Edition {i}</h4>
+                <div className="kuji-card-footer">
+                  <span style={{ fontWeight: 900 }}>₩ 12,000</span>
+                  <Link to="/kuji" className="btn btn-neu" style={{ padding: '6px 12px', fontSize: '0.7rem' }}>DETAILS</Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

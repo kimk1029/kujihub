@@ -6,22 +6,30 @@ interface KujiCardProps {
 
 export function KujiCard({ entry }: KujiCardProps) {
   const isOnline = entry.type === 'online';
-  const badgeText = isOnline ? '온라인 전용' : '매장 판매';
+  const badgeText = isOnline ? 'ONLINE' : 'RETAIL';
   const title = entry.item.translatedTitle || entry.item.title;
   
   return (
-    <div className="kuji-card">
-      <div className="kuji-card__image-placeholder">
+    <div className="card kuji-card" style={{ padding: 0 }}>
+      <div className="kuji-card-img" style={{ height: '140px', fontSize: '2.5rem' }}>
         {isOnline ? '🌐' : '🏪'}
       </div>
-      <div className="kuji-card__content">
-        <span className={`kuji-card__badge ${isOnline ? 'gold' : ''}`}>
+      <div className="kuji-card-body">
+        <span style={{ 
+          fontSize: '0.65rem', 
+          fontWeight: 900, 
+          padding: '2px 8px', 
+          background: isOnline ? 'var(--primary-dark)' : '#d1d9e6',
+          color: isOnline ? 'white' : 'var(--text-muted)',
+          display: 'inline-block',
+          marginBottom: '8px'
+        }}>
           {badgeText}
         </span>
-        <div className="kuji-card__title">{title}</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>상세보기</span>
-          <span style={{ fontSize: '1rem' }}>➡️</span>
+        <h4 className="kuji-card-title" style={{ fontSize: '1rem', height: '2.4em', overflow: 'hidden' }}>{title}</h4>
+        <div className="kuji-card-footer">
+          <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)' }}>DETAILS</span>
+          <span style={{ fontSize: '0.8rem' }}>▶</span>
         </div>
       </div>
     </div>
