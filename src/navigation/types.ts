@@ -9,7 +9,7 @@ export type RootStackParamList = {
 
 export type MainTabsParamList = {
   Home: undefined;
-  Media: undefined;
+  Feed: undefined;
   Draw: undefined;
   Community: undefined;
   My: undefined;

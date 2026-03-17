@@ -5,7 +5,7 @@ import { FAB, Portal } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { HomeScreen } from '../screens/HomeScreen';
-import { MediaScreen } from '../screens/MediaScreen';
+import { FeedScreen } from '../screens/FeedScreen';
 import { KujiDrawStack } from './KujiDrawStack';
 import { CommunityStack } from './CommunityStack';
 import { MyScreen } from '../screens/MyScreen';
@@ -50,18 +50,18 @@ export function MainTabs() {
           component={HomeScreen}
           options={{
             title: '홈',
-            tabBarIcon: ({ color, size }) => (
+            tabBarIcon: ({ color, size: _size }) => (
               <MaterialCommunityIcons name="home-variant" size={26} color={color} />
             ),
           }}
         />
         <Tab.Screen
-          name="Media"
-          component={MediaScreen}
+          name="Feed"
+          component={FeedScreen}
           options={{
-            title: '미디어',
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="play-circle" size={26} color={color} />
+            title: '피드',
+            tabBarIcon: ({ color, size: _size }) => (
+              <MaterialCommunityIcons name="rss" size={26} color={color} />
             ),
           }}
         />
@@ -70,7 +70,7 @@ export function MainTabs() {
           component={KujiDrawStack}
           options={{
             title: '뽑기',
-            tabBarIcon: ({ color, size }) => (
+            tabBarIcon: ({ color, size: _size }) => (
               <MaterialCommunityIcons name="ticket-percent" size={26} color={color} />
             ),
           }}
@@ -80,7 +80,7 @@ export function MainTabs() {
           component={CommunityStack}
           options={{
             title: '커뮤니티',
-            tabBarIcon: ({ color, size }) => (
+            tabBarIcon: ({ color, size: _size }) => (
               <MaterialCommunityIcons name="chat-processing" size={26} color={color} />
             ),
           }}
@@ -90,7 +90,7 @@ export function MainTabs() {
           component={MyScreen}
           options={{
             title: '마이',
-            tabBarIcon: ({ color, size }) => (
+            tabBarIcon: ({ color, size: _size }) => (
               <MaterialCommunityIcons name="account-circle" size={26} color={color} />
             ),
           }}

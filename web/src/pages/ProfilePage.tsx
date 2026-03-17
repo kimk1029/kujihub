@@ -1,34 +1,26 @@
 export function ProfilePage() {
-  const user = {
-    nickname: '쿠지마스터',
-    email: 'kuji@example.com',
-    postsCount: 12,
-    drawsCount: 45,
-    collectionCount: 8,
-  };
-
   return (
     <div className="page profile-page">
       <div className="profile-header profile-section">
         <div className="profile-avatar">👤</div>
         <div className="profile-info">
-          <h1>{user.nickname}</h1>
-          <p>{user.email}</p>
+          <h1>내 프로필</h1>
+          <p>연결된 계정 정보가 표시될 예정입니다.</p>
         </div>
       </div>
 
       <div className="stats-grid">
         <div className="stat-item">
           <span className="stat-label">작성한 글</span>
-          <span className="stat-value">{user.postsCount}</span>
+          <span className="stat-value">-</span>
         </div>
         <div className="stat-item">
           <span className="stat-label">누적 뽑기</span>
-          <span className="stat-value">{user.drawsCount}</span>
+          <span className="stat-value">-</span>
         </div>
         <div className="stat-item">
           <span className="stat-label">나의 컬렉션</span>
-          <span className="stat-value">{user.collectionCount}</span>
+          <span className="stat-value">-</span>
         </div>
       </div>
 

@@ -53,7 +53,7 @@ export function CommunityListScreen() {
 
         <View style={styles.rowBody}>
           <View style={styles.rowHeader}>
-            <Chip compact style={styles.categoryChip} textStyle={styles.categoryChipText}>자유게시판</Chip>
+            <Chip compact style={styles.categoryChip} textStyle={styles.categoryChipText}>{item.category}</Chip>
             <Text style={styles.rowDate}>{dayjs(item.createdAt).format('MM.DD HH:mm')}</Text>
           </View>
 

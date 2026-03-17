@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
+import { FeedPage } from './pages/FeedPage';
 import { CommunityListPage } from './pages/CommunityListPage';
 import { CommunityDetailPage } from './pages/CommunityDetailPage';
 import { CommunityPostFormPage } from './pages/CommunityPostFormPage';
@@ -12,6 +13,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
+          <Route path="feed" element={<FeedPage />} />
           <Route path="community" element={<CommunityListPage />} />
           <Route path="community/new" element={<CommunityPostFormPage />} />
           <Route path="community/edit/:id" element={<CommunityPostFormPage />} />
