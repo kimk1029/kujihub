@@ -103,7 +103,7 @@ export function CommunityListPage() {
               {[1, 2, 3].map(i => (
                 <div key={i} style={{ fontSize: '0.9rem', display: 'flex', gap: '10px' }}>
                   <span style={{ fontWeight: 900, color: 'var(--primary)', minWidth: '20px' }}>{i}</span>
-                  <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', white-space: 'nowrap' }}>
+                  <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     오늘 뽑은 제일 예쁜 피규어 자랑합니다!
                   </span>
                 </div>

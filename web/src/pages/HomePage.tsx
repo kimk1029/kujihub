@@ -67,7 +67,7 @@ export function HomePage() {
                 <button className="calendar-nav" onClick={() => { if (month === 12) { setYear(y => y + 1); setMonth(1); } else setMonth(m => m + 1); }}>›</button>
               </div>
             </div>
-            <div className="calendar-grid">
+            <div className="calendar-grid" style={{ position: 'relative' }}>
               {['일', '월', '화', '수', '목', '금', '토'].map(d => (
                 <div key={d} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', paddingBottom: '8px' }}>{d}</div>
               ))}
@@ -81,7 +81,17 @@ export function HomePage() {
                   </button>
                 );
               })}
+              {loading && (
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', zIndex: 10 }}>
+                  <div className="loading-shimmer" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+                </div>
+              )}
             </div>
+            {error && (
+              <div style={{ marginTop: '16px', padding: '12px', background: '#FEF2F2', color: '#EF4444', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, border: '1px solid #FEE2E2' }}>
+                ⚠️ {error}
+              </div>
+            )}
           </section>
 
           <section className="lineup-section">
