@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import dayjs from 'dayjs';
 import { ensureKujiPlayer, kujiDrawApi } from '../api/kujiDraw';
 import type { KujiBoardResponse, KujiPlayer, KujiReserveResult } from '../types/kujiDraw';
-import { Button, Card, Badge } from '../components/ui';
+import { Button, Card } from '../components/ui';
 import { KujiRevealModal } from '../components/KujiRevealModal';
 
 function sortNumeric(values: number[]) {
@@ -44,7 +43,7 @@ export function KujiBoardPage() {
 
   const remaining = useMemo(() => {
     if (!board) return 0;
-    return 80 - Object.values(board.slots).filter((slot) => slot.status === 'drawn').length;
+    return 80 - Object.values(board.slots).filter((slot: any) => slot.status === 'drawn').length;
   }, [board]);
 
   const handleFinishReveal = async () => {
