@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { communityApi } from '../api/community';
@@ -39,6 +39,8 @@ export function CommunityDetailPage() {
     }
   };
 
+  const contentLength = useMemo(() => post?.content.trim().length ?? 0, [post?.content]);
+
   if (loading) {
     return (
       <div className="page centered">
@@ -59,26 +61,41 @@ export function CommunityDetailPage() {
 
   return (
     <div className="page community-detail-page">
-      <div className="detail-container">
-        <h1 className="detail-title">{post.title}</h1>
-        <div className="detail-meta">
+      <section className="article-hero">
+        <div className="article-hero__eyebrow">COMMUNITY ARTICLE</div>
+        <h1 className="article-hero__title">{post.title}</h1>
+        <div className="article-hero__meta">
           <span>{post.author}</span>
-          <span style={{ margin: '0 8px', opacity: 0.3 }}>|</span>
-          <span>{dayjs(post.updatedAt).format('YYYY.MM.DD HH:mm')}</span>
+          <span>등록 {dayjs(post.createdAt).format('YYYY.MM.DD HH:mm')}</span>
+          <span>수정 {dayjs(post.updatedAt).format('YYYY.MM.DD HH:mm')}</span>
         </div>
-        <div className="detail-body">{post.content || '(내용 없음)'}</div>
-        <div className="detail-actions">
-          <Link to={`/community/edit/${post.id}`} className="btn outlined">
-            수정하기
-          </Link>
-          <button type="button" className="btn danger" onClick={handleDelete}>
-            삭제하기
-          </button>
-          <div style={{ flex: 1 }} />
-          <Link to="/community" className="btn primary">
-            목록으로
-          </Link>
-        </div>
+      </section>
+
+      <div className="article-layout">
+        <article className="article-shell">
+          <div className="article-body">
+            {post.content || '(내용 없음)'}
+          </div>
+        </article>
+
+        <aside className="portal-side">
+          <section className="portal-panel">
+            <h2 className="portal-panel__title">글 정보</h2>
+            <ul className="portal-list">
+              <li>작성자: {post.author}</li>
+              <li>본문 길이: {contentLength.toLocaleString()}자</li>
+              <li>게시글 번호: {post.id}</li>
+            </ul>
+          </section>
+          <section className="portal-panel">
+            <h2 className="portal-panel__title">바로가기</h2>
+            <div className="article-side-actions">
+              <Link to={`/community/edit/${post.id}`} className="btn outlined">수정하기</Link>
+              <Link to="/community" className="btn dark">목록으로</Link>
+              <button type="button" className="btn danger" onClick={handleDelete}>삭제하기</button>
+            </div>
+          </section>
+        </aside>
       </div>
     </div>
   );

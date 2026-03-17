@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { communityApi } from '../api/community';
 
@@ -36,7 +36,7 @@ export function CommunityPostFormPage() {
   }, [editId]);
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const t = title.trim();
       if (!t) return;
@@ -63,6 +63,8 @@ export function CommunityPostFormPage() {
     [editId, title, content, author, navigate]
   );
 
+  const contentLength = useMemo(() => content.trim().length, [content]);
+
   if (fetching) {
     return (
       <div className="page centered">
@@ -73,59 +75,71 @@ export function CommunityPostFormPage() {
   }
 
   return (
-    <div className="page form-page">
-      <div className="detail-container">
-        <h1 className="form-heading" style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>
-          {editId ? '글 수정하기' : '새로운 글 작성'}
-        </h1>
-        <form onSubmit={handleSubmit} className="post-form">
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontWeight: 700, marginBottom: '8px', fontSize: '0.9rem' }}>
-              제목
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="제목을 입력하세요"
-                required
-                style={{ marginTop: '4px', width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--outline)', fontSize: '1rem' }}
-              />
-            </label>
-          </div>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontWeight: 700, marginBottom: '8px', fontSize: '0.9rem' }}>
-              작성자
-              <input
-                type="text"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                placeholder="익명"
-                style={{ marginTop: '4px', width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--outline)', fontSize: '1rem' }}
-              />
-            </label>
-          </div>
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontWeight: 700, marginBottom: '8px', fontSize: '0.9rem' }}>
-              내용
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="내용을 입력하세요"
-                rows={8}
-                style={{ marginTop: '4px', width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--outline)', fontSize: '1rem', resize: 'vertical' }}
-              />
-            </label>
-          </div>
-          <div className="form-actions" style={{ display: 'flex', gap: '12px' }}>
-            <Link to={editId ? `/community/${editId}` : '/community'} className="btn outlined" style={{ flex: 1 }}>
-              취소
-            </Link>
-            <button type="submit" className="btn primary" disabled={!title.trim() || loading} style={{ flex: 2 }}>
-              {loading ? '처리 중…' : editId ? '수정 완료' : '등록하기'}
-            </button>
-          </div>
-        </form>
-      </div>
+    <div className="page editor-page">
+      <section className="editor-hero">
+        <div className="editor-hero__eyebrow">{editId ? 'EDIT POST' : 'NEW POST'}</div>
+        <h1 className="editor-hero__title">{editId ? '게시글 수정하기' : '새 게시글 작성하기'}</h1>
+        <p className="editor-hero__body">
+          클리앙식 게시판 톤에 맞춰 제목과 첫 문장이 먼저 읽히는 글이 좋습니다. 한 줄 제목과 문단 구성이 핵심입니다.
+        </p>
+        <div className="editor-hero__meta">
+          <span className="board-pill">자유게시판</span>
+          <span className="board-pill muted">{contentLength.toLocaleString()}자</span>
+        </div>
+      </section>
+
+      <form onSubmit={handleSubmit} className="editor-shell">
+        <div className="editor-field">
+          <label className="editor-label" htmlFor="title">제목</label>
+          <input
+            id="title"
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.currentTarget.value)}
+            placeholder="한 줄로 핵심이 보이게 작성하세요"
+            required
+            className="editor-input"
+          />
+        </div>
+
+        <div className="editor-field">
+          <label className="editor-label" htmlFor="author">작성자</label>
+          <input
+            id="author"
+            type="text"
+            value={author}
+            onChange={(e) => setAuthor(e.currentTarget.value)}
+            placeholder="익명"
+            className="editor-input"
+          />
+        </div>
+
+        <div className="editor-field">
+          <label className="editor-label" htmlFor="content">내용</label>
+          <textarea
+            id="content"
+            value={content}
+            onChange={(e) => setContent(e.currentTarget.value)}
+            placeholder="발매 정보, 후기, 질문 내용을 문단별로 정리해보세요"
+            rows={12}
+            className="editor-textarea"
+          />
+        </div>
+
+        <div className="editor-guide">
+          <span>제목은 30자 안팎이면 읽기 좋습니다.</span>
+          <span>본문은 날짜, 장소, 상품명 순으로 정리하면 빠르게 읽힙니다.</span>
+        </div>
+
+        <div className="editor-actions">
+          <Link to={editId ? `/community/${editId}` : '/community'} className="btn outlined">
+            취소
+          </Link>
+          <button type="submit" className="btn dark" disabled={!title.trim() || loading}>
+            {loading ? '처리 중…' : editId ? '수정 완료' : '등록하기'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

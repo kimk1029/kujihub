@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { communityApi } from '../api/community';
@@ -26,90 +26,110 @@ export function CommunityListPage() {
     fetchList();
   }, [fetchList]);
 
+  const latestPost = useMemo(() => posts[0], [posts]);
+
   if (loading) {
     return (
       <div className="page centered">
         <div className="loading-shimmer" style={{ width: '60px', height: '60px', borderRadius: '50%' }} />
-        <p style={{ marginTop: '20px', fontWeight: 800, color: 'var(--primary)' }}>커뮤니티 연결 중…</p>
+        <p style={{ marginTop: '20px', fontWeight: 800, color: 'var(--primary)' }}>커뮤니티 포털 동기화 중…</p>
       </div>
     );
   }
 
   return (
-    <div className="page community-list-page">
-      <div className="app-grid">
-        <div className="app-main-content">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h2 className="section-title" style={{ margin: 0 }}><i></i>커뮤니티 광장</h2>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <select style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--outline)', fontSize: '0.85rem', fontWeight: 600 }}>
-                <option>최신순</option>
-                <option>인기순</option>
-              </select>
+    <div className="page community-portal-page">
+      <section className="portal-hero">
+        <div className="portal-hero__eyebrow">COMMUNITY PORTAL</div>
+        <div className="portal-hero__header">
+          <div>
+            <h1 className="portal-hero__title">쿠지 커뮤니티 포털</h1>
+            <p className="portal-hero__body">
+              클리앙 보드처럼 제목과 메타를 빠르게 훑고, 필요한 글로 바로 이동할 수 있게 정리한 게시판입니다.
+            </p>
+          </div>
+          <Link to="/community/new" className="btn dark">
+            글쓰기
+          </Link>
+        </div>
+        <div className="portal-hero__stats">
+          <div className="portal-stat">
+            <span className="portal-stat__label">전체 글</span>
+            <strong className="portal-stat__value">{posts.length}</strong>
+          </div>
+          <div className="portal-stat">
+            <span className="portal-stat__label">최신 글</span>
+            <strong className="portal-stat__value portal-stat__value--small">
+              {latestPost ? dayjs(latestPost.createdAt).format('YYYY.MM.DD HH:mm') : '아직 없음'}
+            </strong>
+          </div>
+          <div className="portal-stat">
+            <span className="portal-stat__label">주요 성격</span>
+            <strong className="portal-stat__value portal-stat__value--small">정보형 자유게시판</strong>
+          </div>
+        </div>
+      </section>
+
+      <div className="portal-layout">
+        <section className="board-shell">
+          <div className="board-toolbar">
+            <div className="board-toolbar__left">
+              <span className="board-pill">전체</span>
+              <span className="board-pill muted">최신순</span>
             </div>
+            <div className="board-toolbar__right">총 {posts.length}건</div>
+          </div>
+
+          <div className="board-header">
+            <span>번호</span>
+            <span>제목</span>
+            <span>작성자</span>
+            <span>등록일</span>
           </div>
 
           {error && <div className="error-box">{error}</div>}
 
-          <div className="community-container">
-            {posts.length === 0 && !error ? (
-              <div className="section-card" style={{ textAlign: 'center', padding: '60px 20px' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</div>
-                <p style={{ fontWeight: 700, color: 'var(--text-muted)' }}>아직 등록된 게시글이 없습니다.</p>
-                <Link to="/community/new" className="btn primary" style={{ marginTop: '20px' }}>첫 글 작성하기</Link>
-              </div>
-            ) : (
-              posts.map((post) => (
-                <Link key={post.id} to={`/community/${post.id}`} className="post-card-link">
-                  <div className="post-card">
-                    <div className="post-card__content">
-                      <span className="post-card__tag">자유게시판</span>
-                      <h3 className="post-card__title">{post.title}</h3>
-                      <p className="post-card__excerpt">
-                        {post.content || '내용이 없는 게시글입니다.'}
-                      </p>
-                      <div className="post-card__footer">
-                        <div className="post-card__meta">
-                          <div className="user-badge">
-                            <div className="user-avatar-sm">👤</div>
-                            <span>{post.author}</span>
-                          </div>
-                          <span style={{ opacity: 0.5 }}>•</span>
-                          <span>{dayjs(post.createdAt).format('YYYY.MM.DD')}</span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '12px', opacity: 0.7 }}>
-                          <span>💬 0</span>
-                          <span>👁️ 0</span>
-                        </div>
-                      </div>
+          {!error && posts.length === 0 ? (
+            <div className="board-empty">
+              <p className="board-empty__title">아직 등록된 게시글이 없습니다.</p>
+              <p className="board-empty__body">첫 글을 작성해 커뮤니티 보드를 시작해보세요.</p>
+              <Link to="/community/new" className="btn dark">첫 글 작성하기</Link>
+            </div>
+          ) : (
+            <div className="board-list">
+              {posts.map((post, index) => (
+                <Link key={post.id} to={`/community/${post.id}`} className="board-row">
+                  <span className="board-row__no">{String(posts.length - index).padStart(2, '0')}</span>
+                  <div className="board-row__main">
+                    <div className="board-row__titleLine">
+                      <span className="board-row__badge">자유</span>
+                      <strong className="board-row__title">{post.title}</strong>
                     </div>
+                    <p className="board-row__excerpt">{post.content || '내용이 없는 게시글입니다.'}</p>
                   </div>
+                  <span className="board-row__author">{post.author}</span>
+                  <span className="board-row__date">{dayjs(post.createdAt).format('YYYY.MM.DD')}</span>
                 </Link>
-              ))
-            )}
-          </div>
-        </div>
-
-        <aside className="app-sidebar">
-          <div className="section-card">
-            <h3 className="section-title"><i></i>커뮤니티 가이드</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-              서로를 존중하는 즐거운 커뮤니티를 만들어요. 불쾌감을 주는 게시글은 제재될 수 있습니다.
-            </p>
-          </div>
-          <div className="section-card">
-            <h3 className="section-title"><i></i>실시간 인기글</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {[1, 2, 3].map(i => (
-                <div key={i} style={{ fontSize: '0.9rem', display: 'flex', gap: '10px' }}>
-                  <span style={{ fontWeight: 900, color: 'var(--primary)', minWidth: '20px' }}>{i}</span>
-                  <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    오늘 뽑은 제일 예쁜 피규어 자랑합니다!
-                  </span>
-                </div>
               ))}
             </div>
-          </div>
+          )}
+        </section>
+
+        <aside className="portal-side">
+          <section className="portal-panel">
+            <h2 className="portal-panel__title">이용 안내</h2>
+            <p className="portal-panel__body">
+              질문, 발매 정보, 현장 후기처럼 읽는 사람이 바로 핵심을 파악할 수 있는 제목이 잘 읽힙니다.
+            </p>
+          </section>
+          <section className="portal-panel">
+            <h2 className="portal-panel__title">작성 팁</h2>
+            <ul className="portal-list">
+              <li>제목은 한 줄로 핵심을 먼저 쓰기</li>
+              <li>본문은 날짜, 장소, 상품명을 문단으로 구분하기</li>
+              <li>질문 글은 원하는 답을 명확히 적기</li>
+            </ul>
+          </section>
         </aside>
       </div>
 
