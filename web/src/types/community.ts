@@ -8,6 +8,14 @@ export interface CommunityPost {
   updatedAt: string;
 }
 
+export interface CommunityComment {
+  id: number;
+  postId: number;
+  author: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface CommunityFeedItem {
   id: number;
   type: string;

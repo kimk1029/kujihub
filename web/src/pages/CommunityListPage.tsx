@@ -73,45 +73,37 @@ export function CommunityListPage() {
           </ArcadeButton>
         </ArcadeBox>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {posts.map((post, index) => (
-            <ArcadeBox 
-              key={post.id} 
-              label={`LOG_ID: ${String(posts.length - index).padStart(3, '0')}`} 
-              variant="secondary"
-              onClick={() => navigate(`/community/${post.id}`)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <span style={{ 
-                      fontSize: '0.7rem', 
-                      background: 'var(--arcade-primary)', 
-                      color: '#000', 
-                      padding: '4px 8px',
-                      fontWeight: 900 
-                    }}>GENERAL</span>
-                    <h2 style={{ fontSize: '1.25rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>
-                      {post.title}
-                    </h2>
-                  </div>
-                  <p style={{ fontSize: '1rem', color: '#fff', opacity: 0.7, lineHeight: '1.5', fontWeight: 500 }}>
-                    {post.content || 'NO_CONTENT_BODY'}
-                  </p>
-                </div>
-                <div style={{ textAlign: 'right', marginLeft: '24px' }}>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--arcade-accent)', marginBottom: '8px', fontWeight: 900 }}>
-                    USER: {post.author}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
-                    DATE: {dayjs(post.createdAt).format('YYYY.MM.DD')}
-                  </div>
-                </div>
-              </div>
-            </ArcadeBox>
-          ))}
-        </div>
+        <table className="bulletin-board">
+          <thead>
+            <tr className="bulletin-header">
+              <th style={{ width: '80px' }}>ID</th>
+              <th>SUBJECT</th>
+              <th style={{ width: '150px' }}>AUTHOR</th>
+              <th style={{ width: '120px' }}>DATE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {posts.map((post, index) => (
+              <tr 
+                key={post.id} 
+                className="bulletin-row"
+                onClick={() => navigate(`/community/${post.id}`)}
+              >
+                <td style={{ color: 'var(--arcade-accent)', fontWeight: 900 }}>
+                  {String(posts.length - index).padStart(3, '0')}
+                </td>
+                <td className="text-left">
+                  <span className="bulletin-title-prefix">[GENERAL]</span>
+                  <span className="bulletin-title">{post.title}</span>
+                </td>
+                <td style={{ color: '#fff', opacity: 0.8 }}>{post.author}</td>
+                <td style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>
+                  {dayjs(post.createdAt).format('YYYY.MM.DD')}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
 
       <div style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 100 }}>

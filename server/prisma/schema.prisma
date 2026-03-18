@@ -65,8 +65,22 @@ model CommunityPost {
   createdAt DateTime            @default(now()) @map("created_at")
   updatedAt DateTime            @updatedAt @map("updated_at")
   feedItems CommunityFeedItem[]
+  comments  CommunityComment[]
 
   @@map("community_posts")
+}
+
+model CommunityComment {
+  id        Int           @id @default(autoincrement())
+  postId    Int           @map("post_id")
+  author    String        @default("익명")
+  content   String
+  createdAt DateTime      @default(now()) @map("created_at")
+  
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@index([postId, createdAt])
+  @@map("community_comments")
 }
 
 model CommunityFeedItem {

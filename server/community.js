@@ -79,6 +79,49 @@ router.get('/posts/:id', async (req, res) => {
   }
 });
 
+router.get('/posts/:id/comments', async (req, res) => {
+  const postId = Number(req.params.id);
+  if (!postId) return res.status(400).json({ error: 'invalid id' });
+  try {
+    const comments = await prisma.communityComment.findMany({
+      where: { postId },
+      orderBy: { createdAt: 'asc' },
+    });
+    res.json(comments);
+  } catch (error) {
+    console.error('[community comments]', error.message);
+    // If table doesn't exist yet, return empty array safely
+    if (error.code === 'P2021' || error.message.includes('does not exist')) {
+      return res.json([]);
+    }
+    res.status(500).json({ error: 'DB error' });
+  }
+});
+
+router.post('/posts/:id/comments', async (req, res) => {
+  const postId = Number(req.params.id);
+  if (!postId) return res.status(400).json({ error: 'invalid id' });
+  
+  const { author, content } = req.body || {};
+  if (!content || !String(content).trim()) {
+    return res.status(400).json({ error: 'content is required' });
+  }
+  
+  try {
+    const comment = await prisma.communityComment.create({
+      data: {
+        postId,
+        author: String(author || '익명').trim() || '익명',
+        content: String(content).trim(),
+      },
+    });
+    res.status(201).json(comment);
+  } catch (error) {
+    console.error('[create comment]', error.message);
+    res.status(500).json({ error: 'DB error' });
+  }
+});
+
 router.post('/posts', async (req, res) => {
   const { title, content = '', author = '익명', category = '자유' } = req.body || {};
   if (!title || !String(title).trim()) {

@@ -3,6 +3,7 @@ import type {
   CommunityFeedItem,
   CommunityOverview,
   CommunityPost,
+  CommunityComment,
   CreatePostBody,
   UpdatePostBody,
 } from '../types/community';
@@ -20,4 +21,8 @@ export const communityApi = {
     api
       .get<CommunityOverview>('/api/community/overview', { params: { postsLimit, feedLimit } })
       .then((r) => r.data),
+  getComments: (postId: number) => 
+    api.get<CommunityComment[]>(`/api/community/posts/${postId}/comments`).then((r) => r.data),
+  createComment: (postId: number, body: { author: string; content: string }) =>
+    api.post<CommunityComment>(`/api/community/posts/${postId}/comments`, body).then((r) => r.data),
 };
