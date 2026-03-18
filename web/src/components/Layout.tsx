@@ -32,7 +32,7 @@ export function Layout() {
         <div className="sidebar-header" style={{ padding: '24px', borderBottom: '4px solid var(--arcade-secondary)' }}>
           <Link to="/" className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img src={logoImg} alt="KujiHub Logo" className="logo-img" style={{ width: '40px', height: '40px', imageRendering: 'pixelated' }} />
-            <span style={{ color: 'var(--arcade-primary)', fontSize: '1.25rem', fontWeight: 900 }}>KUJIHUB</span>
+            <span className="arcade-font-pixel" style={{ color: 'var(--arcade-primary)', fontSize: '1rem' }}>KUJIHUB</span>
           </Link>
         </div>
 
@@ -47,7 +47,7 @@ export function Layout() {
                 style={{ textDecoration: 'none' }}
               >
                 <div 
-                  className={`${isActive ? 'glitch-text' : ''}`}
+                  className={`arcade-font-pixel ${isActive ? 'glitch-text' : ''}`}
                   style={{ 
                     padding: '14px 16px',
                     color: isActive ? 'var(--arcade-secondary)' : '#fff',
@@ -56,12 +56,11 @@ export function Layout() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
-                    fontSize: '0.85rem',
-                    fontWeight: 900,
+                    fontSize: '0.7rem',
                     transition: 'all 0.2s'
                   }}
                 >
-                  <span>{item.icon}</span>
+                  <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
                   <span>{item.label}</span>
                 </div>
               </Link>
@@ -73,6 +72,7 @@ export function Layout() {
           <ArcadeButton 
             variant="primary" 
             size="sm" 
+            className="arcade-font-pixel"
             style={{ width: '100%', margin: 0 }}
             onClick={() => navigate('/')}
           >

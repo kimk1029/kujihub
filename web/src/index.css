@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
 
+/* NeoDunggeunmo from Noonnu */
 @font-face {
     font-family: 'NeoDunggeunmo';
     src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/NeoDunggeunmo.woff') format('woff');
@@ -29,6 +30,7 @@
 }
 
 body {
+  /* Default to NeoDunggeunmo for most content */
   font-family: 'NeoDunggeunmo', 'VT323', monospace;
   background-color: var(--arcade-bg);
   color: var(--arcade-text);
@@ -38,6 +40,7 @@ body {
   overflow-x: hidden;
 }
 
+/* Titles default to NeoDunggeunmo unless specified */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'NeoDunggeunmo', sans-serif;
   font-weight: normal;
@@ -57,28 +60,10 @@ button, input, textarea, select {
   color: inherit;
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-in {
-  animation: fadeIn 0.4s ease-out forwards;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.blink {
-  animation: blink 1s infinite;
-}
-
 /* Utility Classes */
+/* Specific Arcade Font for Menu and Landing titles */
 .arcade-font-pixel {
-  font-family: 'Press Start 2P', cursive;
+  font-family: 'Press Start 2P', cursive !important;
 }
 
 .glitch-text {
@@ -98,4 +83,23 @@ button, input, textarea, select {
   60% { transform: translate(2px, 2px); }
   80% { transform: translate(2px, -2px); }
   100% { transform: translate(0); }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.blink {
+  animation: blink 1s infinite;
 }
