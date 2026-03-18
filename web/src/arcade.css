@@ -55,6 +55,20 @@
   100% { opacity: 0.98; }
 }
 
+/* Advanced Glitch Animation */
+@keyframes glitch-heavy {
+  0% { transform: translate(0); text-shadow: 2px 2px var(--arcade-primary), -2px -2px var(--arcade-secondary); }
+  20% { transform: translate(-3px, 3px); text-shadow: -2px 2px var(--arcade-primary), 2px -2px var(--arcade-secondary); }
+  40% { transform: translate(-3px, -3px); text-shadow: 2px -2px var(--arcade-primary), -2px 2px var(--arcade-secondary); }
+  60% { transform: translate(3px, 3px); text-shadow: -2px -2px var(--arcade-primary), 2px 2px var(--arcade-secondary); }
+  80% { transform: translate(3px, -3px); text-shadow: 2px 2px var(--arcade-primary), -2px -2px var(--arcade-secondary); }
+  100% { transform: translate(0); text-shadow: -2px 2px var(--arcade-primary), 2px -2px var(--arcade-secondary); }
+}
+
+.glitch-heavy {
+  animation: glitch-heavy 0.2s infinite;
+}
+
 /* Hero Section */
 .arcade-hero {
   min-height: 80vh;
@@ -71,6 +85,7 @@
   text-shadow: 6px 6px 0px var(--arcade-secondary);
   line-height: 1.2;
   font-weight: 900;
+  font-family: 'Press Start 2P', cursive;
 }
 
 .hero-subtitle {
@@ -119,4 +134,16 @@
   0% { filter: brightness(1); }
   50% { filter: brightness(1.3); transform: scale(1.1); }
   100% { filter: brightness(1); }
+}
+
+/* Active Glitch for Buttons */
+.btn-glitch-active:hover {
+  animation: glitch-heavy 0.3s infinite;
+}
+
+.btn-glitch-active:active {
+  animation: glitch-heavy 0.1s infinite !important;
+  background-color: #fff !important;
+  color: #000 !important;
+  transform: scale(0.9) translateY(4px) !important;
 }
