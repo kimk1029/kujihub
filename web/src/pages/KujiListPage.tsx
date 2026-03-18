@@ -44,7 +44,7 @@ export function KujiListPage() {
     <div className="animate-in">
       <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+          <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px', fontWeight: 900 }}>
             SELECT MACHINE
           </h1>
           <p style={{ color: '#fff', fontSize: '0.9rem', opacity: 0.8, fontWeight: 500 }}>
@@ -75,8 +75,18 @@ export function KujiListPage() {
             className="kuji-card-arcade"
             style={{ opacity: item.remaining === 0 ? 0.6 : 1 }}
           >
-            <div className="kuji-img-placeholder" style={{ height: '140px', fontSize: '3rem' }}>
-              {item.remaining === 0 ? '💀' : '🎁'}
+            <div className="kuji-img-placeholder" style={{ height: '180px', overflow: 'hidden', padding: 0 }}>
+              {item.imageUrl ? (
+                <img 
+                  src={item.imageUrl} 
+                  alt={item.title} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', imageRendering: 'auto' }} 
+                />
+              ) : (
+                <div style={{ fontSize: '3rem' }}>
+                  {item.remaining === 0 ? '💀' : '🎁'}
+                </div>
+              )}
             </div>
             <div style={{ padding: '20px 0 0' }}>
               <h2 style={{ fontSize: '1.1rem', marginBottom: '12px', height: '3rem', overflow: 'hidden', fontWeight: 900 }}>

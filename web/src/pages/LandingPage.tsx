@@ -1,9 +1,19 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../arcade.css';
 import { ArcadeButton } from '../components/arcade/ArcadeButton';
+import { kujiDrawApi } from '../api/kujiDraw';
+import type { KujiListItem } from '../types/kujiDraw';
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const [featured, setFeatured] = useState<KujiListItem[]>([]);
+
+  useEffect(() => {
+    kujiDrawApi.getList().then(list => {
+      setFeatured(list.slice(0, 3));
+    }).catch(() => {});
+  }, []);
 
   return (
     <div className="arcade-body scanlines crt" style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -34,7 +44,16 @@ export function LandingPage() {
           </ArcadeButton>
         </div>
 
-        <div className="blink" style={{ marginTop: '4rem', color: 'var(--arcade-accent)', fontSize: '0.8rem', fontWeight: 900, letterSpacing: '4px' }}>
+        {/* Real-time Intel (Small) */}
+        <div style={{ marginTop: '4rem', display: 'flex', gap: '20px' }}>
+          {featured.map(item => (
+            <div key={item.id} style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>
+              LOADED: {item.title.substring(0, 15)}...
+            </div>
+          ))}
+        </div>
+
+        <div className="blink" style={{ marginTop: '2rem', color: 'var(--arcade-accent)', fontSize: '0.8rem', fontWeight: 900, letterSpacing: '4px' }}>
           © 2026 KUJIHUB ENTERTAINMENT SYSTEM
         </div>
       </section>

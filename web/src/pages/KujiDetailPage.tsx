@@ -65,7 +65,7 @@ export function KujiDetailPage() {
   return (
     <div className="animate-in">
       <header style={{ marginBottom: '40px' }}>
-        <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+        <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px', fontWeight: 900 }}>
           {kuji.title}
         </h1>
         <p style={{ color: '#fff', fontSize: '1rem', opacity: 0.8, fontWeight: 500 }}>
@@ -75,15 +75,31 @@ export function KujiDetailPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          <ArcadeBox label="MACHINE_PREVIEW" variant="default">
-            <div className="kuji-img-placeholder" style={{ height: '300px', fontSize: '8rem' }}>
-              🎁
-            </div>
+          <ArcadeBox label="MACHINE_PREVIEW" variant="default" style={{ padding: 0, overflow: 'hidden' }}>
+            {kuji.imageUrl ? (
+              <img 
+                src={kuji.imageUrl} 
+                alt={kuji.title} 
+                style={{ width: '100%', height: '400px', objectFit: 'contain', background: '#000' }} 
+              />
+            ) : (
+              <div className="kuji-img-placeholder" style={{ height: '400px', fontSize: '8rem' }}>
+                🎁
+              </div>
+            )}
           </ArcadeBox>
 
           <ArcadeBox label="PRIZE_LIST" variant="secondary">
             <div style={{ fontSize: '0.9rem', opacity: 0.6, fontWeight: 700 }}>
               WINS REMAINING: {kuji.remaining} / {kuji.boardSize}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '16px', marginTop: '24px' }}>
+              {kuji.prizes.map((prize, idx) => (
+                <div key={idx} style={{ textAlign: 'center', padding: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ color: prize.color, fontSize: '1.5rem', fontWeight: 900, marginBottom: '8px' }}>{prize.grade}</div>
+                  <div style={{ fontSize: '0.7rem', color: '#fff', fontWeight: 500 }}>{prize.name}</div>
+                </div>
+              ))}
             </div>
           </ArcadeBox>
         </div>

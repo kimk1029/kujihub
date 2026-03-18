@@ -3,24 +3,24 @@ import { ArcadeBox } from '../components/arcade/ArcadeBox';
 import { ArcadeButton } from '../components/arcade/ArcadeButton';
 import { ArcadeTicker } from '../components/arcade/ArcadeTicker';
 
-// Mock data for translated calendar events
+// Mock data for translated calendar events with more "real" images
 const MOCK_EVENTS: Record<number, { title: string; original: string; image: string; desc: string }> = {
   18: { 
     title: '나의 히어로 아카데미아 Vol.7 발매', 
     original: '僕のヒーローアカデミア Vol.7 発売', 
-    image: 'https://placehold.co/400x200/ff00ff/ffffff?text=My+Hero+Academia',
+    image: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?q=80&w=800&auto=format&fit=crop', // Anime related
     desc: '신규 쿠지 라인업이 오늘 정오에 정식 발매되었습니다. A상 데쿠 피규어를 노려보세요!'
   },
   22: { 
     title: '드래곤볼 GT 특별전 오픈', 
     original: 'ドラゴンボールGT 特別展 オープン', 
-    image: 'https://placehold.co/400x200/00ffff/ffffff?text=Dragon+Ball+GT',
+    image: 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?q=80&w=800&auto=format&fit=crop', // Action figure related
     desc: '드래곤볼 GT 시리즈의 한정판 굿즈가 포함된 새로운 보드가 추가될 예정입니다.'
   },
   25: { 
     title: '주술회전 0 극장판 콜라보', 
     original: '呪術廻戦 0 劇場版 コラボ', 
-    image: 'https://placehold.co/400x200/39ff14/000000?text=Jujutsu+Kaisen',
+    image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=800&auto=format&fit=crop', // Manga related
     desc: '옷코츠 유타의 특급 주구 복제 굿즈를 만날 수 있는 기회!'
   }
 };
