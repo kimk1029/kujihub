@@ -33,7 +33,7 @@ export function KujiListPage() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+        <div className="blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem', fontWeight: 900 }}>
           LOADING DATA...
         </div>
       </div>
@@ -44,15 +44,15 @@ export function KujiListPage() {
     <div className="animate-in">
       <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+          <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
             SELECT MACHINE
           </h1>
-          <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.7rem', opacity: 0.8 }}>
+          <p style={{ color: '#fff', fontSize: '0.9rem', opacity: 0.8, fontWeight: 500 }}>
             CHOOSE YOUR DESTINY. EVERY DRAW IS A NEW CHANCE.
           </p>
         </div>
         <ArcadeBox label="PLAYER_WALLET" variant="accent" isChunky={false}>
-          <div className="arcade-font-pixel" style={{ fontSize: '1rem', color: 'var(--arcade-accent)' }}>
+          <div style={{ fontSize: '1.25rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
             {player ? `${player.points.toLocaleString()} P` : '0 P'}
           </div>
         </ArcadeBox>
@@ -60,7 +60,7 @@ export function KujiListPage() {
 
       {error && (
         <ArcadeBox variant="primary" style={{ marginBottom: '24px', borderColor: 'var(--error)' }}>
-          <div className="arcade-font-pixel" style={{ color: 'var(--error)', fontSize: '0.8rem' }}>
+          <div style={{ color: 'var(--error)', fontSize: '1rem', fontWeight: 900 }}>
             ERROR: {error}
           </div>
         </ArcadeBox>
@@ -79,14 +79,14 @@ export function KujiListPage() {
               {item.remaining === 0 ? '💀' : '🎁'}
             </div>
             <div style={{ padding: '20px 0 0' }}>
-              <h2 className="arcade-font-pixel" style={{ fontSize: '0.9rem', marginBottom: '12px', height: '2.4rem', overflow: 'hidden' }}>
+              <h2 style={{ fontSize: '1.1rem', marginBottom: '12px', height: '3rem', overflow: 'hidden', fontWeight: 900 }}>
                 {item.title}
               </h2>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <span className="arcade-font-pixel" style={{ fontSize: '0.8rem', color: 'var(--arcade-accent)' }}>
+                <span style={{ fontSize: '1.1rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
                   {item.price.toLocaleString()} P
                 </span>
-                <span className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: '#fff' }}>
+                <span style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 700 }}>
                   {item.remaining}/{item.boardSize} LEFT
                 </span>
               </div>

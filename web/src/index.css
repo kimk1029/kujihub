@@ -1,3 +1,6 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
 :root {
   /* Arcade Base Colors */
   --arcade-bg: #0a0a1a;
@@ -20,7 +23,7 @@
 }
 
 body {
-  font-family: 'VT323', monospace;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
   background-color: var(--arcade-bg);
   color: var(--arcade-text);
   line-height: 1.6;
@@ -29,8 +32,14 @@ body {
   overflow-x: hidden;
 }
 
+/* We still keep the pixel fonts as variables or for specific headers if they feel arcade-like, 
+   but per user request, we default everything to Pretendard. 
+   I will use 'Press Start 2P' only for very specific titles to maintain the 'arcade' vibe 
+   but make sure it's not the primary reading font. */
+
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Press Start 2P', cursive;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 900;
   text-transform: uppercase;
 }
 
@@ -40,7 +49,7 @@ a {
 }
 
 button, input, textarea, select {
-  font-family: inherit;
+  font-family: 'Pretendard', sans-serif;
   outline: none;
   border: none;
   background: transparent;

@@ -5,7 +5,7 @@ export function ProfilePage() {
   return (
     <div className="animate-in">
       <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem' }}>
+        <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem' }}>
           PLAYER_PORTAL
         </h1>
         <ArcadeButton variant="primary" size="sm">
@@ -18,15 +18,15 @@ export function ProfilePage() {
         <aside className="profile-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           <ArcadeBox label="AVATAR" variant="primary" style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '5rem', marginBottom: '20px', imageRendering: 'pixelated' }}>👤</div>
-            <h2 className="arcade-font-pixel" style={{ fontSize: '1rem', color: 'var(--arcade-secondary)' }}>KUJI_CHAMP</h2>
-            <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.6rem', marginTop: '12px', opacity: 0.6 }}>
+            <h2 style={{ fontSize: '1.25rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>KUJI_CHAMP</h2>
+            <p style={{ color: '#fff', fontSize: '0.8rem', marginTop: '12px', opacity: 0.6, fontWeight: 700 }}>
               LVL. 42 MASTER
             </p>
           </ArcadeBox>
 
           <ArcadeBox label="INVENTORY" variant="secondary">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="arcade-font-pixel" style={{ fontSize: '1.2rem', color: 'var(--arcade-secondary)' }}>45,000 P</span>
+              <span style={{ fontSize: '1.5rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>45,000 P</span>
               <ArcadeButton variant="accent" size="sm">
                 BUY_COIN
               </ArcadeButton>
@@ -49,13 +49,13 @@ export function ProfilePage() {
         <section className="profile-main" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           <div className="arcade-grid" style={{ padding: 0, gridTemplateColumns: 'repeat(3, 1fr)' }}>
             <ArcadeBox label="DRAWS" variant="primary">
-              <div className="arcade-font-pixel" style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)' }}>124</div>
+              <div style={{ fontSize: '2rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>124</div>
             </ArcadeBox>
             <ArcadeBox label="WINS" variant="secondary">
-              <div className="arcade-font-pixel" style={{ fontSize: '1.5rem', color: 'var(--arcade-secondary)' }}>018</div>
+              <div style={{ fontSize: '2rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>018</div>
             </ArcadeBox>
             <ArcadeBox label="LEVEL" variant="accent">
-              <div className="arcade-font-pixel" style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)' }}>042</div>
+              <div style={{ fontSize: '2rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>042</div>
             </ArcadeBox>
           </div>
 
@@ -71,12 +71,12 @@ export function ProfilePage() {
                   background: 'rgba(0,0,0,0.3)'
                 }}>
                   <div>
-                    <p className="arcade-font-pixel" style={{ fontSize: '0.8rem', color: 'var(--arcade-secondary)' }}>KUJI_BATTLE: VOL.{i+4}</p>
-                    <p className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: '#fff', opacity: 0.6, marginTop: '8px' }}>
+                    <p style={{ fontSize: '1rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>KUJI_BATTLE: VOL.{i+4}</p>
+                    <p style={{ fontSize: '0.8rem', color: '#fff', opacity: 0.6, marginTop: '8px', fontWeight: 500 }}>
                       PULLED 5 TICKETS • SYNC_OK
                     </p>
                   </div>
-                  <div className="arcade-font-pixel" style={{ fontSize: '0.9rem', color: 'var(--arcade-primary)' }}>- 5,000 P</div>
+                  <div style={{ fontSize: '1.1rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>- 5,000 P</div>
                 </div>
               ))}
             </div>

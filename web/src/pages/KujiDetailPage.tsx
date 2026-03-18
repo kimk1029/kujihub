@@ -40,7 +40,7 @@ export function KujiDetailPage() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+        <div className="blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem', fontWeight: 900 }}>
           SCANNING MACHINE...
         </div>
       </div>
@@ -51,7 +51,7 @@ export function KujiDetailPage() {
     return (
       <div className="animate-in">
         <ArcadeBox variant="primary" label="ERROR">
-          <p className="arcade-font-pixel" style={{ color: 'var(--error)' }}>
+          <p style={{ color: 'var(--error)', fontWeight: 900 }}>
             {error ?? 'MACHINE_NOT_FOUND'}
           </p>
           <ArcadeButton variant="secondary" onClick={() => navigate('/kuji')} style={{ marginTop: '20px' }}>
@@ -65,10 +65,10 @@ export function KujiDetailPage() {
   return (
     <div className="animate-in">
       <header style={{ marginBottom: '40px' }}>
-        <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+        <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
           {kuji.title}
         </h1>
-        <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.8rem', opacity: 0.8 }}>
+        <p style={{ color: '#fff', fontSize: '1rem', opacity: 0.8, fontWeight: 500 }}>
           {kuji.description}
         </p>
       </header>
@@ -82,10 +82,9 @@ export function KujiDetailPage() {
           </ArcadeBox>
 
           <ArcadeBox label="PRIZE_LIST" variant="secondary">
-            <div className="arcade-font-pixel" style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+            <div style={{ fontSize: '0.9rem', opacity: 0.6, fontWeight: 700 }}>
               WINS REMAINING: {kuji.remaining} / {kuji.boardSize}
             </div>
-            {/* Prize list could go here */}
           </ArcadeBox>
         </div>
 
@@ -93,20 +92,20 @@ export function KujiDetailPage() {
           <ArcadeBox label="PURCHASE_CONSOLE" variant="primary">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>
-                <span className="arcade-font-pixel" style={{ fontSize: '0.6rem' }}>PLAYER_CREDITS</span>
-                <span className="arcade-font-pixel" style={{ fontSize: '0.8rem', color: 'var(--arcade-accent)' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 900 }}>PLAYER_CREDITS</span>
+                <span style={{ fontSize: '1.1rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
                   {player?.points.toLocaleString() ?? 0} P
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>
-                <span className="arcade-font-pixel" style={{ fontSize: '0.6rem' }}>UNIT_PRICE</span>
-                <span className="arcade-font-pixel" style={{ fontSize: '0.8rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 900 }}>UNIT_PRICE</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 900 }}>
                   {kuji.price.toLocaleString()} P
                 </span>
               </div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
-                <span className="arcade-font-pixel" style={{ fontSize: '0.6rem' }}>QUANTITY</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: 900 }}>QUANTITY</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <ArcadeButton 
                     variant="secondary" 
@@ -114,7 +113,7 @@ export function KujiDetailPage() {
                     onClick={() => setQuantity((v) => Math.max(1, v - 1))}
                     style={{ padding: '4px 12px' }}
                   >-</ArcadeButton>
-                  <span className="arcade-font-pixel" style={{ fontSize: '1rem' }}>{quantity}</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 900 }}>{quantity}</span>
                   <ArcadeButton 
                     variant="secondary" 
                     size="sm" 
@@ -126,15 +125,15 @@ export function KujiDetailPage() {
 
               <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', border: '2px solid var(--arcade-primary)', marginTop: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="arcade-font-pixel" style={{ fontSize: '0.8rem' }}>TOTAL_COST</span>
-                  <span className="arcade-font-pixel" style={{ fontSize: '1.2rem', color: 'var(--arcade-primary)' }}>
+                  <span style={{ fontSize: '1rem', fontWeight: 900 }}>TOTAL_COST</span>
+                  <span style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>
                     {total.toLocaleString()} P
                   </span>
                 </div>
               </div>
 
               {error && (
-                <div className="arcade-font-pixel" style={{ color: 'var(--error)', fontSize: '0.6rem', textAlign: 'center', marginTop: '12px' }}>
+                <div style={{ color: 'var(--error)', fontSize: '0.85rem', textAlign: 'center', marginTop: '12px', fontWeight: 900 }}>
                   [ ERROR: {error} ]
                 </div>
               )}

@@ -32,7 +32,7 @@ export function CommunityListPage() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+        <div className="blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem', fontWeight: 900 }}>
           SYNCING_COMM_LINK...
         </div>
       </div>
@@ -43,10 +43,10 @@ export function CommunityListPage() {
     <div className="animate-in">
       <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+          <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2.5rem', marginBottom: '16px' }}>
             COMMUNITY_LOGS
           </h1>
-          <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.7rem', opacity: 0.8 }}>
+          <p style={{ color: '#fff', fontSize: '1rem', opacity: 0.8, fontWeight: 500 }}>
             DECRYPTING MESSAGES FROM THE RESISTANCE.
           </p>
         </div>
@@ -57,7 +57,7 @@ export function CommunityListPage() {
 
       {error && (
         <ArcadeBox variant="primary" style={{ marginBottom: '24px', borderColor: 'var(--error)' }}>
-          <div className="arcade-font-pixel" style={{ color: 'var(--error)', fontSize: '0.8rem' }}>
+          <div style={{ color: 'var(--error)', fontSize: '1rem', fontWeight: 900 }}>
             COMM_LINK_ERROR: {error}
           </div>
         </ArcadeBox>
@@ -65,7 +65,7 @@ export function CommunityListPage() {
 
       {!error && posts.length === 0 ? (
         <ArcadeBox label="EMPTY_CHANNEL" variant="default" style={{ textAlign: 'center', padding: '60px' }}>
-          <p className="arcade-font-pixel" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginBottom: '24px' }}>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1.1rem', marginBottom: '24px', fontWeight: 700 }}>
             NO DATA DETECTED IN THIS SECTOR.
           </p>
           <ArcadeButton variant="accent" onClick={() => navigate('/community/new')}>
@@ -85,25 +85,26 @@ export function CommunityListPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <span className="arcade-font-pixel" style={{ 
-                      fontSize: '0.5rem', 
+                    <span style={{ 
+                      fontSize: '0.7rem', 
                       background: 'var(--arcade-primary)', 
                       color: '#000', 
-                      padding: '2px 6px' 
+                      padding: '4px 8px',
+                      fontWeight: 900 
                     }}>GENERAL</span>
-                    <h2 className="arcade-font-pixel" style={{ fontSize: '1rem', color: 'var(--arcade-secondary)' }}>
+                    <h2 style={{ fontSize: '1.25rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>
                       {post.title}
                     </h2>
                   </div>
-                  <p className="arcade-font-pixel" style={{ fontSize: '0.7rem', color: '#fff', opacity: 0.6, lineHeight: '1.4' }}>
+                  <p style={{ fontSize: '1rem', color: '#fff', opacity: 0.7, lineHeight: '1.5' }}>
                     {post.content || 'NO_CONTENT_BODY'}
                   </p>
                 </div>
                 <div style={{ textAlign: 'right', marginLeft: '24px' }}>
-                  <div className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: 'var(--arcade-accent)', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--arcade-accent)', marginBottom: '8px', fontWeight: 900 }}>
                     USER: {post.author}
                   </div>
-                  <div className="arcade-font-pixel" style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
                     DATE: {dayjs(post.createdAt).format('YYYY.MM.DD')}
                   </div>
                 </div>
@@ -119,7 +120,7 @@ export function CommunityListPage() {
           size="lg" 
           onClick={() => navigate('/community/new')}
           className="coin-btn"
-          style={{ borderRadius: '50%', width: '64px', height: '64px', padding: 0 }}
+          style={{ borderRadius: '50%', width: '80px', height: '80px', padding: 0, fontSize: '2rem' }}
         >
           +
         </ArcadeButton>

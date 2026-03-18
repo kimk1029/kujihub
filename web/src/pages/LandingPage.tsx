@@ -11,9 +11,9 @@ export function LandingPage() {
     <div className="arcade-body scanlines crt">
       {/* Top Header Bar */}
       <div style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', background: '#000', borderBottom: '4px solid var(--arcade-primary)' }}>
-        <div className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)' }}>1P: 00000</div>
-        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-accent)' }}>INSERT COIN</div>
-        <div className="arcade-font-pixel" style={{ color: 'var(--arcade-primary)' }}>CREDITS: 00</div>
+        <div style={{ color: 'var(--arcade-secondary)', fontWeight: 900 }}>1P: 00000</div>
+        <div className="blink" style={{ color: 'var(--arcade-accent)', fontWeight: 900 }}>INSERT COIN</div>
+        <div style={{ color: 'var(--arcade-primary)', fontWeight: 900 }}>CREDITS: 00</div>
       </div>
 
       {/* Hero Section */}
@@ -25,7 +25,7 @@ export function LandingPage() {
           <ArcadeButton 
             variant="accent" 
             size="lg" 
-            onClick={() => navigate('/kuji')}
+            onClick={() => navigate('/dashboard')}
             className="coin-btn"
           >
             PRESS START
@@ -54,7 +54,7 @@ export function LandingPage() {
 
       {/* Featured Kuji */}
       <section style={{ padding: '4rem 2rem' }}>
-        <h2 className="arcade-font-pixel" style={{ textAlign: 'center', marginBottom: '4rem', color: 'var(--arcade-secondary)', fontSize: '1.5rem' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '4rem', color: 'var(--arcade-secondary)', fontSize: '2rem', fontWeight: 900 }}>
           {`[ SELECT YOUR MACHINE ]`}
         </h2>
         <div className="arcade-grid">
@@ -64,12 +64,12 @@ export function LandingPage() {
                 {i === 1 ? '👺' : i === 2 ? '🐉' : '⚡'}
               </div>
               <div style={{ padding: '1.5rem 0' }}>
-                <span className="arcade-font-pixel" style={{ color: 'var(--arcade-primary)', fontSize: '0.6rem' }}>HOT ITEM</span>
-                <h3 className="arcade-font-pixel" style={{ fontSize: '0.9rem', margin: '0.8rem 0 1.5rem' }}>
+                <span style={{ color: 'var(--arcade-primary)', fontSize: '0.75rem', fontWeight: 900 }}>HOT ITEM</span>
+                <h3 style={{ fontSize: '1.1rem', margin: '0.5rem 0 1.5rem', fontWeight: 900 }}>
                   KUJI BATTLE VOL.{i}
                 </h3>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="arcade-font-pixel" style={{ fontSize: '1rem', color: 'var(--arcade-accent)' }}>12,000 P</span>
+                  <span style={{ fontSize: '1.25rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>12,000 P</span>
                   <ArcadeButton 
                     variant="secondary" 
                     size="sm"
@@ -87,13 +87,13 @@ export function LandingPage() {
       {/* Footer Info */}
       <footer style={{ background: '#000', padding: '6rem 2rem', textAlign: 'center', borderTop: '4px solid var(--arcade-secondary)' }}>
         <ArcadeBox isChunky={false} style={{ display: 'inline-block', padding: '2rem' }}>
-          <p className="arcade-font-pixel" style={{ fontSize: '0.7rem', marginBottom: '1.5rem' }}>
+          <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', fontWeight: 900 }}>
             © 2026 KUJIHUB ENTERTAINMENT SYSTEM
           </p>
           <div style={{ display: 'flex', gap: '3rem', justifyContent: 'center' }}>
-            <span className="glitch-text arcade-font-pixel" style={{ cursor: 'pointer', fontSize: '0.7rem' }}>FAQ</span>
-            <span className="glitch-text arcade-font-pixel" style={{ cursor: 'pointer', fontSize: '0.7rem' }}>LEGAL</span>
-            <span className="glitch-text arcade-font-pixel" style={{ cursor: 'pointer', fontSize: '0.7rem' }}>SUPPORT</span>
+            <span className="glitch-text" style={{ cursor: 'pointer', fontSize: '1rem', fontWeight: 900 }}>FAQ</span>
+            <span className="glitch-text" style={{ cursor: 'pointer', fontSize: '1rem', fontWeight: 900 }}>LEGAL</span>
+            <span className="glitch-text" style={{ cursor: 'pointer', fontSize: '1rem', fontWeight: 900 }}>SUPPORT</span>
           </div>
         </ArcadeBox>
       </footer>

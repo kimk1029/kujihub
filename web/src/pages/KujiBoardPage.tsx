@@ -60,7 +60,7 @@ export function KujiBoardPage() {
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-      <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+      <div className="blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem', fontWeight: 900 }}>
         LOADING BOARD...
       </div>
     </div>
@@ -70,15 +70,15 @@ export function KujiBoardPage() {
     <div className="animate-in">
       <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+          <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
             SELECT_SLOTS
           </h1>
-          <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.7rem', opacity: 0.8 }}>
+          <p style={{ color: '#fff', fontSize: '0.9rem', opacity: 0.8, fontWeight: 700 }}>
             {remaining} SLOTS REMAINING IN SECTOR_{id}
           </p>
         </div>
         <ArcadeBox label="PLAYER_WALLET" variant="accent" isChunky={false}>
-          <div className="arcade-font-pixel" style={{ fontSize: '1rem', color: 'var(--arcade-accent)' }}>
+          <div style={{ fontSize: '1.25rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
             {player?.points.toLocaleString()} P
           </div>
         </ArcadeBox>
@@ -111,10 +111,10 @@ export function KujiBoardPage() {
                       setSelectedSlots([...selectedSlots, slot]);
                     }
                   }}
-                  className="arcade-font-pixel"
                   style={{
                     aspectRatio: '1',
-                    fontSize: '0.8rem',
+                    fontSize: '0.9rem',
+                    fontWeight: 900,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -125,7 +125,8 @@ export function KujiBoardPage() {
                     color: isDrawn ? 'rgba(255,255,255,0.1)' : isSelected ? '#000' : '#fff',
                     opacity: isDrawn ? 0.3 : 1,
                     transition: 'all 0.1s',
-                    position: 'relative'
+                    position: 'relative',
+                    fontFamily: 'Pretendard, sans-serif'
                   }}
                 >
                   {isDrawn ? 'X' : isSelected ? '✓' : slot}
@@ -139,10 +140,10 @@ export function KujiBoardPage() {
         <aside style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           <ArcadeBox label="ACTION_PANEL" variant="primary">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="arcade-font-pixel" style={{ fontSize: '0.6rem', opacity: 0.6 }}>
+              <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 900 }}>
                 MUST SELECT: {quantity} SLOTS
               </div>
-              <div className="arcade-font-pixel" style={{ fontSize: '1rem', color: 'var(--arcade-primary)' }}>
+              <div style={{ fontSize: '1.25rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>
                 SELECTED: {selectedSlots.length}
               </div>
 
@@ -156,22 +157,23 @@ export function KujiBoardPage() {
                 gap: '8px'
               }}>
                 {sortNumeric(selectedSlots).map(s => (
-                  <div key={s} className="arcade-font-pixel" style={{ 
+                  <div key={s} style={{ 
                     padding: '4px 8px', 
                     background: 'var(--arcade-primary)', 
                     color: '#000', 
-                    fontSize: '0.6rem' 
+                    fontSize: '0.8rem',
+                    fontWeight: 900 
                   }}>#{s}</div>
                 ))}
                 {selectedSlots.length === 0 && (
-                  <div className="arcade-font-pixel blink" style={{ fontSize: '0.5rem', opacity: 0.4, margin: 'auto' }}>
+                  <div className="blink" style={{ fontSize: '0.75rem', opacity: 0.4, margin: 'auto', fontWeight: 900 }}>
                     WAITING FOR INPUT...
                   </div>
                 )}
               </div>
 
               {error && (
-                <div className="arcade-font-pixel" style={{ color: 'var(--error)', fontSize: '0.5rem' }}>
+                <div style={{ color: 'var(--error)', fontSize: '0.75rem', fontWeight: 900 }}>
                   [ {error} ]
                 </div>
               )}
@@ -206,13 +208,13 @@ export function KujiBoardPage() {
 
           <ArcadeBox label="MISSION_INTEL" variant="default">
             <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <li className="arcade-font-pixel" style={{ fontSize: '0.5rem', display: 'flex', gap: '8px' }}>
+              <li style={{ fontSize: '0.8rem', display: 'flex', gap: '8px', fontWeight: 700 }}>
                 <span style={{ color: 'var(--arcade-accent)' }}>•</span> SELECT {quantity} EMPTY SLOTS
               </li>
-              <li className="arcade-font-pixel" style={{ fontSize: '0.5rem', display: 'flex', gap: '8px' }}>
+              <li style={{ fontSize: '0.8rem', display: 'flex', gap: '8px', fontWeight: 700 }}>
                 <span style={{ color: 'var(--arcade-accent)' }}>•</span> AVOID LOCKED SLOTS (GLOWING)
               </li>
-              <li className="arcade-font-pixel" style={{ fontSize: '0.5rem', display: 'flex', gap: '8px' }}>
+              <li style={{ fontSize: '0.8rem', display: 'flex', gap: '8px', fontWeight: 700 }}>
                 <span style={{ color: 'var(--arcade-accent)' }}>•</span> WIN BIG PRIZES
               </li>
             </ul>
