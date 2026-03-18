@@ -68,7 +68,7 @@ export function CommunityPostFormPage() {
   if (fetching) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+        <div className="blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem', fontWeight: 900 }}>
           DOWNLOADING_DATA...
         </div>
       </div>
@@ -78,10 +78,10 @@ export function CommunityPostFormPage() {
   return (
     <div className="animate-in">
       <header style={{ marginBottom: '40px' }}>
-        <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+        <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px', fontWeight: 900 }}>
           {editId ? 'UPDATE_LOG' : 'ENCODE_NEW_LOG'}
         </h1>
-        <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.7rem', opacity: 0.8 }}>
+        <p style={{ color: '#fff', fontSize: '1rem', opacity: 0.8, fontWeight: 500 }}>
           INPUT DATA INTO THE GLOBAL MAINFRAME. BE CONCISE.
         </p>
       </header>
@@ -89,7 +89,7 @@ export function CommunityPostFormPage() {
       <ArcadeBox label="DATA_INPUT_TERMINAL" variant="primary">
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <label className="arcade-font-pixel" htmlFor="title" style={{ fontSize: '0.6rem', color: 'var(--arcade-secondary)' }}>
+            <label htmlFor="title" style={{ fontSize: '0.8rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>
               LOG_HEADER
             </label>
             <input
@@ -99,21 +99,21 @@ export function CommunityPostFormPage() {
               onChange={(e) => setTitle(e.currentTarget.value)}
               placeholder="ENTER_TITLE_HERE"
               required
-              className="arcade-font-pixel"
               style={{ 
                 background: 'rgba(0,0,0,0.5)', 
                 border: '2px solid rgba(255,255,255,0.1)', 
                 padding: '16px', 
                 color: '#fff', 
-                fontSize: '0.8rem',
+                fontSize: '1rem',
                 outline: 'none',
-                width: '100%'
+                width: '100%',
+                fontFamily: 'Galmuri11, sans-serif'
               }}
             />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <label className="arcade-font-pixel" htmlFor="author" style={{ fontSize: '0.6rem', color: 'var(--arcade-accent)' }}>
+            <label htmlFor="author" style={{ fontSize: '0.8rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
               SENDER_ID
             </label>
             <input
@@ -122,21 +122,21 @@ export function CommunityPostFormPage() {
               value={author}
               onChange={(e) => setAuthor(e.currentTarget.value)}
               placeholder="GUEST_USER"
-              className="arcade-font-pixel"
               style={{ 
                 background: 'rgba(0,0,0,0.5)', 
                 border: '2px solid rgba(255,255,255,0.1)', 
                 padding: '16px', 
                 color: '#fff', 
-                fontSize: '0.8rem',
+                fontSize: '1rem',
                 outline: 'none',
-                width: '100%'
+                width: '100%',
+                fontFamily: 'Galmuri11, sans-serif'
               }}
             />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <label className="arcade-font-pixel" htmlFor="content" style={{ fontSize: '0.6rem', color: 'var(--arcade-primary)' }}>
+            <label htmlFor="content" style={{ fontSize: '0.8rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>
               MESSAGE_BODY
             </label>
             <textarea
@@ -145,17 +145,16 @@ export function CommunityPostFormPage() {
               onChange={(e) => setContent(e.currentTarget.value)}
               placeholder="ENTER_MESSAGE_CONTENT_TO_BROADCAST"
               rows={12}
-              className="arcade-font-pixel"
               style={{ 
                 background: 'rgba(0,0,0,0.5)', 
                 border: '2px solid rgba(255,255,255,0.1)', 
                 padding: '16px', 
                 color: '#fff', 
-                fontSize: '0.8rem',
+                fontSize: '1.1rem',
                 outline: 'none',
                 width: '100%',
                 lineHeight: '1.6',
-                fontFamily: 'VT323, monospace'
+                fontFamily: 'Galmuri11, sans-serif'
               }}
             />
           </div>
@@ -168,10 +167,10 @@ export function CommunityPostFormPage() {
             flexDirection: 'column',
             gap: '8px'
           }}>
-            <p className="arcade-font-pixel" style={{ fontSize: '0.5rem', color: 'var(--arcade-accent)' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--arcade-accent)', fontWeight: 700 }}>
               • DATA WILL BE BROADCASTED TO ALL SECTORS.
             </p>
-            <p className="arcade-font-pixel" style={{ fontSize: '0.5rem', color: 'var(--arcade-accent)' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--arcade-accent)', fontWeight: 700 }}>
               • NO DELETION POSSIBLE AFTER SUBMISSION WITHOUT AUTHENTICATION.
             </p>
           </div>

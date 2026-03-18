@@ -43,7 +43,7 @@ export function CommunityListPage() {
     <div className="animate-in">
       <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2.5rem', marginBottom: '16px' }}>
+          <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2.5rem', marginBottom: '16px', fontWeight: 900 }}>
             COMMUNITY_LOGS
           </h1>
           <p style={{ color: '#fff', fontSize: '1rem', opacity: 0.8, fontWeight: 500 }}>
@@ -96,7 +96,7 @@ export function CommunityListPage() {
                       {post.title}
                     </h2>
                   </div>
-                  <p style={{ fontSize: '1rem', color: '#fff', opacity: 0.7, lineHeight: '1.5' }}>
+                  <p style={{ fontSize: '1rem', color: '#fff', opacity: 0.7, lineHeight: '1.5', fontWeight: 500 }}>
                     {post.content || 'NO_CONTENT_BODY'}
                   </p>
                 </div>

@@ -44,7 +44,7 @@ export function CommunityDetailPage() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+        <div className="blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem', fontWeight: 900 }}>
           DECRYPTING_LOG...
         </div>
       </div>
@@ -55,7 +55,7 @@ export function CommunityDetailPage() {
     return (
       <div className="animate-in">
         <ArcadeBox variant="primary" label="ERROR">
-          <p className="arcade-font-pixel" style={{ color: 'var(--error)' }}>
+          <p style={{ color: 'var(--error)', fontWeight: 900 }}>
             {error ?? 'LOG_NOT_FOUND'}
           </p>
           <ArcadeButton variant="secondary" onClick={() => navigate('/community')} style={{ marginTop: '20px' }}>
@@ -70,17 +70,17 @@ export function CommunityDetailPage() {
     <div className="animate-in">
       <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <div className="arcade-font-pixel" style={{ color: 'var(--arcade-primary)', fontSize: '0.6rem', marginBottom: '8px' }}>
+          <div style={{ color: 'var(--arcade-primary)', fontSize: '0.8rem', marginBottom: '8px', fontWeight: 900 }}>
             MESSAGE_ID: {post.id}
           </div>
-          <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+          <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2.5rem', marginBottom: '16px', fontWeight: 900 }}>
             {post.title}
           </h1>
           <div style={{ display: 'flex', gap: '20px' }}>
-            <span className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: 'var(--arcade-accent)' }}>
+            <span style={{ fontSize: '0.9rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
               AUTHOR: {post.author}
             </span>
-            <span className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>
+            <span style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>
               RECEIVED: {dayjs(post.createdAt).format('YYYY.MM.DD HH:mm')}
             </span>
           </div>
@@ -97,12 +97,12 @@ export function CommunityDetailPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '32px' }}>
         <ArcadeBox label="LOG_CONTENT" variant="default" style={{ minHeight: '400px' }}>
-          <div className="arcade-font-pixel" style={{ 
-            fontSize: '0.9rem', 
+          <div style={{ 
+            fontSize: '1.1rem', 
             color: '#fff', 
             lineHeight: '1.6', 
             whiteSpace: 'pre-wrap',
-            fontFamily: 'VT323, monospace' 
+            fontFamily: 'Galmuri11, sans-serif'
           }}>
             {post.content || '( NO_DATA_RECORDED )'}
           </div>
@@ -112,16 +112,16 @@ export function CommunityDetailPage() {
           <ArcadeBox label="METADATA" variant="secondary">
             <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <li style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
-                <div className="arcade-font-pixel" style={{ fontSize: '0.5rem', opacity: 0.5, marginBottom: '4px' }}>SECTOR</div>
-                <div className="arcade-font-pixel" style={{ fontSize: '0.7rem' }}>GENERAL_COMM</div>
+                <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', fontWeight: 900 }}>SECTOR</div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>GENERAL_COMM</div>
               </li>
               <li style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
-                <div className="arcade-font-pixel" style={{ fontSize: '0.5rem', opacity: 0.5, marginBottom: '4px' }}>BYTE_SIZE</div>
-                <div className="arcade-font-pixel" style={{ fontSize: '0.7rem' }}>{post.content.length.toLocaleString()} B</div>
+                <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', fontWeight: 900 }}>BYTE_SIZE</div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{post.content.length.toLocaleString()} B</div>
               </li>
               <li>
-                <div className="arcade-font-pixel" style={{ fontSize: '0.5rem', opacity: 0.5, marginBottom: '4px' }}>LAST_SYNC</div>
-                <div className="arcade-font-pixel" style={{ fontSize: '0.7rem' }}>{dayjs(post.updatedAt).format('HH:mm:ss')}</div>
+                <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', fontWeight: 900 }}>LAST_SYNC</div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{dayjs(post.updatedAt).format('HH:mm:ss')}</div>
               </li>
             </ul>
           </ArcadeBox>
