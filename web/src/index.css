@@ -1,12 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
-
-/* NeoDunggeunmo from Noonnu */
-@font-face {
-    font-family: 'NeoDunggeunmo';
-    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/NeoDunggeunmo.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-}
+@import url('https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css');
 
 :root {
   /* Arcade Base Colors */
@@ -30,8 +23,8 @@
 }
 
 body {
-  /* Default to NeoDunggeunmo for most content */
-  font-family: 'NeoDunggeunmo', 'VT323', monospace;
+  /* Default to Galmuri11 for most content */
+  font-family: 'Galmuri11', 'VT323', monospace;
   background-color: var(--arcade-bg);
   color: var(--arcade-text);
   line-height: 1.6;
@@ -40,9 +33,9 @@ body {
   overflow-x: hidden;
 }
 
-/* Titles default to NeoDunggeunmo unless specified */
+/* Titles default to Galmuri11 unless specified */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'NeoDunggeunmo', sans-serif;
+  font-family: 'Galmuri11', sans-serif;
   font-weight: normal;
   text-transform: uppercase;
 }
@@ -53,7 +46,7 @@ a {
 }
 
 button, input, textarea, select {
-  font-family: 'NeoDunggeunmo', sans-serif;
+  font-family: 'Galmuri11', sans-serif;
   outline: none;
   border: none;
   background: transparent;
