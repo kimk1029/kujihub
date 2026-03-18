@@ -15,6 +15,12 @@
   --success: #39ff14;
 }
 
+html,
+body,
+#root {
+  cursor: url('./assets/cursor-hand.svg') 5 1, auto;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -51,6 +57,30 @@ button, input, textarea, select {
   border: none;
   background: transparent;
   color: inherit;
+}
+
+a,
+button,
+label,
+select,
+summary,
+[role='button'],
+input[type='button'],
+input[type='submit'],
+input[type='reset'] {
+  cursor: url('./assets/cursor-hand-click.svg') 5 1, pointer;
+}
+
+a:active,
+button:active,
+label:active,
+select:active,
+summary:active,
+[role='button']:active,
+input[type='button']:active,
+input[type='submit']:active,
+input[type='reset']:active {
+  cursor: url('./assets/cursor-hand-click.svg') 5 1, pointer;
 }
 
 /* Utility Classes */
