@@ -55,7 +55,7 @@ export function HomePage() {
         </ArcadeBox>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '32px', marginBottom: '32px' }}>
+      <div className="detail-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '32px', marginBottom: '32px' }}>
         {/* Compact Calendar Section */}
         <ArcadeBox label="EVENT_CALENDAR" variant="secondary">
           <div style={{ padding: '8px' }}>

@@ -9,15 +9,16 @@ export function Layout() {
   const navigate = useNavigate();
   
   const navItems = [
-    { path: '/dashboard', label: 'DASHBOARD', icon: '🏠' },
-    { path: '/kuji', label: 'KUJI LIST', icon: '🎰' },
-    { path: '/feed', label: 'LIVE FEED', icon: '📡' },
-    { path: '/community', label: 'COMMUNITY', icon: '👥' },
-    { path: '/profile', label: 'MY PORTAL', icon: '👤' },
+    { path: '/dashboard', label: 'HOME', icon: '🏠' },
+    { path: '/kuji', label: 'KUJI', icon: '🎰' },
+    { path: '/feed', label: 'FEED', icon: '📡' },
+    { path: '/community', label: 'COMM', icon: '👥' },
+    { path: '/profile', label: 'MY', icon: '👤' },
   ];
 
   return (
     <div className="layout arcade-body arcade-grid-bg scanlines crt" style={{ minHeight: '100vh', display: 'flex', width: '100vw', overflowX: 'hidden' }}>
+      {/* Desktop Sidebar */}
       <aside className="sidebar" style={{ 
         width: '280px', 
         background: 'rgba(0,0,0,0.9)', 
@@ -80,6 +81,23 @@ export function Layout() {
           </ArcadeButton>
         </div>
       </aside>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-nav">
+        {navItems.map((item) => {
+          const isActive = loc.pathname === item.path || (item.path !== '/' && loc.pathname.startsWith(item.path));
+          return (
+            <Link 
+              key={item.path} 
+              to={item.path} 
+              className={`mobile-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       <main className="main-content" style={{ 
         marginLeft: '280px', 

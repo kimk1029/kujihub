@@ -109,7 +109,7 @@ export function KujiBoardPage() {
         </ArcadeBox>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '40px' }}>
+      <div className="detail-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '40px' }}>
         {/* Left: The Board */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           <ArcadeBox label="MAIN_BOARD_INTERFACE" variant="default" style={{ padding: '40px' }}>

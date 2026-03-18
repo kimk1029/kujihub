@@ -95,7 +95,7 @@ export function CommunityDetailPage() {
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '32px' }}>
+      <div className="community-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '32px' }}>
         <ArcadeBox label="LOG_CONTENT" variant="default" style={{ minHeight: '400px' }}>
           <div style={{ 
             fontSize: '1.1rem', 

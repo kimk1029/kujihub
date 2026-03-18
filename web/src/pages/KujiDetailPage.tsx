@@ -73,7 +73,7 @@ export function KujiDetailPage() {
         </p>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
+      <div className="detail-layout" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           <ArcadeBox label="MACHINE_PREVIEW" variant="default" style={{ padding: 0, overflow: 'hidden' }}>
             {kuji.imageUrl ? (
