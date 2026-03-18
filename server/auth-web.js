@@ -6,6 +6,26 @@ const KAKAO_CLIENT_SECRET = process.env.KAKAO_CLIENT_SECRET || '';
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID || '';
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET || '';
 
+function formatError(error) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error || 'Unknown error');
+}
+
+async function readJsonSafe(response) {
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { raw: text };
+  }
+}
+
 function signPayload(payload) {
   const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const signature = crypto.createHmac('sha256', WEB_AUTH_SECRET).update(encoded).digest('base64url');
@@ -37,7 +57,7 @@ async function fetchGoogleProfile(accessToken) {
     throw new Error('Google 사용자 검증에 실패했습니다.');
   }
 
-  const data = await response.json();
+  const data = await readJsonSafe(response);
   return {
     id: data.sub,
     name: data.name || data.email || 'Google User',
@@ -70,9 +90,13 @@ async function exchangeKakaoCode(code, redirectUri) {
     body: params.toString(),
   });
 
-  const tokenData = await tokenResponse.json();
+  const tokenData = await readJsonSafe(tokenResponse);
   if (!tokenResponse.ok || !tokenData.access_token) {
-    throw new Error(tokenData.error_description || '카카오 토큰 교환에 실패했습니다.');
+    throw new Error(
+      tokenData?.error_description ||
+      tokenData?.error ||
+      '카카오 토큰 교환에 실패했습니다.',
+    );
   }
 
   const profileResponse = await fetch('https://kapi.kakao.com/v2/user/me', {
@@ -82,9 +106,13 @@ async function exchangeKakaoCode(code, redirectUri) {
     },
   });
 
-  const profileData = await profileResponse.json();
+  const profileData = await readJsonSafe(profileResponse);
   if (!profileResponse.ok || !profileData.id) {
-    throw new Error('카카오 사용자 조회에 실패했습니다.');
+    throw new Error(
+      profileData?.msg ||
+      profileData?.error_description ||
+      '카카오 사용자 조회에 실패했습니다.',
+    );
   }
 
   return {
@@ -115,9 +143,14 @@ async function exchangeNaverCode(code, state) {
   });
 
   const tokenResponse = await fetch(`https://nid.naver.com/oauth2.0/token?${params.toString()}`);
-  const tokenData = await tokenResponse.json();
+  const tokenData = await readJsonSafe(tokenResponse);
   if (!tokenResponse.ok || !tokenData.access_token) {
-    throw new Error(tokenData.error_description || '네이버 토큰 교환에 실패했습니다.');
+    throw new Error(
+      tokenData?.error_description ||
+      tokenData?.error ||
+      tokenData?.raw ||
+      '네이버 토큰 교환에 실패했습니다.',
+    );
   }
 
   const profileResponse = await fetch('https://openapi.naver.com/v1/nid/me', {
@@ -126,9 +159,13 @@ async function exchangeNaverCode(code, state) {
     },
   });
 
-  const profileData = await profileResponse.json();
+  const profileData = await readJsonSafe(profileResponse);
   if (!profileResponse.ok || profileData.resultcode !== '00') {
-    throw new Error('네이버 사용자 조회에 실패했습니다.');
+    throw new Error(
+      profileData?.message ||
+      profileData?.error_description ||
+      '네이버 사용자 조회에 실패했습니다.',
+    );
   }
 
   return {
@@ -150,7 +187,8 @@ function registerWebAuthRoutes(app) {
       const user = await fetchGoogleProfile(accessToken);
       res.json(createSession('google', user));
     } catch (error) {
-      res.status(502).json({ error: 'Google auth failed', message: error.message });
+      console.error('web-auth:google', formatError(error));
+      res.status(502).json({ error: 'Google auth failed', message: formatError(error) });
     }
   });
 
@@ -165,7 +203,8 @@ function registerWebAuthRoutes(app) {
       const user = await exchangeKakaoCode(code, redirectUri);
       res.json(createSession('kakao', user));
     } catch (error) {
-      res.status(502).json({ error: 'Kakao auth failed', message: error.message });
+      console.error('web-auth:kakao', formatError(error));
+      res.status(502).json({ error: 'Kakao auth failed', message: formatError(error) });
     }
   });
 
@@ -180,7 +219,8 @@ function registerWebAuthRoutes(app) {
       const user = await exchangeNaverCode(code, state);
       res.json(createSession('naver', user));
     } catch (error) {
-      res.status(502).json({ error: 'Naver auth failed', message: error.message });
+      console.error('web-auth:naver', formatError(error));
+      res.status(502).json({ error: 'Naver auth failed', message: formatError(error) });
     }
   });
 

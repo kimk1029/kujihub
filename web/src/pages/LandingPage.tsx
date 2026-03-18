@@ -73,6 +73,11 @@ export function LandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [authenticating, setAuthenticating] = useState(false);
 
+  function completeLogin(session: Parameters<typeof setWebAuthSession>[0]) {
+    setWebAuthSession(session);
+    window.location.replace('/dashboard');
+  }
+
   useEffect(() => {
     kujiDrawApi.getList().then(list => {
       setFeatured(list.slice(0, 3));
@@ -118,9 +123,8 @@ export function LandingPage() {
 
       loginPromise
         .then((session) => {
-          setWebAuthSession(session);
+          completeLogin(session);
           window.history.replaceState({}, '', '/');
-          navigate('/dashboard', { replace: true });
         })
         .catch((authError) => {
           setError(authError instanceof Error ? authError.message : '로그인 처리에 실패했습니다.');
@@ -160,8 +164,7 @@ export function LandingPage() {
       setAuthenticating(true);
       loginWithDev()
         .then((session) => {
-          setWebAuthSession(session);
-          navigate('/dashboard', { replace: true });
+          completeLogin(session);
         })
         .catch((authError) => {
           setError(authError instanceof Error ? authError.message : '개발용 로그인에 실패했습니다.');
@@ -244,8 +247,7 @@ export function LandingPage() {
                           setAuthenticating(true);
                           loginWithGoogle(accessToken)
                             .then((session) => {
-                              setWebAuthSession(session);
-                              navigate('/dashboard', { replace: true });
+                              completeLogin(session);
                             })
                             .catch((authError) => {
                               setError(authError instanceof Error ? authError.message : '구글 로그인에 실패했습니다.');
