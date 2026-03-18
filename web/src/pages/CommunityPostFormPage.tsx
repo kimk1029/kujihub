@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { communityApi } from '../api/community';
+import { ArcadeBox } from '../components/arcade/ArcadeBox';
+import { ArcadeButton } from '../components/arcade/ArcadeButton';
 
 export function CommunityPostFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -9,7 +11,7 @@ export function CommunityPostFormPage() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [author, setAuthor] = useState('익명');
+  const [author, setAuthor] = useState('GUEST_USER');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!!editId);
 
@@ -52,7 +54,7 @@ export function CommunityPostFormPage() {
           await communityApi.create({
             title: t,
             content: content.trim(),
-            author: author.trim() || '익명',
+            author: author.trim() || 'GUEST_USER',
           });
         }
         navigate('/community');
@@ -63,83 +65,139 @@ export function CommunityPostFormPage() {
     [editId, title, content, author, navigate]
   );
 
-  const contentLength = useMemo(() => content.trim().length, [content]);
-
   if (fetching) {
     return (
-      <div className="page centered">
-        <div className="loading-shimmer" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
-        <p style={{ fontWeight: 700, color: 'var(--primary)' }}>불러오는 중…</p>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+          DOWNLOADING_DATA...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="page editor-page">
-      <section className="editor-hero">
-        <div className="editor-hero__eyebrow">{editId ? 'EDIT POST' : 'NEW POST'}</div>
-        <h1 className="editor-hero__title">{editId ? '게시글 수정하기' : '새 게시글 작성하기'}</h1>
-        <p className="editor-hero__body">
-          제목과 첫 문장이 먼저 읽히는 글이 좋습니다. 한 줄 제목과 문단 구성이 핵심입니다.
+    <div className="animate-in">
+      <header style={{ marginBottom: '40px' }}>
+        <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+          {editId ? 'UPDATE_LOG' : 'ENCODE_NEW_LOG'}
+        </h1>
+        <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.7rem', opacity: 0.8 }}>
+          INPUT DATA INTO THE GLOBAL MAINFRAME. BE CONCISE.
         </p>
-        <div className="editor-hero__meta">
-          <span className="board-pill">자유게시판</span>
-          <span className="board-pill muted">{contentLength.toLocaleString()}자</span>
-        </div>
-      </section>
+      </header>
 
-      <form onSubmit={handleSubmit} className="editor-shell">
-        <div className="editor-field">
-          <label className="editor-label" htmlFor="title">제목</label>
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.currentTarget.value)}
-            placeholder="한 줄로 핵심이 보이게 작성하세요"
-            required
-            className="editor-input"
-          />
-        </div>
+      <ArcadeBox label="DATA_INPUT_TERMINAL" variant="primary">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <label className="arcade-font-pixel" htmlFor="title" style={{ fontSize: '0.6rem', color: 'var(--arcade-secondary)' }}>
+              LOG_HEADER
+            </label>
+            <input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.currentTarget.value)}
+              placeholder="ENTER_TITLE_HERE"
+              required
+              className="arcade-font-pixel"
+              style={{ 
+                background: 'rgba(0,0,0,0.5)', 
+                border: '2px solid rgba(255,255,255,0.1)', 
+                padding: '16px', 
+                color: '#fff', 
+                fontSize: '0.8rem',
+                outline: 'none',
+                width: '100%'
+              }}
+            />
+          </div>
 
-        <div className="editor-field">
-          <label className="editor-label" htmlFor="author">작성자</label>
-          <input
-            id="author"
-            type="text"
-            value={author}
-            onChange={(e) => setAuthor(e.currentTarget.value)}
-            placeholder="익명"
-            className="editor-input"
-          />
-        </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <label className="arcade-font-pixel" htmlFor="author" style={{ fontSize: '0.6rem', color: 'var(--arcade-accent)' }}>
+              SENDER_ID
+            </label>
+            <input
+              id="author"
+              type="text"
+              value={author}
+              onChange={(e) => setAuthor(e.currentTarget.value)}
+              placeholder="GUEST_USER"
+              className="arcade-font-pixel"
+              style={{ 
+                background: 'rgba(0,0,0,0.5)', 
+                border: '2px solid rgba(255,255,255,0.1)', 
+                padding: '16px', 
+                color: '#fff', 
+                fontSize: '0.8rem',
+                outline: 'none',
+                width: '100%'
+              }}
+            />
+          </div>
 
-        <div className="editor-field">
-          <label className="editor-label" htmlFor="content">내용</label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.currentTarget.value)}
-            placeholder="발매 정보, 후기, 질문 내용을 문단별로 정리해보세요"
-            rows={12}
-            className="editor-textarea"
-          />
-        </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <label className="arcade-font-pixel" htmlFor="content" style={{ fontSize: '0.6rem', color: 'var(--arcade-primary)' }}>
+              MESSAGE_BODY
+            </label>
+            <textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.currentTarget.value)}
+              placeholder="ENTER_MESSAGE_CONTENT_TO_BROADCAST"
+              rows={12}
+              className="arcade-font-pixel"
+              style={{ 
+                background: 'rgba(0,0,0,0.5)', 
+                border: '2px solid rgba(255,255,255,0.1)', 
+                padding: '16px', 
+                color: '#fff', 
+                fontSize: '0.8rem',
+                outline: 'none',
+                width: '100%',
+                lineHeight: '1.6',
+                fontFamily: 'VT323, monospace'
+              }}
+            />
+          </div>
 
-        <div className="editor-guide">
-          <span>제목은 30자 안팎이면 읽기 좋습니다.</span>
-          <span>본문은 날짜, 장소, 상품명 순으로 정리하면 빠르게 읽힙니다.</span>
-        </div>
+          <div style={{ 
+            background: 'rgba(57, 255, 20, 0.05)', 
+            padding: '12px', 
+            border: '1px solid var(--arcade-accent)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <p className="arcade-font-pixel" style={{ fontSize: '0.5rem', color: 'var(--arcade-accent)' }}>
+              • DATA WILL BE BROADCASTED TO ALL SECTORS.
+            </p>
+            <p className="arcade-font-pixel" style={{ fontSize: '0.5rem', color: 'var(--arcade-accent)' }}>
+              • NO DELETION POSSIBLE AFTER SUBMISSION WITHOUT AUTHENTICATION.
+            </p>
+          </div>
 
-        <div className="editor-actions">
-          <Link to={editId ? `/community/${editId}` : '/community'} className="btn outlined">
-            취소
-          </Link>
-          <button type="submit" className="btn dark" disabled={!title.trim() || loading}>
-            {loading ? '처리 중…' : editId ? '수정 완료' : '등록하기'}
-          </button>
-        </div>
-      </form>
+          <div style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
+            <ArcadeButton 
+              variant="secondary" 
+              size="md" 
+              type="button" 
+              onClick={() => navigate(editId ? `/community/${editId}` : '/community')}
+              style={{ flex: 1 }}
+            >
+              ABORT_MISSION
+            </ArcadeButton>
+            <ArcadeButton 
+              variant="accent" 
+              size="md" 
+              type="submit" 
+              disabled={!title.trim() || loading}
+              style={{ flex: 1 }}
+            >
+              {loading ? 'UPLOADING...' : editId ? 'UPDATE_ENTRY' : 'BROADCAST_NOW'}
+            </ArcadeButton>
+          </div>
+        </form>
+      </ArcadeBox>
     </div>
   );
 }

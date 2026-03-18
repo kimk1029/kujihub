@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ensureKujiPlayer, kujiDrawApi } from '../api/kujiDraw';
 import type { KujiDetail, KujiPlayer } from '../types/kujiDraw';
+import { ArcadeBox } from '../components/arcade/ArcadeBox';
+import { ArcadeButton } from '../components/arcade/ArcadeButton';
 
 export function KujiDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,83 +37,142 @@ export function KujiDetailPage() {
   const total = useMemo(() => (kuji ? kuji.price * quantity : 0), [kuji, quantity]);
   const canAfford = (player?.points ?? 0) >= total;
 
-  if (loading) return <div className="page centered"><div className="loading-shimmer" style={{ width: '60px', height: '60px', borderRadius: '50%' }} /></div>;
-  if (!kuji) return <div className="page centered"><p className="error-text">{error ?? '쿠지를 찾을 수 없습니다.'}</p></div>;
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+          SCANNING MACHINE...
+        </div>
+      </div>
+    );
+  }
+
+  if (!kuji) {
+    return (
+      <div className="animate-in">
+        <ArcadeBox variant="primary" label="ERROR">
+          <p className="arcade-font-pixel" style={{ color: 'var(--error)' }}>
+            {error ?? 'MACHINE_NOT_FOUND'}
+          </p>
+          <ArcadeButton variant="secondary" onClick={() => navigate('/kuji')} style={{ marginTop: '20px' }}>
+            BACK_TO_LIST
+          </ArcadeButton>
+        </ArcadeBox>
+      </div>
+    );
+  }
 
   return (
-    <div className="page kuji-page">
-      <section className="board-shell" style={{ padding: '18px' }}>
-        <div className="editor-hero__eyebrow" style={{ color: 'var(--primary)' }}>KUJI DETAIL</div>
-        <h1 className="portal-hero__title" style={{ color: '#111827', marginTop: '8px', fontSize: '2rem' }}>{kuji.title}</h1>
-        <p className="portal-hero__body" style={{ color: 'var(--text-muted)', marginTop: '10px' }}>{kuji.description}</p>
+    <div className="animate-in">
+      <header style={{ marginBottom: '40px' }}>
+        <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+          {kuji.title}
+        </h1>
+        <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.8rem', opacity: 0.8 }}>
+          {kuji.description}
+        </p>
+      </header>
 
-        <div className="kuji-purchase-grid">
-          <div className="portal-panel">
-            <h2 className="portal-panel__title">구매 정보</h2>
-            <div className="kuji-detail-meta">
-              <span>보유 포인트</span>
-              <strong>{player?.points.toLocaleString() ?? 0}P</strong>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <ArcadeBox label="MACHINE_PREVIEW" variant="default">
+            <div className="kuji-img-placeholder" style={{ height: '300px', fontSize: '8rem' }}>
+              🎁
             </div>
-            <div className="kuji-detail-meta">
-              <span>1회 가격</span>
-              <strong>{kuji.price.toLocaleString()}P</strong>
-            </div>
-            <div className="kuji-detail-meta">
-              <span>남은 칸</span>
-              <strong>{kuji.remaining} / {kuji.boardSize}</strong>
-            </div>
-            <div className="kuji-qty-row">
-              <button className="calendar-nav" onClick={() => setQuantity((v) => Math.max(1, v - 1))}>-</button>
-              <strong>{quantity}회</strong>
-              <button className="calendar-nav" onClick={() => setQuantity((v) => Math.min(Math.min(10, kuji.remaining), v + 1))}>+</button>
-            </div>
-            <div className="kuji-total-row">
-              <span>총 결제</span>
-              <strong>{total.toLocaleString()}P</strong>
-            </div>
-            {error && <div className="error-box" style={{ margin: '12px 0 0' }}>{error}</div>}
-            <div className="editor-actions" style={{ marginTop: '16px' }}>
-              <Link to="/kuji" className="btn outlined">목록</Link>
-              <button
-                type="button"
-                className="btn dark"
-                disabled={submitting || kuji.remaining === 0 || !canAfford}
-                onClick={async () => {
-                  if (!id || !player) return;
-                  setSubmitting(true);
-                  setError(null);
-                  try {
-                    const response = await kujiDrawApi.createPurchase(id, quantity, player.id);
-                    setPlayer(response.player);
-                    navigate(`/kuji/${id}/board/${response.purchase.id}?qty=${quantity}`);
-                  } catch (e: any) {
-                    const apiError = e?.response?.data?.error;
-                    if (apiError === 'insufficient_points') setError('포인트가 부족합니다.');
-                    else if (apiError === 'not_enough_slots') setError('남은 칸이 부족합니다.');
-                    else setError('결제 처리에 실패했습니다.');
-                  } finally {
-                    setSubmitting(false);
-                  }
-                }}
-              >
-                {submitting ? '결제 중...' : kuji.remaining === 0 ? '매진' : !canAfford ? '포인트 부족' : '결제 후 보드로'}
-              </button>
-            </div>
-          </div>
+          </ArcadeBox>
 
-          <div className="portal-panel">
-            <h2 className="portal-panel__title">등급 구성</h2>
-            <div className="kuji-prize-list">
-              {kuji.prizes.map((prize) => (
-                <div key={prize.id} className="kuji-prize-item">
-                  <span className="kuji-prize-grade" style={{ backgroundColor: prize.color }}>{prize.grade}</span>
-                  <span>{prize.name}</span>
-                </div>
-              ))}
+          <ArcadeBox label="PRIZE_LIST" variant="secondary">
+            <div className="arcade-font-pixel" style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+              WINS REMAINING: {kuji.remaining} / {kuji.boardSize}
             </div>
-          </div>
+            {/* Prize list could go here */}
+          </ArcadeBox>
         </div>
-      </section>
+
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <ArcadeBox label="PURCHASE_CONSOLE" variant="primary">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>
+                <span className="arcade-font-pixel" style={{ fontSize: '0.6rem' }}>PLAYER_CREDITS</span>
+                <span className="arcade-font-pixel" style={{ fontSize: '0.8rem', color: 'var(--arcade-accent)' }}>
+                  {player?.points.toLocaleString() ?? 0} P
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>
+                <span className="arcade-font-pixel" style={{ fontSize: '0.6rem' }}>UNIT_PRICE</span>
+                <span className="arcade-font-pixel" style={{ fontSize: '0.8rem' }}>
+                  {kuji.price.toLocaleString()} P
+                </span>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+                <span className="arcade-font-pixel" style={{ fontSize: '0.6rem' }}>QUANTITY</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <ArcadeButton 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={() => setQuantity((v) => Math.max(1, v - 1))}
+                    style={{ padding: '4px 12px' }}
+                  >-</ArcadeButton>
+                  <span className="arcade-font-pixel" style={{ fontSize: '1rem' }}>{quantity}</span>
+                  <ArcadeButton 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={() => setQuantity((v) => Math.min(Math.min(10, kuji.remaining), v + 1))}
+                    style={{ padding: '4px 12px' }}
+                  >+</ArcadeButton>
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', border: '2px solid var(--arcade-primary)', marginTop: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="arcade-font-pixel" style={{ fontSize: '0.8rem' }}>TOTAL_COST</span>
+                  <span className="arcade-font-pixel" style={{ fontSize: '1.2rem', color: 'var(--arcade-primary)' }}>
+                    {total.toLocaleString()} P
+                  </span>
+                </div>
+              </div>
+
+              {error && (
+                <div className="arcade-font-pixel" style={{ color: 'var(--error)', fontSize: '0.6rem', textAlign: 'center', marginTop: '12px' }}>
+                  [ ERROR: {error} ]
+                </div>
+              )}
+
+              <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <ArcadeButton
+                  variant="accent"
+                  className="coin-btn"
+                  disabled={submitting || kuji.remaining === 0 || !canAfford}
+                  onClick={async () => {
+                    if (!id || !player) return;
+                    setSubmitting(true);
+                    setError(null);
+                    try {
+                      const response = await kujiDrawApi.createPurchase(id, quantity, player.id);
+                      setPlayer(response.player);
+                      navigate(`/kuji/${id}/board/${response.purchase.id}?qty=${quantity}`);
+                    } catch (e: any) {
+                      const apiError = e?.response?.data?.error;
+                      if (apiError === 'insufficient_points') setError('INSUFFICIENT_CREDITS');
+                      else if (apiError === 'not_enough_slots') setError('MACHINE_EMPTY');
+                      else setError('TRANSACTION_FAILED');
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  {submitting ? 'SYNCING...' : kuji.remaining === 0 ? 'SOLD_OUT' : !canAfford ? 'NO_CREDITS' : 'START_GAME'}
+                </ArcadeButton>
+                <ArcadeButton variant="secondary" size="sm" onClick={() => navigate('/kuji')} style={{ width: '100%' }}>
+                  EXIT_MACHINE
+                </ArcadeButton>
+              </div>
+            </div>
+          </ArcadeBox>
+        </aside>
+      </div>
     </div>
   );
 }

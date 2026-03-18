@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { communityApi } from '../api/community';
 import type { CommunityPost } from '../types/community';
+import { ArcadeBox } from '../components/arcade/ArcadeBox';
+import { ArcadeButton } from '../components/arcade/ArcadeButton';
 
 export function CommunityDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,71 +32,105 @@ export function CommunityDetailPage() {
   }, [fetchPost]);
 
   const handleDelete = async () => {
-    if (!id || !window.confirm('이 글을 삭제할까요?')) return;
+    if (!id || !window.confirm('DELETE THIS LOG PERMANENTLY?')) return;
     try {
       await communityApi.remove(Number(id));
       navigate('/community');
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : '삭제에 실패했습니다.');
+      window.alert(e instanceof Error ? e.message : 'ERASE_FAILED');
     }
   };
 
-  const contentLength = useMemo(() => post?.content.trim().length ?? 0, [post?.content]);
-
   if (loading) {
     return (
-      <div className="page centered">
-        <div className="loading-shimmer" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
-        <p style={{ fontWeight: 700, color: 'var(--primary)' }}>글 읽는 중…</p>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+          DECRYPTING_LOG...
+        </div>
       </div>
     );
   }
 
   if (error || !post) {
     return (
-      <div className="page centered">
-        <p className="error-text">{error ?? '글을 찾을 수 없습니다.'}</p>
-        <Link to="/community" className="btn outlined">목록으로</Link>
+      <div className="animate-in">
+        <ArcadeBox variant="primary" label="ERROR">
+          <p className="arcade-font-pixel" style={{ color: 'var(--error)' }}>
+            {error ?? 'LOG_NOT_FOUND'}
+          </p>
+          <ArcadeButton variant="secondary" onClick={() => navigate('/community')} style={{ marginTop: '20px' }}>
+            BACK_TO_ARCHIVE
+          </ArcadeButton>
+        </ArcadeBox>
       </div>
     );
   }
 
   return (
-    <div className="page community-detail-page">
-      <section className="article-hero">
-        <div className="article-hero__eyebrow">COMMUNITY ARTICLE</div>
-        <h1 className="article-hero__title">{post.title}</h1>
-        <div className="article-hero__meta">
-          <span>{post.author}</span>
-          <span>등록 {dayjs(post.createdAt).format('YYYY.MM.DD HH:mm')}</span>
-          <span>수정 {dayjs(post.updatedAt).format('YYYY.MM.DD HH:mm')}</span>
-        </div>
-      </section>
-
-      <div className="article-layout">
-        <article className="article-shell">
-          <div className="article-body">
-            {post.content || '(내용 없음)'}
+    <div className="animate-in">
+      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <div className="arcade-font-pixel" style={{ color: 'var(--arcade-primary)', fontSize: '0.6rem', marginBottom: '8px' }}>
+            MESSAGE_ID: {post.id}
           </div>
-        </article>
+          <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+            {post.title}
+          </h1>
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <span className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: 'var(--arcade-accent)' }}>
+              AUTHOR: {post.author}
+            </span>
+            <span className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>
+              RECEIVED: {dayjs(post.createdAt).format('YYYY.MM.DD HH:mm')}
+            </span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <ArcadeButton variant="secondary" size="sm" onClick={() => navigate(`/community/edit/${post.id}`)}>
+            EDIT_DATA
+          </ArcadeButton>
+          <ArcadeButton variant="primary" size="sm" onClick={handleDelete}>
+            ERASE_LOG
+          </ArcadeButton>
+        </div>
+      </header>
 
-        <aside className="portal-side">
-          <section className="portal-panel">
-            <h2 className="portal-panel__title">글 정보</h2>
-            <ul className="portal-list">
-              <li>작성자: {post.author}</li>
-              <li>본문 길이: {contentLength.toLocaleString()}자</li>
-              <li>게시글 번호: {post.id}</li>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '32px' }}>
+        <ArcadeBox label="LOG_CONTENT" variant="default" style={{ minHeight: '400px' }}>
+          <div className="arcade-font-pixel" style={{ 
+            fontSize: '0.9rem', 
+            color: '#fff', 
+            lineHeight: '1.6', 
+            whiteSpace: 'pre-wrap',
+            fontFamily: 'VT323, monospace' 
+          }}>
+            {post.content || '( NO_DATA_RECORDED )'}
+          </div>
+        </ArcadeBox>
+
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <ArcadeBox label="METADATA" variant="secondary">
+            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <li style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
+                <div className="arcade-font-pixel" style={{ fontSize: '0.5rem', opacity: 0.5, marginBottom: '4px' }}>SECTOR</div>
+                <div className="arcade-font-pixel" style={{ fontSize: '0.7rem' }}>GENERAL_COMM</div>
+              </li>
+              <li style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
+                <div className="arcade-font-pixel" style={{ fontSize: '0.5rem', opacity: 0.5, marginBottom: '4px' }}>BYTE_SIZE</div>
+                <div className="arcade-font-pixel" style={{ fontSize: '0.7rem' }}>{post.content.length.toLocaleString()} B</div>
+              </li>
+              <li>
+                <div className="arcade-font-pixel" style={{ fontSize: '0.5rem', opacity: 0.5, marginBottom: '4px' }}>LAST_SYNC</div>
+                <div className="arcade-font-pixel" style={{ fontSize: '0.7rem' }}>{dayjs(post.updatedAt).format('HH:mm:ss')}</div>
+              </li>
             </ul>
-          </section>
-          <section className="portal-panel">
-            <h2 className="portal-panel__title">바로가기</h2>
-            <div className="article-side-actions">
-              <Link to={`/community/edit/${post.id}`} className="btn outlined">수정하기</Link>
-              <Link to="/community" className="btn dark">목록으로</Link>
-              <button type="button" className="btn danger" onClick={handleDelete}>삭제하기</button>
-            </div>
-          </section>
+          </ArcadeBox>
+
+          <ArcadeBox label="NAVIGATION" variant="default">
+            <ArcadeButton variant="secondary" size="sm" style={{ width: '100%' }} onClick={() => navigate('/community')}>
+              BACK_TO_LIST
+            </ArcadeButton>
+          </ArcadeBox>
         </aside>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button, Card } from './ui';
 import type { KujiReserveResult } from '../types/kujiDraw';
+import { ArcadeBox } from './arcade/ArcadeBox';
+import { ArcadeButton } from './arcade/ArcadeButton';
 
 interface KujiRevealModalProps {
   results: KujiReserveResult[];
@@ -51,7 +52,7 @@ export function KujiRevealModal({ results, onFinish }: KujiRevealModalProps) {
           <div key={i} className="firework" style={{ 
             left: `${Math.random() * 100}%`, 
             top: `${Math.random() * 100}%`,
-            backgroundColor: ['#ff0000', '#ffd700', '#ff00ff', '#00ffff', '#00ff00'][Math.floor(Math.random() * 5)],
+            backgroundColor: ['#ff00ff', '#00ffff', '#39ff14', '#ffff00', '#ff0000'][Math.floor(Math.random() * 5)],
             animationDelay: `${Math.random() * 0.5}s`
           }} />
         ))}
@@ -61,72 +62,85 @@ export function KujiRevealModal({ results, onFinish }: KujiRevealModalProps) {
 
   if (completed) {
     return (
-      <div className="reveal-overlay">
-        <div className="animate-in" style={{ width: 'min(500px, 90%)' }}>
-          <Card title="FINAL RESULTS" className="neu-flat">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+      <div className="reveal-overlay arcade-body crt scanlines">
+        <div className="animate-in" style={{ width: 'min(600px, 95%)' }}>
+          <ArcadeBox label="FINAL_RESULTS" variant="primary">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '32px' }}>
               {results.map((r, i) => (
-                <div key={i} className="neu-flat-sm" style={{ padding: '12px', textAlign: 'center' }}>
+                <div key={i} style={{ 
+                  padding: '16px', 
+                  border: '2px solid rgba(255,255,255,0.1)', 
+                  textAlign: 'center',
+                  background: 'rgba(0,0,0,0.3)'
+                }}>
                   <div style={{ 
-                    width: '40px', 
-                    height: '40px', 
-                    borderRadius: '50%', 
+                    width: '50px', 
+                    height: '50px', 
                     backgroundColor: r.color, 
-                    color: 'white', 
+                    color: '#000', 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
-                    margin: '0 auto 8px',
-                    fontWeight: 900
+                    margin: '0 auto 12px',
+                    fontFamily: 'Press Start 2P, cursive',
+                    fontSize: '1.2rem',
+                    border: '4px solid #000'
                   }}>
                     {r.grade}
                   </div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 800 }}>{r.name}</div>
+                  <div className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: '#fff' }}>{r.name}</div>
                 </div>
               ))}
             </div>
-            <Button variant="primary" fullWidth onClick={onFinish}>CONFIRM & EXIT</Button>
-          </Card>
+            <ArcadeButton variant="accent" size="lg" style={{ width: '100%' }} onClick={onFinish}>
+              CLAIM_PRIZES & EXIT
+            </ArcadeButton>
+          </ArcadeBox>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="reveal-overlay">
+    <div className="reveal-overlay arcade-body crt scanlines">
       {renderFireworks()}
       
       <div className="reveal-container animate-in">
-        <div className="reveal-status">
-          TICKET {currentIndex + 1} / {results.length}
+        <div className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', letterSpacing: '2px', fontSize: '0.8rem' }}>
+          SIGNAL {currentIndex + 1} / {results.length}
         </div>
 
         <div className={`kuji-ticket-container ${revealed ? 'is-revealed' : ''} ${isPeeling ? 'is-peeling' : ''}`}>
           {/* Back of the ticket (Hidden state) */}
-          <div className="kuji-ticket-back neu-flat" onClick={handleReveal}>
-            <div className="ticket-pattern"></div>
-            <div className="peel-guide">CLICK TO PEEL</div>
-            <div className="ticket-logo">KUJIHUB</div>
+          <div className="kuji-ticket-back" onClick={handleReveal} style={{ background: 'var(--arcade-surface)', border: '6px solid var(--arcade-primary)' }}>
+            <div className="ticket-pattern" style={{ border: '2px dashed var(--arcade-primary)' }}></div>
+            <div className="arcade-font-pixel blink" style={{ fontSize: '0.9rem', color: 'var(--arcade-accent)' }}>TAP_TO_PEEL</div>
+            <div className="arcade-font-pixel" style={{ position: 'absolute', bottom: '20px', fontSize: '0.5rem', color: 'var(--arcade-primary)' }}>KUJIHUB_SYSTEM</div>
           </div>
 
           {/* Front of the ticket (Revealed state) */}
-          <div className="kuji-ticket-front neu-convex">
-            <div className="prize-grade-large" style={{ color: currentResult.color }}>
+          <div className="kuji-ticket-front" style={{ background: '#000', border: '6px solid var(--arcade-secondary)' }}>
+            <div className="arcade-font-pixel" style={{ fontSize: '8rem', color: currentResult.color, textShadow: '6px 6px 0px rgba(255,255,255,0.1)' }}>
               {currentResult.grade}
             </div>
-            <div className="prize-name">{currentResult.name}</div>
-            <div className="slot-number">SLOT #{currentResult.slotNumber}</div>
-            <div className="congrats-text">{['A', 'B', 'S'].includes(currentResult.grade) ? 'CONGRATULATIONS!' : 'BETTER LUCK NEXT TIME!'}</div>
+            <div className="arcade-font-pixel" style={{ fontSize: '0.8rem', color: '#fff', textAlign: 'center', margin: '20px 0' }}>
+              {currentResult.name}
+            </div>
+            <div className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>
+              SLOT_LINK #{currentResult.slotNumber}
+            </div>
           </div>
         </div>
 
         <div className="reveal-actions">
           {revealed ? (
-            <Button variant="primary" size="lg" onClick={nextTicket} className="shake-animation">
-              {currentIndex < results.length - 1 ? 'NEXT TICKET' : 'SEE ALL RESULTS'}
-            </Button>
+            <ArcadeButton variant="primary" size="lg" onClick={nextTicket} className="coin-btn">
+              {currentIndex < results.length - 1 ? 'NEXT_SIGNAL' : 'REVEAL_SUMMARY'}
+            </ArcadeButton>
           ) : (
-            <p className="hint-text">TAP THE TICKET TO REVEAL YOUR PRIZE</p>
+            <p className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)' }}>
+              INITIATING DECRYPTION...
+            </p>
           )}
         </div>
       </div>
@@ -135,13 +149,11 @@ export function KujiRevealModal({ results, onFinish }: KujiRevealModalProps) {
         .reveal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(10, 15, 25, 0.95);
-          backdrop-filter: blur(10px);
+          background: rgba(10, 10, 26, 0.98);
           z-index: 1000;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
           overflow: hidden;
         }
 
@@ -154,18 +166,11 @@ export function KujiRevealModal({ results, onFinish }: KujiRevealModalProps) {
           max-width: 400px;
         }
 
-        .reveal-status {
-          font-weight: 900;
-          letter-spacing: 2px;
-          color: #4b6cb7;
-          text-shadow: 0 0 10px rgba(75, 108, 183, 0.5);
-        }
-
         .kuji-ticket-container {
-          width: 280px;
-          height: 380px;
+          width: 300px;
+          height: 420px;
           position: relative;
-          perspective: 1000px;
+          perspective: 1200px;
           cursor: pointer;
         }
 
@@ -173,23 +178,19 @@ export function KujiRevealModal({ results, onFinish }: KujiRevealModalProps) {
           position: absolute;
           inset: 0;
           backface-visibility: hidden;
-          transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          border: 4px solid #182848;
         }
 
         .kuji-ticket-back {
-          background: #e0e5ec;
           z-index: 2;
         }
 
         .kuji-ticket-front {
-          background: #e0e5ec;
           transform: rotateY(180deg);
-          color: #182848;
         }
 
         .is-revealed .kuji-ticket-back {
@@ -201,88 +202,20 @@ export function KujiRevealModal({ results, onFinish }: KujiRevealModalProps) {
         }
 
         .is-peeling .kuji-ticket-back {
-          animation: peel-shake 0.15s infinite;
+          animation: peel-shake 0.1s infinite;
         }
 
         @keyframes peel-shake {
-          0% { transform: rotate(0deg); }
-          25% { transform: rotate(1deg); }
-          75% { transform: rotate(-1deg); }
-          100% { transform: rotate(0deg); }
+          0% { transform: translate(0, 0); }
+          25% { transform: translate(2px, -2px); }
+          50% { transform: translate(-2px, 2px); }
+          75% { transform: translate(2px, 2px); }
+          100% { transform: translate(0, 0); }
         }
 
         .ticket-pattern {
           position: absolute;
-          inset: 10px;
-          border: 2px dashed #b8bec5;
-        }
-
-        .peel-guide {
-          font-weight: 900;
-          font-size: 1.2rem;
-          color: var(--text-muted);
-          animation: pulse 1.5s infinite;
-        }
-
-        .ticket-logo {
-          position: absolute;
-          bottom: 20px;
-          font-weight: 900;
-          font-size: 0.8rem;
-          color: #4b6cb7;
-          letter-spacing: 3px;
-        }
-
-        .prize-grade-large {
-          font-size: 8rem;
-          font-weight: 950;
-          line-height: 1;
-          margin-bottom: 20px;
-          text-shadow: 4px 4px 0px rgba(0,0,0,0.1);
-        }
-
-        .prize-name {
-          font-size: 1.2rem;
-          font-weight: 800;
-          text-align: center;
-          padding: 0 20px;
-          margin-bottom: 40px;
-        }
-
-        .slot-number {
-          font-size: 0.9rem;
-          font-weight: 700;
-          color: var(--text-muted);
-        }
-
-        .congrats-text {
-          position: absolute;
-          top: 20px;
-          font-weight: 900;
-          font-size: 0.7rem;
-          letter-spacing: 2px;
-        }
-
-        .hint-text {
-          font-weight: 700;
-          color: #636e72;
-          letter-spacing: 1px;
-        }
-
-        @keyframes pulse {
-          0% { opacity: 0.4; }
-          50% { opacity: 1; }
-          100% { opacity: 0.4; }
-        }
-
-        .shake-animation {
-          animation: shake 2s infinite;
-        }
-
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-          20%, 40%, 60%, 80% { transform: translateX(5px); }
+          inset: 12px;
         }
 
         /* Fireworks */
@@ -295,15 +228,15 @@ export function KujiRevealModal({ results, onFinish }: KujiRevealModalProps) {
 
         .firework {
           position: absolute;
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          animation: explode 1s ease-out forwards;
+          width: 8px;
+          height: 8px;
+          border-radius: 2px;
+          animation: explode 0.8s ease-out forwards;
         }
 
         @keyframes explode {
           0% { transform: scale(1); opacity: 1; }
-          100% { transform: scale(30); opacity: 0; }
+          100% { transform: scale(40); opacity: 0; }
         }
       `}} />
     </div>

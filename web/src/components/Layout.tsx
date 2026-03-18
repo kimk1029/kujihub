@@ -2,7 +2,6 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import logoImg from '../assets/logo.png';
 import '../components/arcade/Arcade.css';
 import '../arcade.css';
-import { ArcadeBox } from './arcade/ArcadeBox';
 import { ArcadeButton } from './arcade/ArcadeButton';
 
 export function Layout() {
