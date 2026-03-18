@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ensureKujiPlayer, kujiDrawApi } from '../api/kujiDraw';
 import type { KujiListItem, KujiPlayer } from '../types/kujiDraw';
+import { ArcadeBox } from '../components/arcade/ArcadeBox';
+import { ArcadeButton } from '../components/arcade/ArcadeButton';
 
 export function KujiListPage() {
   const [items, setItems] = useState<KujiListItem[]>([]);
   const [player, setPlayer] = useState<KujiPlayer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -28,42 +31,78 @@ export function KujiListPage() {
   }, [load]);
 
   if (loading) {
-    return <div className="page centered"><div className="loading-shimmer" style={{ width: '60px', height: '60px', borderRadius: '50%' }} /></div>;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <div className="arcade-font-pixel blink" style={{ color: 'var(--arcade-primary)', fontSize: '1.5rem' }}>
+          LOADING DATA...
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="page kuji-page">
-      <section className="board-shell">
-        <div style={{ padding: '0 18px 12px' }}>
-          <div className="portal-hero__eyebrow" style={{ color: 'var(--primary)' }}>KUJI</div>
-          <div className="portal-hero__header" style={{ marginTop: '8px' }}>
-            <div>
-              <h1 className="portal-hero__title" style={{ color: '#111827', marginTop: 0, fontSize: '2rem' }}>쿠지 목록</h1>
-              <p className="portal-hero__body" style={{ color: 'var(--text-muted)', marginTop: '10px' }}>
-                앱과 같은 DB를 바라보는 실시간 쿠지 목록입니다. 결제 후 같은 보드 상태를 공유합니다.
-              </p>
-            </div>
-            <div className="board-pill">{player ? `${player.points.toLocaleString()}P` : '0P'}</div>
+    <div className="animate-in">
+      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px' }}>
+            SELECT MACHINE
+          </h1>
+          <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.7rem', opacity: 0.8 }}>
+            CHOOSE YOUR DESTINY. EVERY DRAW IS A NEW CHANCE.
+          </p>
+        </div>
+        <ArcadeBox label="PLAYER_WALLET" variant="accent" isChunky={false}>
+          <div className="arcade-font-pixel" style={{ fontSize: '1rem', color: 'var(--arcade-accent)' }}>
+            {player ? `${player.points.toLocaleString()} P` : '0 P'}
           </div>
-        </div>
-        {error && <div className="error-box">{error}</div>}
-        <div className="kuji-web-list">
-          {items.map((item) => (
-            <Link key={item.id} to={`/kuji/${item.id}`} className="kuji-web-card">
-              <div className="kuji-web-card__header">
-                <span className={`board-pill ${item.remaining === 0 ? 'muted' : ''}`}>{item.remaining === 0 ? '매진' : '진행중'}</span>
-                <strong className="kuji-web-card__price">{item.price.toLocaleString()}P</strong>
+        </ArcadeBox>
+      </header>
+
+      {error && (
+        <ArcadeBox variant="primary" style={{ marginBottom: '24px', borderColor: 'var(--error)' }}>
+          <div className="arcade-font-pixel" style={{ color: 'var(--error)', fontSize: '0.8rem' }}>
+            ERROR: {error}
+          </div>
+        </ArcadeBox>
+      )}
+
+      <div className="arcade-grid" style={{ padding: 0 }}>
+        {items.map((item) => (
+          <ArcadeBox 
+            key={item.id} 
+            label={item.remaining === 0 ? "SOLD_OUT" : "ACTIVE"} 
+            variant={item.remaining === 0 ? "default" : "secondary"}
+            className="kuji-card-arcade"
+            style={{ opacity: item.remaining === 0 ? 0.6 : 1 }}
+          >
+            <div className="kuji-img-placeholder" style={{ height: '140px', fontSize: '3rem' }}>
+              {item.remaining === 0 ? '💀' : '🎁'}
+            </div>
+            <div style={{ padding: '20px 0 0' }}>
+              <h2 className="arcade-font-pixel" style={{ fontSize: '0.9rem', marginBottom: '12px', height: '2.4rem', overflow: 'hidden' }}>
+                {item.title}
+              </h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <span className="arcade-font-pixel" style={{ fontSize: '0.8rem', color: 'var(--arcade-accent)' }}>
+                  {item.price.toLocaleString()} P
+                </span>
+                <span className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: '#fff' }}>
+                  {item.remaining}/{item.boardSize} LEFT
+                </span>
               </div>
-              <h2 className="kuji-web-card__title">{item.title}</h2>
-              <p className="kuji-web-card__body">{item.description || '설명이 없습니다.'}</p>
-              <div className="kuji-web-card__footer">
-                <span>{item.remaining} / {item.boardSize}</span>
-                <span>입장하기</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+              <ArcadeButton 
+                variant={item.remaining === 0 ? "primary" : "secondary"} 
+                size="sm" 
+                style={{ width: '100%' }}
+                disabled={item.remaining === 0}
+                onClick={() => navigate(`/kuji/${item.id}`)}
+              >
+                {item.remaining === 0 ? "GAME OVER" : "INSERT COIN"}
+              </ArcadeButton>
+            </div>
+          </ArcadeBox>
+        ))}
+      </div>
     </div>
   );
 }

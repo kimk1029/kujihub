@@ -1,80 +1,108 @@
+import { ArcadeBox } from '../components/arcade/ArcadeBox';
+import { ArcadeButton } from '../components/arcade/ArcadeButton';
+
 export function ProfilePage() {
   return (
     <div className="animate-in">
-      <header className="page-header">
-        <h1 className="page-title">My Portal</h1>
-        <div className="btn btn-primary">EDIT PROFILE</div>
+      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 className="arcade-font-pixel" style={{ color: 'var(--arcade-secondary)', fontSize: '2rem' }}>
+          PLAYER_PORTAL
+        </h1>
+        <ArcadeButton variant="primary" size="sm">
+          EDIT_AVATAR
+        </ArcadeButton>
       </header>
 
-      <div className="profile-dashboard">
+      <div className="profile-dashboard" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '32px' }}>
         {/* Sidebar / Profile Summary */}
-        <aside className="profile-sidebar">
-          <div className="card profile-avatar-container">
-            <div className="profile-avatar-large">👤</div>
-            <h2 className="profile-name">Kuji Enthusiast</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>Member since March 2026</p>
-          </div>
+        <aside className="profile-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <ArcadeBox label="AVATAR" variant="primary" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '5rem', marginBottom: '20px', imageRendering: 'pixelated' }}>👤</div>
+            <h2 className="arcade-font-pixel" style={{ fontSize: '1rem', color: 'var(--arcade-secondary)' }}>KUJI_CHAMP</h2>
+            <p className="arcade-font-pixel" style={{ color: '#fff', fontSize: '0.6rem', marginTop: '12px', opacity: 0.6 }}>
+              LVL. 42 MASTER
+            </p>
+          </ArcadeBox>
 
-          <div className="card">
-            <h3 className="card-title">CREDITS</h3>
+          <ArcadeBox label="INVENTORY" variant="secondary">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '1.5rem', fontWeight: 900 }}>₩ 45,000</span>
-              <div className="btn btn-neu" style={{ padding: '8px 12px', fontSize: '0.7rem' }}>TOP UP</div>
+              <span className="arcade-font-pixel" style={{ fontSize: '1.2rem', color: 'var(--arcade-secondary)' }}>45,000 P</span>
+              <ArcadeButton variant="accent" size="sm">
+                BUY_COIN
+              </ArcadeButton>
             </div>
-          </div>
+          </ArcadeBox>
 
-          <div className="card">
-            <h3 className="card-title">SETTINGS</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div className="btn btn-neu" style={{ justifyContent: 'flex-start', fontSize: '0.8rem' }}>🔔 NOTIFICATIONS</div>
-              <div className="btn btn-neu" style={{ justifyContent: 'flex-start', fontSize: '0.8rem' }}>🔒 SECURITY</div>
+          <ArcadeBox label="CONFIG" variant="default">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <ArcadeButton variant="primary" size="sm" style={{ textAlign: 'left', width: '100%' }}>
+                [ SIGNAL_CONFIG ]
+              </ArcadeButton>
+              <ArcadeButton variant="secondary" size="sm" style={{ textAlign: 'left', width: '100%' }}>
+                [ SECURITY_LOCK ]
+              </ArcadeButton>
             </div>
-          </div>
+          </ArcadeBox>
         </aside>
 
         {/* Main Content / Stats & Activity */}
-        <section className="profile-main">
-          <div className="dashboard-grid">
-            <div className="card stat-card">
-              <span className="stat-label">TOTAL DRAWS</span>
-              <span className="stat-value">124</span>
-            </div>
-            <div className="card stat-card">
-              <span className="stat-label">PRIZES WON</span>
-              <span className="stat-value">18</span>
-            </div>
-            <div className="card stat-card">
-              <span className="stat-label">POSTS</span>
-              <span className="stat-value">32</span>
-            </div>
+        <section className="profile-main" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="arcade-grid" style={{ padding: 0, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            <ArcadeBox label="DRAWS" variant="primary">
+              <div className="arcade-font-pixel" style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)' }}>124</div>
+            </ArcadeBox>
+            <ArcadeBox label="WINS" variant="secondary">
+              <div className="arcade-font-pixel" style={{ fontSize: '1.5rem', color: 'var(--arcade-secondary)' }}>018</div>
+            </ArcadeBox>
+            <ArcadeBox label="LEVEL" variant="accent">
+              <div className="arcade-font-pixel" style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)' }}>042</div>
+            </ArcadeBox>
           </div>
 
-          <div className="card">
-            <h3 className="card-title">RECENT ACTIVITY</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <ArcadeBox label="RECENT_LOGS" variant="secondary">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {[1, 2, 3].map((i) => (
-                <div key={i} className="neu-flat-sm" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={i} style={{ 
+                  padding: '16px', 
+                  border: '2px solid rgba(255,255,255,0.1)', 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  background: 'rgba(0,0,0,0.3)'
+                }}>
                   <div>
-                    <p style={{ fontWeight: 800, fontSize: '0.95rem' }}>Ichiban Kuji: Dragon Ball Z</p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pulled 5 tickets • 2 hours ago</p>
+                    <p className="arcade-font-pixel" style={{ fontSize: '0.8rem', color: 'var(--arcade-secondary)' }}>KUJI_BATTLE: VOL.{i+4}</p>
+                    <p className="arcade-font-pixel" style={{ fontSize: '0.6rem', color: '#fff', opacity: 0.6, marginTop: '8px' }}>
+                      PULLED 5 TICKETS • SYNC_OK
+                    </p>
                   </div>
-                  <div style={{ fontWeight: 900, color: 'var(--primary)' }}>- ₩ 50,000</div>
+                  <div className="arcade-font-pixel" style={{ fontSize: '0.9rem', color: 'var(--arcade-primary)' }}>- 5,000 P</div>
                 </div>
               ))}
             </div>
-            <div className="btn btn-neu" style={{ width: '100%', marginTop: '20px', fontSize: '0.8rem' }}>VIEW ALL ACTIVITY</div>
-          </div>
+            <ArcadeButton variant="primary" size="sm" style={{ width: '100%', marginTop: '24px' }}>
+              DOWNLOAD_FULL_LOGS
+            </ArcadeButton>
+          </ArcadeBox>
 
-          <div className="card">
-            <h3 className="card-title">MY COLLECTION</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-              {[1, 2, 4, 8].map((i) => (
-                <div key={i} className="neu-flat-sm" style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>
+          <ArcadeBox label="COLLECTION_POD" variant="accent">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+              {[1, 2, 4, 8, 16, 32, 64, 128].map((i) => (
+                <div key={i} style={{ 
+                  aspectRatio: '1', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: '2rem',
+                  border: '2px solid rgba(57, 255, 20, 0.2)',
+                  background: 'rgba(57, 255, 20, 0.05)',
+                  imageRendering: 'pixelated'
+                }}>
                   {['🎁', '🏆', '🧸', '🎮'][i % 4]}
                 </div>
               ))}
             </div>
-          </div>
+          </ArcadeBox>
         </section>
       </div>
     </div>

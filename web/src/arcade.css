@@ -1,26 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
-
-:root {
-  --arcade-bg: #0a0a1a;
-  --arcade-surface: #1a1a2e;
-  --arcade-primary: #ff00ff; /* Neon Pink */
-  --arcade-secondary: #00ffff; /* Cyan */
-  --arcade-accent: #39ff14; /* Lime */
-  --arcade-text: #ffffff;
-  --arcade-border: #ffffff;
-}
-
-.arcade-body {
-  background-color: var(--arcade-bg);
-  color: var(--arcade-text);
-  font-family: 'VT323', monospace;
-  overflow-x: hidden;
-  position: relative;
-}
-
-.arcade-body h1, .arcade-body h2, .arcade-body h3, .arcade-font-pixel {
-  font-family: 'Press Start 2P', cursive;
-}
+/* Global Arcade Effects */
 
 /* Scanline Effect Overlay */
 .scanlines::before {
@@ -31,7 +9,8 @@
   left: 0;
   bottom: 0;
   right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
   z-index: 9999;
   background-size: 100% 2px, 3px 100%;
   pointer-events: none;
@@ -46,17 +25,14 @@
   left: 0;
   bottom: 0;
   right: 0;
-  background: radial-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-              linear-gradient(rgba(18, 16, 16, 0.1) 50%, rgba(0, 0, 0, 0.1) 50%), 
-              linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+  background: radial-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
   z-index: 9998;
-  background-size: 100% 2px, 3px 100%, 100% 100%;
   pointer-events: none;
   animation: flicker 0.15s infinite;
 }
 
 @keyframes flicker {
-  0% { opacity: 0.97; }
+  0% { opacity: 0.98; }
   5% { opacity: 0.95; }
   10% { opacity: 0.9; }
   15% { opacity: 0.95; }
@@ -79,214 +55,68 @@
   100% { opacity: 0.98; }
 }
 
-/* Chunky Pixel Border */
-.pixel-border-chunky {
-  border: 4px solid var(--arcade-border);
-  box-shadow: 
-    4px 0 0 0 var(--arcade-border),
-    -4px 0 0 0 var(--arcade-border),
-    0 4px 0 0 var(--arcade-border),
-    0 -4px 0 0 var(--arcade-border),
-    8px 0 0 0 rgba(0,0,0,0.5),
-    0 8px 0 0 rgba(0,0,0,0.5);
-  margin: 12px;
-  background: var(--arcade-surface);
-}
-
-.pixel-border-chunky:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 
-    4px 0 0 0 var(--arcade-border),
-    -4px 0 0 0 var(--arcade-border),
-    0 4px 0 0 var(--arcade-border),
-    0 -4px 0 0 var(--arcade-border),
-    12px 0 0 0 rgba(0,0,0,0.5),
-    0 12px 0 0 rgba(0,0,0,0.5);
-}
-
-/* Coin Animation */
-@keyframes coin-pulse {
-  0% { filter: brightness(1); }
-  50% { filter: brightness(1.5); }
-  100% { filter: brightness(1); }
-}
-
-.coin-btn {
-  animation: coin-pulse 1.5s infinite;
-  box-shadow: 4px 4px 0 var(--arcade-accent);
-}
-
-/* Retro Scrollbar */
-::-webkit-scrollbar {
-  width: 12px;
-}
-::-webkit-scrollbar-track {
-  background: #000;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--arcade-primary);
-  border: 2px solid #000;
-}
-
-/* Arcade Buttons */
-.arcade-btn {
-  background: var(--arcade-surface);
-  color: var(--arcade-text);
-  padding: 12px 24px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 0.8rem;
-  border: none;
-  cursor: pointer;
-  display: inline-block;
-  text-transform: uppercase;
-  position: relative;
-  transition: transform 0.1s;
-}
-
-.arcade-btn::after {
-  content: "";
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  right: -4px;
-  bottom: -4px;
-  background: var(--arcade-primary);
-  z-index: -1;
-}
-
-.arcade-btn:active {
-  transform: translate(2px, 2px);
-}
-
-.arcade-btn:active::after {
-  top: 2px;
-  left: 2px;
-  right: -2px;
-  bottom: -2px;
-}
-
-/* Glitch Animation */
-@keyframes glitch {
-  0% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
-  100% { transform: translate(0); }
-}
-
-.glitch-text:hover {
-  animation: glitch 0.2s infinite;
-  color: var(--arcade-secondary);
-}
-
 /* Hero Section */
 .arcade-hero {
-  height: 80vh;
+  min-height: 80vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
   padding: 2rem;
-  background: radial-gradient(circle, #1a1a4e 0%, #0a0a1a 100%);
 }
 
 .hero-title {
-  font-size: 3rem;
-  margin-bottom: 2rem;
+  font-family: 'Press Start 2P', cursive;
   color: var(--arcade-primary);
-  text-shadow: 4px 4px 0px var(--arcade-secondary);
+  text-shadow: 6px 6px 0px var(--arcade-secondary);
   line-height: 1.2;
 }
 
 .hero-subtitle {
-  font-size: 1.5rem;
-  margin-bottom: 3rem;
-  color: var(--arcade-accent);
-}
-
-/* Ticker Marquee */
-.marquee-container {
-  background: #000;
-  border-top: 4px solid var(--arcade-accent);
-  border-bottom: 4px solid var(--arcade-accent);
-  padding: 10px 0;
-  overflow: hidden;
-}
-
-.marquee-text {
-  display: inline-block;
-  white-space: nowrap;
-  animation: marquee 20s linear infinite;
-  color: var(--arcade-accent);
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.8rem;
+  margin-top: 1.5rem;
+  color: var(--arcade-accent);
 }
 
-@keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-
-/* Gacha Machine Container */
-.machine-container {
-  display: flex;
-  justify-content: center;
-  margin: 4rem 0;
-}
-
-.pixel-machine {
-  width: 300px;
-  height: 450px;
-  background: #222;
-  position: relative;
-}
-
-/* Grid Layouts */
+/* Arcade Grid Layout */
 .arcade-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  padding: 2rem;
-}
-
-.arcade-card {
-  background: var(--arcade-surface);
-  padding: 1.5rem;
-}
-
-.card-label {
-  color: var(--arcade-primary);
-  font-size: 0.7rem;
-  margin-bottom: 1rem;
-}
-
-.card-value {
-  font-size: 2rem;
-  color: var(--arcade-secondary);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 32px;
 }
 
 /* Kuji Cards Arcade Style */
 .kuji-card-arcade {
-  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.kuji-card-arcade:hover {
+  transform: scale(1.02);
 }
 
 .kuji-img-placeholder {
   width: 100%;
-  aspect-ratio: 1;
-  background: #333;
+  aspect-ratio: 16/9;
+  background: #222;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4rem;
   image-rendering: pixelated;
+  border: 4px solid rgba(255, 255, 255, 0.1);
 }
 
-.blink {
-  animation: blink-animation 1s steps(2, start) infinite;
+.card-value {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.5rem;
 }
 
-@keyframes blink-animation {
-  to { visibility: hidden; }
+.coin-btn {
+  animation: coin-pulse 1.5s infinite;
+}
+
+@keyframes coin-pulse {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.3); transform: scale(1.1); }
+  100% { filter: brightness(1); }
 }

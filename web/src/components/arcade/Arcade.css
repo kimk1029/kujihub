@@ -10,59 +10,67 @@
   --arcade-border: #ffffff;
 }
 
-/* Button V2 Styles */
+/* 3D Chunky Arcade Button */
 .arcade-btn-v2 {
   position: relative;
-  border: 4px solid #000;
-  display: inline-block;
-  padding: 10px 20px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
   background-color: var(--arcade-surface);
   color: var(--arcade-text);
   font-family: 'Press Start 2P', cursive;
   font-size: 0.8rem;
   text-transform: uppercase;
   cursor: pointer;
-  transition: transform 0.1s;
+  outline: none;
+  image-rendering: pixelated;
+  /* 3D Depth Shadow */
   box-shadow: 
-    4px 0 0 -2px #000,
-    -4px 0 0 -2px #000,
-    0 4px 0 -2px #000,
-    0 -4px 0 -2px #000;
-  margin: 4px;
+    0 6px 0 0 #000,
+    0 10px 0 0 rgba(0,0,0,0.3);
+  transform: translateY(-4px);
+  transition: all 0.05s;
+  margin: 10px;
 }
 
-.arcade-btn-v2::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  right: -4px;
-  bottom: -4px;
-  z-index: -1;
-  background-color: #000;
+.arcade-btn-v2:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 0 0 #000,
+    0 8px 0 0 rgba(0,0,0,0.3);
 }
 
 .arcade-btn-v2:active {
-  transform: translate(2px, 2px);
+  transform: translateY(2px);
+  box-shadow: 
+    0 0px 0 0 #000,
+    0 4px 0 0 rgba(0,0,0,0.3);
 }
 
-.arcade-btn-v2:active::after {
-  top: 2px;
-  left: 2px;
-  right: -2px;
-  bottom: -2px;
+.arcade-btn-primary { 
+  background-color: var(--arcade-primary); 
+  color: #000;
+  box-shadow: 0 6px 0 0 #b300b3, 0 10px 0 0 rgba(0,0,0,0.3);
 }
+.arcade-btn-primary:active { box-shadow: 0 0px 0 0 #b300b3, 0 4px 0 0 rgba(0,0,0,0.3); }
 
-.arcade-btn-primary { background-color: var(--arcade-primary); color: #000; }
-.arcade-btn-primary::after { background-color: #7a007a; }
+.arcade-btn-secondary { 
+  background-color: var(--arcade-secondary); 
+  color: #000;
+  box-shadow: 0 6px 0 0 #00b3b3, 0 10px 0 0 rgba(0,0,0,0.3);
+}
+.arcade-btn-secondary:active { box-shadow: 0 0px 0 0 #00b3b3, 0 4px 0 0 rgba(0,0,0,0.3); }
 
-.arcade-btn-secondary { background-color: var(--arcade-secondary); color: #000; }
-.arcade-btn-secondary::after { background-color: #008b8b; }
+.arcade-btn-accent { 
+  background-color: var(--arcade-accent); 
+  color: #000;
+  box-shadow: 0 6px 0 0 #2db30e, 0 10px 0 0 rgba(0,0,0,0.3);
+}
+.arcade-btn-accent:active { box-shadow: 0 0px 0 0 #2db30e, 0 4px 0 0 rgba(0,0,0,0.3); }
 
-.arcade-btn-accent { background-color: var(--arcade-accent); color: #000; }
-.arcade-btn-accent::after { background-color: #1e8a0a; }
-
-.arcade-btn-sm { font-size: 0.6rem; padding: 6px 12px; }
+.arcade-btn-sm { font-size: 0.6rem; padding: 8px 16px; }
 .arcade-btn-lg { font-size: 1.2rem; padding: 16px 32px; }
 
 /* Box V2 Styles */
@@ -94,6 +102,8 @@
   padding: 16px;
   font-family: 'VT323', monospace;
   color: var(--arcade-text);
+  background-color: rgba(26, 26, 46, 0.8);
+  backdrop-filter: blur(4px);
 }
 
 .arcade-box-label {
@@ -106,6 +116,7 @@
   font-size: 0.6rem;
   color: var(--arcade-primary);
   border: 2px solid var(--arcade-primary);
+  z-index: 10;
 }
 
 .arcade-box-primary .arcade-box-label { border-color: var(--arcade-primary); color: var(--arcade-primary); }
@@ -117,7 +128,7 @@
   background: #000;
   border-top: 4px solid var(--arcade-border);
   border-bottom: 4px solid var(--arcade-border);
-  padding: 8px 0;
+  padding: 12px 0;
   overflow: hidden;
   position: relative;
   width: 100%;
@@ -126,7 +137,7 @@
 .arcade-ticker-text {
   display: inline-block;
   white-space: nowrap;
-  animation: marquee 20s linear infinite;
+  animation: marquee 30s linear infinite;
   font-family: 'Press Start 2P', cursive;
   font-size: 0.8rem;
 }
@@ -140,17 +151,30 @@
   100% { transform: translateX(-100%); }
 }
 
+/* Global Arcade Background & Effects */
+.arcade-grid-bg {
+  background-color: #0a0a1a;
+  background-image: 
+    radial-gradient(circle, #1a1a4e 0%, #0a0a1a 100%),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
 /* Scrollbar Style */
 ::-webkit-scrollbar {
-  width: 16px;
+  width: 20px;
 }
 ::-webkit-scrollbar-track {
   background: #000;
+  border-left: 4px solid #1a1a2e;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--arcade-primary);
   border: 4px solid #000;
+  box-shadow: inset -4px -4px 0 0 #b300b3;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--arcade-secondary);
+  box-shadow: inset -4px -4px 0 0 #00b3b3;
 }
