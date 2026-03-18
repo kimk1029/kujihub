@@ -7,6 +7,10 @@
     "web"
   ],
   "scripts": {
+    "sync:auth-env": "node ./scripts/sync-auth-env.js",
+    "prestart": "node ./scripts/sync-auth-env.js",
+    "preandroid": "node ./scripts/sync-auth-env.js",
+    "preios": "node ./scripts/sync-auth-env.js",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",

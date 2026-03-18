@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type AuthProvider = 'google' | 'kakao' | null;
+export type AuthProvider = 'google' | 'kakao' | 'naver' | null;
 
 interface AuthState {
   isAuthed: boolean;

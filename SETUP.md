@@ -258,15 +258,27 @@ npx react-native run-android
 - [ ] NDK: 27.1.12297006 필요 시 SDK Manager에서 설치 (또는 `sdkmanager "ndk;27.1.12297006"`)
 - [ ] Reanimated / gesture-handler: babel plugin, index.js 최상단 import 확인
 
+### 소셜 로그인 환경변수
+- [ ] 루트에 `.env` 생성 후 아래 값 입력
+- [ ] `GOOGLE_WEB_CLIENT_ID=...`
+- [ ] `GOOGLE_IOS_CLIENT_ID=...` (iOS 사용 시)
+- [ ] `KAKAO_NATIVE_APP_KEY=...`
+- [ ] `NAVER_CLIENT_ID=...`
+- [ ] `NAVER_CLIENT_SECRET=...`
+- [ ] 필요 시 `NAVER_CALLBACK_SCHEME`, `NAVER_CALLBACK_HOST`, `NAVER_CALLBACK_PATH` 수정
+
 ### Google 로그인
-- [ ] Android: `google-services.json` 추가, `webClientId` 설정
-- [ ] iOS: `GoogleService-Info.plist` 추가
-- [ ] SHA-1 인증서 지문 등록 (Firebase/Google Cloud Console)
+- [ ] Google Cloud / Firebase 콘솔에 Android 앱 패키지명과 SHA-1 등록
 
 ### 카카오 로그인
-- [ ] Android: keyHash 등록 (카카오 개발자 콘솔)
-- [ ] iOS: URL Scheme `kakao{NATIVE_APP_KEY}://` 설정
-- [ ] `auth.service.ts`에서 `initializeKakaoSDK(KAKAO_NATIVE_APP_KEY)` 주석 해제
+- [ ] 카카오 개발자 콘솔에 Android keyHash 등록
+
+### 네이버 로그인
+- [ ] 네이버 개발자 콘솔 Redirect URI를 `kujihub://auth/naver/callback`로 등록
+
+### env 동기화
+- [ ] `yarn start`, `yarn android`, `yarn ios` 실행 시 자동으로 `scripts/sync-auth-env.js`가 실행됨
+- [ ] 수동 실행이 필요하면 `yarn sync:auth-env`
 
 ---
 

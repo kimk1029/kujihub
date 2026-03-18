@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Image, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+  Animated,
+  Easing,
+  Pressable,
+} from 'react-native';
 import { Button, Text, Surface, useTheme } from 'react-native-paper';
 import { useAuthStore } from './auth.store';
-import { signInWithGoogle, signInWithKakao } from './auth.service';
+import { signInWithGoogle, signInWithKakao, signInWithNaver } from './auth.service';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const { width } = Dimensions.get('window');
 
 export function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const setAuth = useAuthStore((s) => s.setAuth);
   const theme = useTheme();
+  const transition = useRef(new Animated.Value(0)).current;
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -32,15 +43,110 @@ export function LoginScreen() {
     }
   };
 
+  const handleNaverLogin = async () => {
+    setError(null);
+    try {
+      const ok = await signInWithNaver();
+      if (!ok) setError('로그인을 취소했습니다.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '네이버 로그인 실패');
+    }
+  };
+
   const handleDevLogin = () => {
     setError(null);
     setAuth(true, null, 'dev_token');
   };
 
+  const handleQuickEnter = () => {
+    setError(null);
+    setAuth(true, null, 'quick_enter');
+  };
+
+  const handlePressButton = () => {
+    if (isExpanded) {
+      return;
+    }
+
+    setError(null);
+    setIsExpanded(true);
+
+    Animated.sequence([
+      Animated.timing(transition, {
+        toValue: 0.52,
+        duration: 180,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(transition, {
+        toValue: 1,
+        friction: 7,
+        tension: 68,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const pressCardStyle = {
+    opacity: transition.interpolate({
+      inputRange: [0, 0.42, 1],
+      outputRange: [1, 0.28, 0],
+    }),
+    transform: [
+      { perspective: 1200 },
+      {
+        rotateX: transition.interpolate({
+          inputRange: [0, 1],
+          outputRange: ['0deg', '72deg'],
+        }),
+      },
+      {
+        translateY: transition.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -28],
+        }),
+      },
+      {
+        scale: transition.interpolate({
+          inputRange: [0, 1],
+          outputRange: [1, 0.9],
+        }),
+      },
+    ],
+  };
+
+  const socialCardStyle = {
+    opacity: transition.interpolate({
+      inputRange: [0, 0.38, 1],
+      outputRange: [0, 0.08, 1],
+    }),
+    transform: [
+      { perspective: 1200 },
+      {
+        rotateX: transition.interpolate({
+          inputRange: [0, 1],
+          outputRange: ['-78deg', '0deg'],
+        }),
+      },
+      {
+        translateY: transition.interpolate({
+          inputRange: [0, 1],
+          outputRange: [34, 0],
+        }),
+      },
+      {
+        scale: transition.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.92, 1],
+        }),
+      },
+    ],
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.topSection}>
-        <Surface style={styles.imageCard} elevation={8}>
+        <Surface style={styles.imageCard} elevation={5}>
           <Image 
             source={require('../../assets/images/Gemini_Generated_Image_brlmgybrlmgybrlm.png')} 
             style={styles.heroImage}
@@ -58,39 +164,87 @@ export function LoginScreen() {
           </Text>
         </View>
 
-        <View style={styles.buttonGroup}>
-          <TouchableOpacity 
-            style={[styles.loginBtn, styles.googleBtn]} 
-            onPress={handleGoogleLogin}
-            activeOpacity={0.8}
+        <View style={styles.buttonStage}>
+          <Animated.View
+            pointerEvents={isExpanded ? 'none' : 'auto'}
+            style={[styles.pressCard, pressCardStyle]}
           >
-            <MaterialCommunityIcons name="google" size={24} color="#FFFFFF" />
-            <Text style={styles.googleBtnText}>Google 계정으로 로그인</Text>
-          </TouchableOpacity>
+            <Pressable
+              onPress={handlePressButton}
+              style={({ pressed }) => [
+                styles.pressButton,
+                pressed && styles.pressButtonPressed,
+              ]}
+            >
+              <View style={styles.pressButtonGlow} />
+              <Text style={styles.pressLabelTop}>ENTER THE HUB</Text>
+              <Text style={styles.pressLabelMain}>PRESS BUTTON</Text>
+              <View style={styles.pressCtaRow}>
+                <Text style={styles.pressLabelBottom}>tap to unlock social login</Text>
+                <MaterialCommunityIcons name="arrow-right-circle" size={22} color="#F8FAFC" />
+              </View>
+            </Pressable>
+          </Animated.View>
 
-          <TouchableOpacity 
-            style={[styles.loginBtn, styles.kakaoBtn]} 
-            onPress={handleKakaoLogin}
-            activeOpacity={0.8}
+          <Animated.View
+            pointerEvents={isExpanded ? 'auto' : 'none'}
+            style={[styles.buttonGroup, styles.socialCard, socialCardStyle]}
           >
-            <MaterialCommunityIcons name="chat" size={24} color="#3C1E1E" />
-            <Text style={styles.kakaoBtnText}>카카오톡으로 시작하기</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.loginBtn, styles.kakaoBtn]}
+              onPress={handleKakaoLogin}
+              activeOpacity={0.88}
+            >
+              <MaterialCommunityIcons name="chat" size={24} color="#3C1E1E" />
+              <Text style={styles.kakaoBtnText}>카카오톡으로 시작하기</Text>
+            </TouchableOpacity>
 
-          <View style={styles.divider}>
-            <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
-            <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>또는</Text>
-            <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
-          </View>
+            <TouchableOpacity
+              style={[styles.loginBtn, styles.googleBtn]}
+              onPress={handleGoogleLogin}
+              activeOpacity={0.88}
+            >
+              <MaterialCommunityIcons name="google" size={24} color="#FFFFFF" />
+              <Text style={styles.googleBtnText}>Google 계정으로 로그인</Text>
+            </TouchableOpacity>
 
-          <Button
-            mode="text"
-            onPress={handleDevLogin}
-            style={styles.devBtn}
-            labelStyle={[styles.devBtnLabel, { color: theme.colors.secondary }]}
-          >
-            게스트로 둘러보기
-          </Button>
+            <TouchableOpacity
+              style={[styles.loginBtn, styles.naverBtn]}
+              onPress={handleNaverLogin}
+              activeOpacity={0.88}
+            >
+              <MaterialCommunityIcons name="alpha-n-circle" size={24} color="#FFFFFF" />
+              <Text style={styles.naverBtnText}>네이버로 빠르게 시작하기</Text>
+            </TouchableOpacity>
+
+            <View style={styles.divider}>
+              <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
+              <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>또는</Text>
+              <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
+            </View>
+
+            <View style={styles.utilityRow}>
+              <Button
+                mode="contained-tonal"
+                onPress={handleQuickEnter}
+                style={styles.quickBtn}
+                contentStyle={styles.utilityBtnContent}
+                labelStyle={styles.quickBtnLabel}
+              >
+                바로가기
+              </Button>
+
+              <Button
+                mode="text"
+                onPress={handleDevLogin}
+                style={styles.devBtn}
+                contentStyle={styles.utilityBtnContent}
+                labelStyle={[styles.devBtnLabel, { color: theme.colors.secondary }]}
+              >
+                게스트로 둘러보기
+              </Button>
+            </View>
+          </Animated.View>
         </View>
 
         {error && (
@@ -167,6 +321,85 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 12,
   },
+  buttonStage: {
+    width: '100%',
+    minHeight: 320,
+    position: 'relative',
+  },
+  pressCard: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  pressButton: {
+    minHeight: 188,
+    borderRadius: 28,
+    paddingHorizontal: 24,
+    paddingVertical: 26,
+    justifyContent: 'space-between',
+    overflow: 'hidden',
+    backgroundColor: '#111827',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.28,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  pressButtonPressed: {
+    transform: [{ scale: 0.985 }],
+  },
+  pressButtonGlow: {
+    position: 'absolute',
+    top: -40,
+    right: -20,
+    width: 180,
+    height: 180,
+    borderRadius: 999,
+    backgroundColor: 'rgba(56, 189, 248, 0.22)',
+  },
+  pressLabelTop: {
+    color: '#7DD3FC',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 2.4,
+  },
+  pressLabelMain: {
+    color: '#F8FAFC',
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: -1,
+    lineHeight: 34,
+  },
+  pressCtaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  pressLabelBottom: {
+    color: '#CBD5E1',
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    flex: 1,
+  },
+  socialCard: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: 18,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.16,
+    shadowRadius: 28,
+    elevation: 7,
+  },
   loginBtn: {
     width: '100%',
     height: 56,
@@ -197,6 +430,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
+  naverBtn: {
+    backgroundColor: '#03C75A',
+  },
+  naverBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+  },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -213,12 +454,33 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   devBtn: {
+    flex: 1,
     marginTop: 4,
   },
   devBtnLabel: {
     fontSize: 15,
     fontWeight: '800',
     textDecorationLine: 'underline',
+  },
+  utilityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 4,
+    width: '100%',
+  },
+  utilityBtnContent: {
+    minHeight: 50,
+  },
+  quickBtn: {
+    flex: 1,
+    borderRadius: 14,
+    backgroundColor: '#E2E8F0',
+  },
+  quickBtnLabel: {
+    color: '#0F172A',
+    fontSize: 15,
+    fontWeight: '900',
   },
   errorContainer: {
     flexDirection: 'row',

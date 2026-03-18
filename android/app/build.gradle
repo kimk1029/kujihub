@@ -61,6 +61,61 @@ react {
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
 def enableProguardInReleaseBuilds = false
+def dotenv = [:]
+
+def loadDotenv = {
+    def envFile = rootProject.file(".env")
+    if (!envFile.exists()) {
+        return
+    }
+
+    envFile.eachLine { rawLine ->
+        def line = rawLine.trim()
+        if (!line || line.startsWith("#") || !line.contains("=")) {
+            return
+        }
+
+        def separator = line.indexOf("=")
+        def key = line.substring(0, separator).trim()
+        def value = line.substring(separator + 1).trim()
+
+        if (
+            (value.startsWith('"') && value.endsWith('"')) ||
+            (value.startsWith("'") && value.endsWith("'"))
+        ) {
+            value = value.substring(1, value.length() - 1)
+        }
+
+        dotenv[key] = value
+    }
+}
+
+loadDotenv()
+
+def configValue = { String key, String fallback = "" ->
+    def processValue = System.getenv(key)
+    if (processValue != null && !processValue.trim().isEmpty()) {
+        return processValue
+    }
+
+    def dotenvValue = dotenv[key]
+    if (dotenvValue != null && !dotenvValue.toString().trim().isEmpty()) {
+        return dotenvValue.toString()
+    }
+
+    def propertyValue = project.findProperty(key)
+    if (propertyValue != null && !propertyValue.toString().trim().isEmpty()) {
+        return propertyValue.toString()
+    }
+
+    return fallback
+}
+
+def kakaoNativeAppKey = configValue("KAKAO_NATIVE_APP_KEY", "")
+def kakaoScheme = kakaoNativeAppKey ? "kakao${kakaoNativeAppKey}" : "kakao"
+def naverCallbackScheme = configValue("NAVER_CALLBACK_SCHEME", "kujihub")
+def naverCallbackHost = configValue("NAVER_CALLBACK_HOST", "auth")
+def naverCallbackPath = configValue("NAVER_CALLBACK_PATH", "/naver/callback")
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -87,6 +142,12 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = [
+            kakaoScheme        : kakaoScheme,
+            naverCallbackScheme: naverCallbackScheme,
+            naverCallbackHost  : naverCallbackHost,
+            naverCallbackPath  : naverCallbackPath,
+        ]
         // WSL2 등에서 adb reverse가 안 될 때 PC IP로 접속 (휴대폰과 PC가 같은 Wi-Fi여야 함)
         resValue "string", "react_native_dev_server_ip", project.findProperty("REACT_NATIVE_PACKAGER_HOSTNAME") ?: "localhost"
     }
