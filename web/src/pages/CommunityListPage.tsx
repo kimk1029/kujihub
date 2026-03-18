@@ -50,9 +50,11 @@ export function CommunityListPage() {
             DECRYPTING MESSAGES FROM THE RESISTANCE.
           </p>
         </div>
-        <ArcadeButton variant="primary" size="sm" onClick={() => navigate('/community/new')}>
-          NEW_MESSAGE
-        </ArcadeButton>
+        <div className="desktop-only">
+          <ArcadeButton variant="primary" size="sm" onClick={() => navigate('/community/new')}>
+            NEW_MESSAGE
+          </ArcadeButton>
+        </div>
       </header>
 
       {error && (
@@ -86,14 +88,14 @@ export function CommunityListPage() {
             {posts.map((post, index) => (
               <tr 
                 key={post.id} 
-                className="bulletin-row"
+                className={`bulletin-row ${post.isNotice ? 'notice' : ''}`}
                 onClick={() => navigate(`/community/${post.id}`)}
               >
-                <td style={{ color: 'var(--arcade-accent)', fontWeight: 900 }}>
-                  {String(posts.length - index).padStart(3, '0')}
+                <td style={{ color: post.isNotice ? 'var(--arcade-accent)' : 'var(--arcade-accent)', fontWeight: 900 }}>
+                  {post.isNotice ? 'NOTICE' : String(posts.length - index).padStart(3, '0')}
                 </td>
                 <td className="text-left">
-                  <span className="bulletin-title-prefix">[GENERAL]</span>
+                  <span className="bulletin-title-prefix">{post.isNotice ? '[NOTICE]' : '[GENERAL]'}</span>
                   <span className="bulletin-title">{post.title}</span>
                 </td>
                 <td style={{ color: '#fff', opacity: 0.8 }}>{post.author}</td>
@@ -106,13 +108,13 @@ export function CommunityListPage() {
         </table>
       )}
 
-      <div style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 100 }}>
+      <div className="mobile-only" style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 100 }}>
         <ArcadeButton 
           variant="accent" 
           size="lg" 
           onClick={() => navigate('/community/new')}
           className="coin-btn"
-          style={{ borderRadius: '50%', width: '80px', height: '80px', padding: 0, fontSize: '2rem' }}
+          style={{ borderRadius: '50%', width: '60px', height: '60px', padding: 0, fontSize: '2rem' }}
         >
           +
         </ArcadeButton>

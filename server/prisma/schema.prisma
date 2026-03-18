@@ -29,6 +29,7 @@ model KujiPlayer {
   id        String         @id
   nickname  String         @default("게스트")
   points    Int            @default(100000)
+  role      String         @default("user") // "user" or "admin"
   createdAt DateTime       @default(now()) @map("created_at")
   updatedAt DateTime       @updatedAt @map("updated_at")
   purchases KujiPurchase[]
@@ -59,6 +60,7 @@ model KujiPurchase {
 model CommunityPost {
   id        Int                 @id @default(autoincrement())
   category  String              @default("자유")
+  isNotice  Boolean             @default(false) @map("is_notice")
   title     String
   content   String              @default("")
   author    String              @default("익명")

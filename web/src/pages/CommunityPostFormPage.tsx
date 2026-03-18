@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { communityApi } from '../api/community';
+import { ensureKujiPlayer } from '../api/kujiDraw';
+import type { KujiPlayer } from '../types/kujiDraw';
 import { ArcadeBox } from '../components/arcade/ArcadeBox';
 import { ArcadeButton } from '../components/arcade/ArcadeButton';
 
@@ -12,22 +14,34 @@ export function CommunityPostFormPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [author, setAuthor] = useState('GUEST_USER');
+  const [isNotice, setIsNotice] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(!!editId);
+  const [fetching, setFetching] = useState(true); // default true for player load
+  const [player, setPlayer] = useState<KujiPlayer | null>(null);
 
   useEffect(() => {
-    if (!editId) return;
     let cancelled = false;
     (async () => {
       try {
-        const post = await communityApi.getOne(editId);
+        const currentPlayer = await ensureKujiPlayer();
         if (!cancelled) {
-          setTitle(post.title);
-          setContent(post.content);
-          setAuthor(post.author);
+          setPlayer(currentPlayer);
+          if (!editId && author === 'GUEST_USER') {
+            setAuthor(currentPlayer.nickname);
+          }
+        }
+        
+        if (editId) {
+          const post = await communityApi.getOne(editId);
+          if (!cancelled) {
+            setTitle(post.title);
+            setContent(post.content);
+            setAuthor(post.author);
+            setIsNotice(!!post.isNotice);
+          }
         }
       } catch {
-        if (!cancelled) setFetching(false);
+        // ignore
       } finally {
         if (!cancelled) setFetching(false);
       }
@@ -49,12 +63,14 @@ export function CommunityPostFormPage() {
             title: t,
             content: content.trim(),
             author: author.trim(),
+            isNotice: player?.role === 'admin' ? isNotice : undefined,
           });
         } else {
           await communityApi.create({
             title: t,
             content: content.trim(),
             author: author.trim() || 'GUEST_USER',
+            isNotice: player?.role === 'admin' ? isNotice : false,
           });
         }
         navigate('/community');
@@ -62,7 +78,7 @@ export function CommunityPostFormPage() {
         setLoading(false);
       }
     },
-    [editId, title, content, author, navigate]
+    [editId, title, content, author, isNotice, player, navigate]
   );
 
   if (fetching) {
@@ -158,6 +174,21 @@ export function CommunityPostFormPage() {
               }}
             />
           </div>
+
+          {player?.role === 'admin' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <input
+                id="isNotice"
+                type="checkbox"
+                checked={isNotice}
+                onChange={(e) => setIsNotice(e.target.checked)}
+                style={{ width: '20px', height: '20px', accentColor: 'var(--arcade-accent)' }}
+              />
+              <label htmlFor="isNotice" style={{ fontSize: '1rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
+                MARK_AS_NOTICE_BROADCAST
+              </label>
+            </div>
+          )}
 
           <div style={{ 
             background: 'rgba(57, 255, 20, 0.05)', 

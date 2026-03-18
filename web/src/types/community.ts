@@ -1,6 +1,7 @@
 export interface CommunityPost {
   id: number;
   category: string;
+  isNotice?: boolean;
   title: string;
   content: string;
   author: string;
@@ -44,6 +45,7 @@ export interface CreatePostBody {
   content?: string;
   author?: string;
   category?: string;
+  isNotice?: boolean;
 }
 
 export interface UpdatePostBody {
@@ -51,4 +53,5 @@ export interface UpdatePostBody {
   content?: string;
   author?: string;
   category?: string;
+  isNotice?: boolean;
 }

@@ -15,6 +15,7 @@ function mapPost(post) {
   return {
     id: post.id,
     category: post.category,
+    isNotice: post.isNotice,
     title: post.title,
     content: post.content,
     author: post.author,
@@ -55,7 +56,7 @@ router.get('/posts', async (req, res) => {
   try {
     const limit = parseLimit(req.query.limit);
     const posts = await prisma.communityPost.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ isNotice: 'desc' }, { createdAt: 'desc' }],
       take: limit,
     });
     res.json(posts.map(mapPost));
@@ -123,7 +124,7 @@ router.post('/posts/:id/comments', async (req, res) => {
 });
 
 router.post('/posts', async (req, res) => {
-  const { title, content = '', author = '익명', category = '자유' } = req.body || {};
+  const { title, content = '', author = '익명', category = '자유', isNotice = false } = req.body || {};
   if (!title || !String(title).trim()) {
     return res.status(400).json({ error: 'title is required' });
   }
@@ -136,6 +137,7 @@ router.post('/posts', async (req, res) => {
           content: String(content ?? '').trim(),
           author: String(author ?? '익명').trim() || '익명',
           category: String(category ?? '자유').trim() || '자유',
+          isNotice: Boolean(isNotice),
         },
       });
 
@@ -162,7 +164,7 @@ router.put('/posts/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (!id) return res.status(400).json({ error: 'invalid id' });
 
-  const { title, content, author, category } = req.body || {};
+  const { title, content, author, category, isNotice } = req.body || {};
 
   try {
     const existing = await prisma.communityPost.findUnique({ where: { id } });
@@ -176,6 +178,7 @@ router.put('/posts/:id', async (req, res) => {
           ...(content !== undefined ? { content: String(content).trim() } : {}),
           ...(author !== undefined ? { author: String(author).trim() || '익명' } : {}),
           ...(category !== undefined ? { category: String(category).trim() || '자유' } : {}),
+          ...(isNotice !== undefined ? { isNotice: Boolean(isNotice) } : {}),
         },
       });
 
@@ -247,7 +250,7 @@ router.get('/overview', async (req, res) => {
 
     const [posts, feed, postCount] = await Promise.all([
       prisma.communityPost.findMany({
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ isNotice: 'desc' }, { createdAt: 'desc' }],
         take: postsLimit,
       }),
       prisma.communityFeedItem.findMany({

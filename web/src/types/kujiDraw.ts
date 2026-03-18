@@ -26,6 +26,7 @@ export interface KujiPlayer {
   id: string;
   nickname: string;
   points: number;
+  role?: string;
 }
 
 export interface KujiPurchase {

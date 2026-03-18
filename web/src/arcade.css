@@ -174,6 +174,14 @@
   font-size: 1.4rem;
 }
 
+.mobile-only {
+  display: none !important;
+}
+
+.desktop-only {
+  display: flex !important; /* or block depending on context, assuming mostly flex for our buttons */
+}
+
 /* Responsive Grid Adjustments */
 @media (max-width: 1024px) {
   .arcade-grid {
@@ -183,6 +191,71 @@
 }
 
 @media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: flex !important;
+  }
+
+  /* Bulletin Board Mobile Styling */
+  .bulletin-board thead {
+    display: none;
+  }
+
+  .bulletin-board, .bulletin-board tbody, .bulletin-board tr, .bulletin-board td {
+    display: block;
+    width: 100%;
+  }
+
+  .bulletin-row {
+    margin-bottom: 12px;
+    border: 2px solid var(--arcade-primary);
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.4);
+  }
+  
+  .bulletin-row:hover {
+    background: rgba(255, 0, 255, 0.1);
+  }
+
+  .bulletin-row.notice {
+    border-color: var(--arcade-accent);
+    background: rgba(255, 0, 255, 0.1);
+  }
+
+  .bulletin-row td {
+    border-bottom: none;
+    padding: 4px 0;
+    text-align: left !important;
+  }
+
+  /* ID */
+  .bulletin-row td:nth-child(1) {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-bottom: 4px;
+    display: inline-block;
+  }
+
+  /* Title */
+  .bulletin-row td:nth-child(2) {
+    font-size: 1.15rem;
+    margin-bottom: 8px;
+    display: block;
+    white-space: normal;
+  }
+
+  /* Author and Date */
+  .bulletin-row td:nth-child(3),
+  .bulletin-row td:nth-child(4) {
+    display: inline-block;
+    font-size: 0.8rem;
+    margin-right: 16px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
   .sidebar {
     display: none !important;
   }
@@ -295,6 +368,19 @@
 .bulletin-row:hover {
   background: rgba(255, 0, 255, 0.1);
   animation: glitch-hover 0.2s infinite;
+}
+
+.bulletin-row.notice {
+  background: rgba(255, 0, 255, 0.15);
+  font-weight: 900;
+}
+
+.bulletin-row.notice:hover {
+  background: rgba(255, 0, 255, 0.3);
+}
+
+.bulletin-row.notice .bulletin-title {
+  color: var(--arcade-primary);
 }
 
 .bulletin-row td {

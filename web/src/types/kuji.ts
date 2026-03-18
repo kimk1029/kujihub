@@ -2,6 +2,7 @@ export interface KujiLineupItem {
   title: string;
   slug: string;
   url: string;
+  image?: string;
   storeDate?: string;
   onlineDate?: string;
   translatedTitle?: string;

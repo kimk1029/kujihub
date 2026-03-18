@@ -1,33 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArcadeBox } from '../components/arcade/ArcadeBox';
 import { ArcadeButton } from '../components/arcade/ArcadeButton';
 import { ArcadeTicker } from '../components/arcade/ArcadeTicker';
-
-// Mock data for translated calendar events with more "real" images
-const MOCK_EVENTS: Record<number, { title: string; original: string; image: string; desc: string }> = {
-  18: { 
-    title: '나의 히어로 아카데미아 Vol.7 발매', 
-    original: '僕のヒーローアカデミア Vol.7 発売', 
-    image: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?q=80&w=800&auto=format&fit=crop', // Anime related
-    desc: '신규 쿠지 라인업이 오늘 정오에 정식 발매되었습니다. A상 데쿠 피규어를 노려보세요!'
-  },
-  22: { 
-    title: '드래곤볼 GT 특별전 오픈', 
-    original: 'ドラゴンボールGT 特別展 オープン', 
-    image: 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?q=80&w=800&auto=format&fit=crop', // Action figure related
-    desc: '드래곤볼 GT 시리즈의 한정판 굿즈가 포함된 새로운 보드가 추가될 예정입니다.'
-  },
-  25: { 
-    title: '주술회전 0 극장판 콜라보', 
-    original: '呪術廻戦 0 劇場版 コラボ', 
-    image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=800&auto=format&fit=crop', // Manga related
-    desc: '옷코츠 유타의 특급 주구 복제 굿즈를 만날 수 있는 기회!'
-  }
-};
+import { fetchLineup } from '../api/kujiLineup';
+import type { KujiLineupItem } from '../types/kuji';
 
 export function HomePage() {
-  const [selectedDay, setSelectedDay] = useState<number>(18);
-  const selectedEvent = MOCK_EVENTS[selectedDay];
+  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
+  const [eventsByDay, setEventsByDay] = useState<Record<number, KujiLineupItem[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [year] = useState(new Date().getFullYear());
+  const [month] = useState(new Date().getMonth() + 1);
+
+  const loadEvents = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fetchLineup(year, month);
+      const byDay: Record<number, KujiLineupItem[]> = {};
+      
+      data.items.forEach(item => {
+        const dateStr = item.storeDate || item.onlineDate;
+        if (dateStr) {
+          const match = dateStr.match(/(\d{1,2})日/);
+          if (match) {
+            const day = parseInt(match[1], 10);
+            if (!byDay[day]) byDay[day] = [];
+            byDay[day].push(item);
+          } else {
+            let d = 15;
+            if (dateStr.includes('上旬')) d = 5;
+            if (dateStr.includes('下旬')) d = 25;
+            if (!byDay[d]) byDay[d] = [];
+            byDay[d].push(item);
+          }
+        }
+      });
+      setEventsByDay(byDay);
+      
+      // Select the first day with events if current day has no events
+      const currentDay = new Date().getDate();
+      if (!byDay[currentDay]) {
+        const sortedDays = Object.keys(byDay).map(Number).sort((a, b) => a - b);
+        const nextDay = sortedDays.find(d => d >= currentDay);
+        if (nextDay) setSelectedDay(nextDay);
+        else if (sortedDays.length > 0) setSelectedDay(sortedDays[0]);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [year, month]);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  const selectedEvents = eventsByDay[selectedDay] || [];
+  const selectedEvent = selectedEvents[0];
+
+  const daysInMonth = new Date(year, month, 0).getDate();
 
   return (
     <div className="animate-in">
@@ -63,9 +95,9 @@ export function HomePage() {
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
                 <div key={d} style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', fontWeight: 900 }}>{d}</div>
               ))}
-              {Array.from({ length: 31 }).map((_, i) => {
+              {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
-                const hasEvent = !!MOCK_EVENTS[day];
+                const hasEvent = !!eventsByDay[day];
                 const isSelected = selectedDay === day;
                 return (
                   <button 
@@ -83,8 +115,10 @@ export function HomePage() {
                       background: isSelected ? 'rgba(255,0,255,0.1)' : 'transparent',
                       cursor: 'pointer',
                       position: 'relative',
-                      fontWeight: isSelected ? 900 : 500
+                      fontWeight: isSelected ? 900 : 500,
+                      opacity: loading ? 0.5 : 1,
                     }}
+                    disabled={loading}
                   >
                     {day}
                     {hasEvent && (
@@ -103,7 +137,7 @@ export function HomePage() {
               })}
             </div>
             <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
-              MARCH 2026 - SELECT A DATE
+              {year} - {month.toString().padStart(2, '0')} - SELECT A DATE
             </p>
           </div>
         </ArcadeBox>
@@ -118,23 +152,38 @@ export function HomePage() {
                 backgroundColor: '#111', 
                 border: '4px solid rgba(255,255,255,0.1)',
                 overflow: 'hidden',
-                marginBottom: '16px'
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'rgba(255,255,255,0.2)'
               }}>
-                <img src={selectedEvent.image} alt="Event Thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {selectedEvent.image ? (
+                  <img src={selectedEvent.image} alt="Event Thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div>NO IMAGE</div>
+                )}
               </div>
               <div style={{ marginBottom: '8px' }}>
                 <span style={{ fontSize: '0.65rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>[ TRANSLATED_LOG ]</span>
-                <h2 style={{ fontSize: '1.25rem', color: 'var(--arcade-secondary)', margin: '4px 0' }}>{selectedEvent.title}</h2>
+                <h2 style={{ fontSize: '1.25rem', color: 'var(--arcade-secondary)', margin: '4px 0', wordBreak: 'keep-all' }}>
+                  {selectedEvent.translatedTitle || selectedEvent.title}
+                </h2>
               </div>
               <div style={{ marginBottom: '16px', background: 'rgba(0,0,0,0.3)', padding: '12px', borderLeft: '4px solid var(--arcade-accent)' }}>
                 <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', marginBottom: '4px' }}>ORIGINAL:</p>
-                <p style={{ fontSize: '0.9rem', color: '#fff' }}>{selectedEvent.original}</p>
+                <p style={{ fontSize: '0.9rem', color: '#fff' }}>{selectedEvent.title}</p>
               </div>
               <p style={{ fontSize: '0.95rem', color: '#fff', lineHeight: '1.5' }}>
-                {selectedEvent.desc}
+                발매일: {selectedEvent.storeDate || selectedEvent.onlineDate || '미정'}
               </p>
-              <ArcadeButton variant="primary" size="sm" style={{ marginTop: '20px', width: '100%' }}>
-                GO TO DRAW CHANNEL
+              <ArcadeButton 
+                variant="primary" 
+                size="sm" 
+                style={{ marginTop: '20px', width: '100%' }}
+                onClick={() => window.open(selectedEvent.url, '_blank')}
+              >
+                GO TO DRAW CHANNEL (OFFICIAL)
               </ArcadeButton>
             </div>
           ) : (
@@ -172,7 +221,7 @@ export function HomePage() {
         </ArcadeBox>
       </div>
 
-      <ArcadeTicker text="SYSTEM STABLE // NEW KUJI LOADED: DRAGON BALL GT // MAINTAINING 99.9% UPTIME // HAPPY DRAWING!" variant="accent" />
+      <ArcadeTicker text="SYSTEM STABLE // NEW KUJI LOADED // MAINTAINING 99.9% UPTIME // HAPPY DRAWING!" variant="accent" />
     </div>
   );
 }

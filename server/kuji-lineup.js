@@ -59,12 +59,15 @@ async function fetchLineupForMonth(year, month) {
     const titleMatch = text.match(/一番くじ(?:ちょこっと)?\s*(.+)$/);
     if (titleMatch) title = titleMatch[1].trim();
 
+    const image = $a.find('img').attr('src') || '';
+
     items.push({
       title: title || slug,
       slug,
       url: href.startsWith('http') ? href : `${BASE}${href}`,
       storeDate: storeDate || undefined,
       onlineDate: onlineDate || undefined,
+      image,
     });
   });
 

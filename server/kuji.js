@@ -11,6 +11,7 @@
 
 const { Router } = require('express');
 const prisma = require('./db');
+const { fetchYouTubeSearch } = require('./youtube-search');
 
 const router = Router();
 const LOCK_TIMEOUT_MS = 2 * 60 * 1000; // 2분
@@ -69,16 +70,33 @@ router.get('/', async (_req, res) => {
       orderBy: { id: 'asc' },
     });
 
-    res.json(kujis.map((k) => ({
-      id: String(k.id),
-      title: k.title,
-      description: k.description,
-      imageUrl: k.imageUrl,
-      price: k.price,
-      boardSize: k.boardSize,
-      status: k.status,
-      remaining: k.boardSize - k._count.slots,
-    })));
+    const result = await Promise.all(kujis.map(async (k) => {
+      let imageUrl = k.imageUrl;
+      if (!imageUrl) {
+        try {
+          const yt = await fetchYouTubeSearch(k.title + ' 피규어', 1);
+          if (yt && yt.items && yt.items.length > 0) {
+            imageUrl = yt.items[0].thumbnail;
+            // update db async so next time it's faster
+            prisma.kuji.update({ where: { id: k.id }, data: { imageUrl } }).catch(() => {});
+          }
+        } catch (err) {
+          console.error('[youtube search for kuji img failed]', err.message);
+        }
+      }
+      return {
+        id: String(k.id),
+        title: k.title,
+        description: k.description,
+        imageUrl: imageUrl,
+        price: k.price,
+        boardSize: k.boardSize,
+        status: k.status,
+        remaining: k.boardSize - k._count.slots,
+      };
+    }));
+
+    res.json(result);
   } catch (e) {
     console.error('[kuji list]', e.message);
     res.status(500).json({ error: 'DB error' });
@@ -104,11 +122,24 @@ router.get('/:id', async (req, res) => {
 
     if (!kuji) return res.status(404).json({ error: 'Not found' });
 
+    let imageUrl = kuji.imageUrl;
+    if (!imageUrl) {
+      try {
+        const yt = await fetchYouTubeSearch(kuji.title + ' 피규어', 1);
+        if (yt && yt.items && yt.items.length > 0) {
+          imageUrl = yt.items[0].thumbnail;
+          prisma.kuji.update({ where: { id: kuji.id }, data: { imageUrl } }).catch(() => {});
+        }
+      } catch (err) {
+        console.error('[youtube search for kuji img failed]', err.message);
+      }
+    }
+
     res.json({
       id: String(kuji.id),
       title: kuji.title,
       description: kuji.description,
-      imageUrl: kuji.imageUrl,
+      imageUrl: imageUrl,
       price: kuji.price,
       boardSize: kuji.boardSize,
       status: kuji.status,
@@ -148,6 +179,7 @@ router.post('/player/ensure', async (req, res) => {
       id: player.id,
       nickname: player.nickname,
       points: player.points,
+      role: player.role,
       createdAt: player.createdAt,
       updatedAt: player.updatedAt,
     });
@@ -168,6 +200,7 @@ router.get('/player/:id', async (req, res) => {
       id: player.id,
       nickname: player.nickname,
       points: player.points,
+      role: player.role,
       createdAt: player.createdAt,
       updatedAt: player.updatedAt,
     });
