@@ -15,6 +15,7 @@ try {
 const express = require('express');
 const cors = require('cors');
 const os = require('os');
+const { registerWebAuthRoutes } = require('./auth-web');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,7 @@ function getWslIp() {
 
 app.use(cors());
 app.use(express.json());
+registerWebAuthRoutes(app);
 
 // ── 쿠지 (PostgreSQL) ──────────────────────────────────────────
 const kujiRouter = require('./kuji');

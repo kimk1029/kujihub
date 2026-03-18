@@ -3,6 +3,12 @@ export type WebAuthProvider = 'google' | 'kakao' | 'naver' | 'dev';
 export type WebAuthSession = {
   provider: WebAuthProvider;
   token: string;
+  user: {
+    id: string;
+    name: string;
+    email: string | null;
+    image: string | null;
+  };
   createdAt: number;
 };
 
@@ -30,14 +36,13 @@ export function getWebAuthSession(): WebAuthSession | null {
   }
 }
 
-export function setWebAuthSession(provider: WebAuthProvider, token: string) {
+export function setWebAuthSession(session: Omit<WebAuthSession, 'createdAt'>) {
   if (typeof window === 'undefined') {
     return;
   }
 
   const payload: WebAuthSession = {
-    provider,
-    token,
+    ...session,
     createdAt: Date.now(),
   };
 

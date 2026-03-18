@@ -263,8 +263,14 @@ npx react-native run-android
 - [ ] `GOOGLE_WEB_CLIENT_ID=...`
 - [ ] `GOOGLE_IOS_CLIENT_ID=...` (iOS 사용 시)
 - [ ] `KAKAO_NATIVE_APP_KEY=...`
+- [ ] `KAKAO_REST_API_KEY=...` (웹 카카오 로그인용)
+- [ ] `KAKAO_CLIENT_SECRET=...` (카카오 콘솔에서 secret 사용 시)
 - [ ] `NAVER_CLIENT_ID=...`
 - [ ] `NAVER_CLIENT_SECRET=...`
+- [ ] `WEB_AUTH_SECRET=...` (웹 세션 서명용)
+- [ ] `VITE_GOOGLE_CLIENT_ID=...`
+- [ ] `VITE_KAKAO_REST_API_KEY=...`
+- [ ] `VITE_NAVER_CLIENT_ID=...`
 - [ ] 필요 시 `NAVER_CALLBACK_SCHEME`, `NAVER_CALLBACK_HOST`, `NAVER_CALLBACK_PATH` 수정
 
 ### Google 로그인
@@ -272,9 +278,16 @@ npx react-native run-android
 
 ### 카카오 로그인
 - [ ] 카카오 개발자 콘솔에 Android keyHash 등록
+- [ ] 카카오 개발자 콘솔 Redirect URI에 `http://localhost:5173/?provider=kakao` 와 운영 웹 주소 등록
 
 ### 네이버 로그인
 - [ ] 네이버 개발자 콘솔 Redirect URI를 `kujihub://auth/naver/callback`로 등록
+- [ ] 네이버 개발자 콘솔 Callback URL에 `http://localhost:5173/?provider=naver` 와 운영 웹 주소 등록
+
+### 웹 로그인
+- [ ] Google Cloud OAuth Web Client의 Authorized JavaScript origins에 로컬/운영 웹 주소 등록
+- [ ] 서버가 `KAKAO_CLIENT_SECRET`, `NAVER_CLIENT_SECRET`, `WEB_AUTH_SECRET` 를 읽을 수 있게 설정
+- [ ] 웹 랜딩의 `PRESS START` 이후 버튼은 서버 세션 발급이 성공해야 `/dashboard` 로 이동함
 
 ### env 동기화
 - [ ] `yarn start`, `yarn android`, `yarn ios` 실행 시 자동으로 `scripts/sync-auth-env.js`가 실행됨

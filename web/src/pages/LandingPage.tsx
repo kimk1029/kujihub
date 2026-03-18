@@ -6,6 +6,7 @@ import { ArcadeButton } from '../components/arcade/ArcadeButton';
 import { kujiDrawApi } from '../api/kujiDraw';
 import type { KujiListItem } from '../types/kujiDraw';
 import { getWebAuthSession, setWebAuthSession } from '../auth/webAuth';
+import { loginWithDev, loginWithGoogle, loginWithKakao, loginWithNaver } from '../api/webAuth';
 
 type WebLoginOption = {
   id: 'kakao' | 'naver' | 'google' | 'dev';
@@ -70,6 +71,7 @@ export function LandingPage() {
   const [showLoginPanel, setShowLoginPanel] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authenticating, setAuthenticating] = useState(false);
 
   useEffect(() => {
     kujiDrawApi.getList().then(list => {
@@ -108,9 +110,25 @@ export function LandingPage() {
         return;
       }
 
-      setWebAuthSession(provider, code);
-      window.history.replaceState({}, '', '/');
-      navigate('/dashboard', { replace: true });
+      setAuthenticating(true);
+      const loginPromise =
+        provider === 'kakao'
+          ? loginWithKakao(code, buildCallbackUrl('kakao'))
+          : loginWithNaver(code, state || '');
+
+      loginPromise
+        .then((session) => {
+          setWebAuthSession(session);
+          window.history.replaceState({}, '', '/');
+          navigate('/dashboard', { replace: true });
+        })
+        .catch((authError) => {
+          setError(authError instanceof Error ? authError.message : '로그인 처리에 실패했습니다.');
+          window.history.replaceState({}, '', '/');
+        })
+        .finally(() => {
+          setAuthenticating(false);
+        });
     }
   }, [location.search, navigate]);
 
@@ -139,8 +157,18 @@ export function LandingPage() {
     setError(null);
 
     if (option === 'dev') {
-      setWebAuthSession('dev', 'web_dev_shortcut');
-      navigate('/dashboard', { replace: true });
+      setAuthenticating(true);
+      loginWithDev()
+        .then((session) => {
+          setWebAuthSession(session);
+          navigate('/dashboard', { replace: true });
+        })
+        .catch((authError) => {
+          setError(authError instanceof Error ? authError.message : '개발용 로그인에 실패했습니다.');
+        })
+        .finally(() => {
+          setAuthenticating(false);
+        });
       return;
     }
 
@@ -210,10 +238,21 @@ export function LandingPage() {
                     GOOGLE_CLIENT_ID ? (
                       <GoogleLoginButton
                         key={option.id}
+                        disabled={authenticating}
                         onError={(message) => setError(message)}
-                        onSuccess={(token) => {
-                          setWebAuthSession('google', token);
-                          navigate('/dashboard', { replace: true });
+                        onSuccess={(accessToken) => {
+                          setAuthenticating(true);
+                          loginWithGoogle(accessToken)
+                            .then((session) => {
+                              setWebAuthSession(session);
+                              navigate('/dashboard', { replace: true });
+                            })
+                            .catch((authError) => {
+                              setError(authError instanceof Error ? authError.message : '구글 로그인에 실패했습니다.');
+                            })
+                            .finally(() => {
+                              setAuthenticating(false);
+                            });
                         }}
                       />
                     ) : (
@@ -251,6 +290,11 @@ export function LandingPage() {
         </div>
 
         {error ? <div className="landing-login-error">{error}</div> : null}
+        {authenticating ? (
+          <div className="landing-login-hint">
+            인증 정보를 확인하는 중입니다...
+          </div>
+        ) : null}
         {loginHelp.length > 0 ? (
           <div className="landing-login-hint">
             누락된 웹 환경변수: {loginHelp.join(', ')}
@@ -282,9 +326,11 @@ export function LandingPage() {
 }
 
 function GoogleLoginButton({
+  disabled,
   onSuccess,
   onError,
 }: {
+  disabled: boolean;
   onSuccess: (token: string) => void;
   onError: (message: string) => void;
 }) {
@@ -306,6 +352,7 @@ function GoogleLoginButton({
     <button
       type="button"
       className="web-login-btn tone-primary"
+      disabled={disabled}
       onClick={() => {
         login();
       }}
