@@ -20,7 +20,6 @@ export function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showLoginOptions, setShowLoginOptions] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const setAuth = useAuthStore((s) => s.setAuth);
   const theme = useTheme();
   const transition = useRef(new Animated.Value(0)).current;
 
@@ -52,16 +51,6 @@ export function LoginScreen() {
     } catch (e) {
       setError(e instanceof Error ? e.message : '네이버 로그인 실패');
     }
-  };
-
-  const handleDevLogin = () => {
-    setError(null);
-    setAuth(true, null, 'dev_token');
-  };
-
-  const handleQuickEnter = () => {
-    setError(null);
-    setAuth(true, null, 'quick_enter');
   };
 
   const handlePressButton = () => {
@@ -244,30 +233,15 @@ export function LoginScreen() {
 
             <View style={styles.divider}>
               <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
-              <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>또는</Text>
+              <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>LOGIN ONLY</Text>
               <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
             </View>
 
-            <View style={styles.utilityRow}>
-              <Button
-                mode="contained-tonal"
-                onPress={handleQuickEnter}
-                style={styles.quickBtn}
-                contentStyle={styles.utilityBtnContent}
-                labelStyle={styles.quickBtnLabel}
-              >
-                바로가기
-              </Button>
-
-              <Button
-                mode="text"
-                onPress={handleDevLogin}
-                style={styles.devBtn}
-                contentStyle={styles.utilityBtnContent}
-                labelStyle={[styles.devBtnLabel, { color: theme.colors.secondary }]}
-              >
-                게스트로 둘러보기
-              </Button>
+            <View style={styles.lockedNotice}>
+              <MaterialCommunityIcons name="shield-lock" size={18} color={theme.colors.secondary} />
+              <Text style={[styles.lockedNoticeText, { color: theme.colors.onSurfaceVariant }]}>
+                소셜 로그인 완료 후에만 다음 화면으로 이동할 수 있습니다.
+              </Text>
             </View>
           </Animated.View>
         </View>
@@ -485,34 +459,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
-  devBtn: {
-    flex: 1,
-    marginTop: 4,
-  },
-  devBtnLabel: {
-    fontSize: 15,
-    fontWeight: '800',
-    textDecorationLine: 'underline',
-  },
-  utilityRow: {
+  lockedNotice: {
+    minHeight: 52,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginTop: 4,
-    width: '100%',
   },
-  utilityBtnContent: {
-    minHeight: 50,
-  },
-  quickBtn: {
+  lockedNoticeText: {
     flex: 1,
-    borderRadius: 14,
-    backgroundColor: '#E2E8F0',
-  },
-  quickBtnLabel: {
-    color: '#0F172A',
-    fontSize: 15,
-    fontWeight: '900',
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700',
   },
   errorContainer: {
     flexDirection: 'row',

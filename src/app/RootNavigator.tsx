@@ -11,6 +11,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
   const isAuthed = useAuthStore((s) => s.isAuthed);
+  const provider = useAuthStore((s) => s.provider);
+  const token = useAuthStore((s) => s.token);
+  const isFullyAuthed = isAuthed && Boolean(provider) && Boolean(token);
 
   return (
     <Stack.Navigator
@@ -19,7 +22,7 @@ export function RootNavigator() {
         contentStyle: { backgroundColor: '#FFFBFE' },
       }}
     >
-      {!isAuthed ? (
+      {!isFullyAuthed ? (
         <Stack.Screen name="Login" component={LoginScreen} />
       ) : (
         <>
