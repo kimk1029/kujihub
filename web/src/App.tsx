@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
+import { LandingPage } from './pages/LandingPage';
 import { KujiListPage } from './pages/KujiListPage';
 import { KujiDetailPage } from './pages/KujiDetailPage';
 import { KujiBoardPage } from './pages/KujiBoardPage';
@@ -14,8 +15,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Full-screen Landing Page */}
+        <Route index element={<LandingPage />} />
+        
+        {/* App Shell / Dashboard Layout */}
         <Route path="/" element={<Layout />}>
-          <Route index element={<HomePage />} />
+          <Route path="dashboard" element={<HomePage />} />
           <Route path="kuji" element={<KujiListPage />} />
           <Route path="kuji/:id" element={<KujiDetailPage />} />
           <Route path="kuji/:id/board/:purchaseId" element={<KujiBoardPage />} />
