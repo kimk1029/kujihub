@@ -3,6 +3,7 @@ import logoImg from '../assets/logo.png';
 import '../components/arcade/Arcade.css';
 import '../arcade.css';
 import { ArcadeButton } from './arcade/ArcadeButton';
+import { clearWebAuthSession } from '../auth/webAuth';
 
 export function Layout() {
   const loc = useLocation();
@@ -75,7 +76,10 @@ export function Layout() {
             size="sm" 
             className="arcade-font-pixel"
             style={{ width: '100%', margin: 0 }}
-            onClick={() => navigate('/')}
+            onClick={() => {
+              clearWebAuthSession();
+              navigate('/');
+            }}
           >
             QUIT GAME
           </ArcadeButton>
