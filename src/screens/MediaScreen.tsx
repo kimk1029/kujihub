@@ -1,18 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
+  FlatList,
   ImageBackground,
   Linking,
   Pressable,
-  ScrollView,
+  RefreshControl,
   StyleSheet,
   View,
 } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import WebView from 'react-native-webview';
-import { Screen } from '../components/Screen';
 import { api } from '../shared/api';
 
 type MediaVideo = {
@@ -28,612 +28,568 @@ type MediaVideo = {
   thumbnail: string;
 };
 
+type AnimeCategory = {
+  id: string;
+  name: string;
+  query: string;
+  imageUrl: string | null;
+  accentColor: string;
+};
+
+type AnimeCategoryResponse = {
+  items: AnimeCategory[];
+};
+
 type YouTubeSearchResponse = {
   query: string;
+  effectiveQuery: string;
+  page: number;
   items: MediaVideo[];
 };
 
 const { width } = Dimensions.get('window');
-const GRID_CARD_WIDTH = Math.floor((width - 48) / 2);
-
-const MEDIA_CATEGORIES = [
-  '드래곤볼',
-  '원피스',
-  '나루토',
-  '블리치',
-  '귀멸의 칼날',
-  '주술회전',
-  '하이큐',
-  '포켓몬',
-];
+const GRID_GAP = 12;
+const HORIZONTAL_PADDING = 18;
+const TILE_WIDTH = Math.floor((width - HORIZONTAL_PADDING * 2 - GRID_GAP) / 2);
 
 const PALETTE = {
-  bg: '#F8FAFC',
-  panel: '#FFFFFF',
-  panelSoft: '#F1F5F9',
-  border: '#E2E8F0',
-  accent: '#151926',
-  accentSoft: '#D4AF37',
-  accentMuted: '#1E293B',
-  text: '#1E293B',
-  textDim: '#475569',
-  textMuted: '#94A3B8',
-  overlay: 'rgba(0, 0, 0, 0.05)',
-  overlayStrong: 'rgba(0, 0, 0, 0.4)',
-  errorBg: '#FEF2F2',
-  errorBorder: '#FEE2E2',
-  errorText: '#B91C1C',
+  bg: '#07111F',
+  panel: '#0E172A',
+  panelSoft: '#122033',
+  border: '#1F314A',
+  cardBorder: '#1A2B41',
+  text: '#E2E8F0',
+  textDim: '#94A3B8',
+  textMuted: '#64748B',
+  accent: '#F6C945',
+  accentStrong: '#F59E0B',
+  overlay: 'rgba(5, 10, 18, 0.45)',
+  overlayStrong: 'rgba(3, 7, 18, 0.72)',
+  errorBg: '#3A1118',
+  errorBorder: '#7F1D1D',
+  errorText: '#FECACA',
 };
 
-function buildQuery(category: string) {
-  return `${category} 쿠지`;
-}
-
-function buildPlayerHtml(videoId: string) {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
-    iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-  </style>
-</head>
-<body>
-  <iframe
-    src="https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0&modestbranding=1"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-  ></iframe>
-</body>
-</html>`;
-}
-
-function getYouTubeUrl(video: MediaVideo) {
+function buildYouTubeUrl(video: MediaVideo) {
   return video.isShort
     ? `https://www.youtube.com/shorts/${video.videoId}`
     : `https://www.youtube.com/watch?v=${video.videoId}`;
 }
 
 export function MediaScreen() {
-  const [selectedCategory, setSelectedCategory] = useState('드래곤볼');
+  const insets = useSafeAreaInsets();
+  const requestIdRef = useRef(0);
+  const [categories, setCategories] = useState<AnimeCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [videos, setVideos] = useState<MediaVideo[]>([]);
-  const [selectedVideo, setSelectedVideo] = useState<MediaVideo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const query = useMemo(() => buildQuery(selectedCategory), [selectedCategory]);
+
+  const selectedCategory = useMemo(
+    () => categories.find((category) => category.id === selectedCategoryId) ?? null,
+    [categories, selectedCategoryId],
+  );
 
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      setLoading(true);
-      setError(null);
-
+      setLoadingCategories(true);
       try {
-        const { data } = await api.get<YouTubeSearchResponse>('/api/media/youtube-search', {
-          params: { query, limit: 18 },
-        });
+        const { data } = await api.get<AnimeCategoryResponse>('/api/media/anime-categories');
+        if (cancelled) {
+          return;
+        }
 
-        if (cancelled) return;
-
-        setVideos(data.items);
-        setSelectedVideo(data.items[0] ?? null);
+        setCategories(data.items);
+        setSelectedCategoryId((current) => current ?? data.items[0]?.id ?? null);
       } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : '미디어를 불러올 수 없습니다.');
-        setVideos([]);
-        setSelectedVideo(null);
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : '애니 카테고리를 불러오지 못했습니다.');
+          setLoadingInitial(false);
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoadingCategories(false);
+        }
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [query]);
+  }, []);
 
-  const shorts = useMemo(() => {
-    const shortItems = videos.filter((video) => video.isShort);
-    return shortItems.length > 0 ? shortItems.slice(0, 8) : videos.slice(0, 6);
-  }, [videos]);
+  useEffect(() => {
+    if (!selectedCategory) {
+      return;
+    }
 
-  const features = useMemo(
-    () => videos.filter((video) => !shorts.some((short) => short.id === video.id)),
-    [shorts, videos],
-  );
+    void loadVideos({ reset: true, category: selectedCategory });
+  }, [selectedCategory?.id]);
 
-  async function openInYouTube(video: MediaVideo) {
-    const url = getYouTubeUrl(video);
+  async function loadVideos({
+    reset,
+    category,
+  }: {
+    reset: boolean;
+    category: AnimeCategory;
+  }) {
+    if (reset) {
+      setLoadingInitial(true);
+      setPage(1);
+      setHasMore(true);
+    } else {
+      if (loadingMore || !hasMore) {
+        return;
+      }
+      setLoadingMore(true);
+    }
+
+    setError(null);
+
+    const targetPage = reset ? 1 : page + 1;
+    const requestId = ++requestIdRef.current;
 
     try {
-      await Linking.openURL(url);
+      const { data } = await api.get<YouTubeSearchResponse>('/api/media/youtube-search', {
+        params: {
+          query: category.query,
+          page: targetPage,
+          limit: 18,
+        },
+      });
+
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      setVideos((current) => {
+        if (reset) {
+          return data.items;
+        }
+
+        const existing = new Set(current.map((item) => item.videoId));
+        const next = data.items.filter((item) => !existing.has(item.videoId));
+        return [...current, ...next];
+      });
+
+      setPage(targetPage);
+      setHasMore(data.items.length >= 12);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '영상을 불러오지 못했습니다.');
+      if (reset) {
+        setVideos([]);
+      }
+    } finally {
+      setLoadingInitial(false);
+      setLoadingMore(false);
+      setRefreshing(false);
+    }
+  }
+
+  async function handleRefresh() {
+    if (!selectedCategory) {
+      return;
+    }
+
+    setRefreshing(true);
+    await loadVideos({ reset: true, category: selectedCategory });
+  }
+
+  async function handleEndReached() {
+    if (!selectedCategory || loadingInitial || loadingMore || !hasMore) {
+      return;
+    }
+
+    await loadVideos({ reset: false, category: selectedCategory });
+  }
+
+  async function openVideo(video: MediaVideo) {
+    try {
+      await Linking.openURL(buildYouTubeUrl(video));
     } catch {
       setError('유튜브를 열 수 없습니다.');
     }
   }
 
-  return (
-    <Screen style={styles.screen}>
-      <View style={styles.header}>
-        <Text variant="headlineSmall" style={[styles.title, { color: PALETTE.accent }]}>KUJI MEDIA</Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
-          유튜브에서 "{query}" 검색 결과를 바로 재생
-        </Text>
-      </View>
+  function renderHeader() {
+    return (
+      <View style={styles.headerWrap}>
+        <View style={styles.header}>
+          <Text style={styles.headerEyebrow}>MEDIA</Text>
+          <Text style={styles.headerTitle}>애니별 쿠지 영상 모아보기</Text>
+          <Text style={styles.headerSubtitle}>
+            애니 탭을 누르면 `{selectedCategory?.query ?? '애니명 쿠지'}` 기준으로 영상이 타일형으로 계속 로드됩니다.
+          </Text>
+        </View>
 
-      <View style={styles.sectionHeader}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>애니 카테고리</Text>
-        <Text variant="bodySmall" style={styles.sectionHint}>누르면 자동 검색</Text>
-      </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryRow}
-      >
-        {MEDIA_CATEGORIES.map((category) => {
-          const active = selectedCategory === category;
-          return (
-            <Pressable
-              key={category}
-              style={[styles.categoryChip, active && styles.categoryChipActive]}
-              onPress={() => setSelectedCategory(category)}
-            >
-              <Text
-                variant="labelLarge"
-                style={[styles.categoryChipText, active && styles.categoryChipTextActive]}
+        <FlatList
+          data={categories}
+          horizontal
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryList}
+          renderItem={({ item }) => {
+            const active = item.id === selectedCategoryId;
+
+            return (
+              <Pressable
+                onPress={() => setSelectedCategoryId(item.id)}
+                style={[styles.categoryCard, active && styles.categoryCardActive]}
               >
-                {category}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      {loading ? (
-        <View style={styles.loadingCard}>
-          <ActivityIndicator size="large" color={PALETTE.accentSoft} />
-          <Text variant="bodyMedium" style={styles.loadingText}>유튜브 검색 결과를 불러오는 중</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.errorCard}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={22} color="#FF8E8E" />
-          <Text variant="bodyMedium" style={styles.errorText}>{error}</Text>
-        </View>
-      ) : selectedVideo ? (
-        <>
-          <View style={styles.playerStage}>
-            <View style={styles.playerFrame}>
-              {selectedVideo.isShort ? (
                 <ImageBackground
-                  source={{ uri: selectedVideo.thumbnail }}
-                  style={styles.shortHero}
-                  imageStyle={styles.shortHeroImage}
+                  source={item.imageUrl ? { uri: item.imageUrl } : undefined}
+                  style={styles.categoryImage}
+                  imageStyle={styles.categoryImageInner}
                 >
-                  <View style={styles.shortHeroShade}>
-                    <View style={styles.shortHeroBadge}>
-                      <MaterialCommunityIcons name="lightning-bolt" size={14} color="#FFFFFF" />
-                      <Text variant="labelMedium" style={styles.shortHeroBadgeText}>SHORTS PREVIEW</Text>
-                    </View>
-                    <Pressable style={styles.shortHeroButton} onPress={() => openInYouTube(selectedVideo)}>
-                      <MaterialCommunityIcons name="youtube" size={18} color="#1C120F" />
-                      <Text variant="labelLarge" style={styles.shortHeroButtonText}>유튜브에서 보기</Text>
-                    </Pressable>
+                  <View
+                    style={[
+                      styles.categoryShade,
+                      active && { borderColor: item.accentColor || PALETTE.accent },
+                    ]}
+                  >
+                    <Text style={styles.categoryName}>{item.name}</Text>
+                    <Text style={styles.categoryQuery}>{item.query}</Text>
                   </View>
                 </ImageBackground>
-              ) : (
-                <WebView
-                  source={{ html: buildPlayerHtml(selectedVideo.videoId) }}
-                  style={styles.webview}
-                  javaScriptEnabled
-                  domStorageEnabled
-                  allowsInlineMediaPlayback
-                  allowsFullscreenVideo
-                  mediaPlaybackRequiresUserAction={false}
-                  originWhitelist={['*']}
-                  mixedContentMode="always"
-                />
-              )}
-            </View>
-            <View style={styles.playerTopOverlay}>
-              <View style={styles.liveBadge}>
-                <MaterialCommunityIcons name="youtube" size={16} color="#FFFFFF" />
-                <Text variant="labelMedium" style={styles.liveBadgeText}>
-                  {selectedVideo.isShort ? 'Shorts Preview' : 'YouTube Player'}
-                </Text>
+              </Pressable>
+            );
+          }}
+          ListEmptyComponent={
+            loadingCategories ? (
+              <View style={styles.loadingCategories}>
+                <ActivityIndicator size="small" color={PALETTE.accent} />
+                <Text style={styles.loadingCategoriesText}>애니 카테고리 불러오는 중</Text>
               </View>
-            </View>
-            <View style={styles.playerBottomOverlay}>
-              <Text variant="labelLarge" style={styles.creatorText}>@{selectedVideo.creator}</Text>
-              <Text variant="titleMedium" style={styles.playerTitle}>{selectedVideo.title}</Text>
-              <Text variant="bodySmall" style={styles.playerMeta}>
-                {[selectedVideo.duration, selectedVideo.views, selectedVideo.published].filter(Boolean).join(' · ') || 'YouTube'}
-              </Text>
-              {!!selectedVideo.description && !selectedVideo.isShort && (
-                <Text variant="bodySmall" numberOfLines={3} style={styles.playerDescription}>
-                  {selectedVideo.description}
-                </Text>
-              )}
-            </View>
-          </View>
+            ) : null
+          }
+        />
 
-          <View style={styles.sectionHeader}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>쇼츠/짧은 영상</Text>
-            <Text variant="bodySmall" style={styles.sectionHint}>검색 결과에서 빠르게 보기</Text>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.shortsRow}
-          >
-            {shorts.map((video) => {
-              const active = selectedVideo.id === video.id;
-              return (
-                <Pressable
-                  key={video.id}
-                  style={[styles.shortCard, active && styles.shortCardActive]}
-                  onPress={() => setSelectedVideo(video)}
-                >
-                  <ImageBackground
-                    source={{ uri: video.thumbnail }}
-                    style={styles.shortThumb}
-                    imageStyle={styles.shortThumbImage}
-                  >
-                    <View style={styles.shortOverlay}>
-                      <View style={styles.shortPill}>
-                        <MaterialCommunityIcons name="lightning-bolt" size={12} color="#FFFFFF" />
-                        <Text variant="labelSmall" style={styles.shortPillText}>SHORT</Text>
-                      </View>
-                      <MaterialCommunityIcons name="play-circle" size={28} color="#FFFFFF" />
-                    </View>
-                  </ImageBackground>
-                  <Text numberOfLines={2} variant="labelLarge" style={styles.shortTitle}>{video.title}</Text>
-                  <Text variant="bodySmall" numberOfLines={1} style={styles.shortCreator}>{video.creator}</Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-
-          <View style={styles.sectionHeader}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>전체 검색 결과</Text>
-            <Text variant="bodySmall" style={styles.sectionHint}>썸네일을 누르면 바로 재생</Text>
-          </View>
-          <View style={styles.list}>
-            {features.map((video) => {
-              const active = selectedVideo.id === video.id;
-              return (
-                <Pressable
-                  key={video.id}
-                  style={[styles.listCard, active && styles.listCardActive]}
-                  onPress={() => setSelectedVideo(video)}
-                >
-                  <ImageBackground
-                    source={{ uri: video.thumbnail }}
-                    style={styles.listThumb}
-                    imageStyle={styles.listThumbImage}
-                  >
-                    <View style={styles.listThumbShade}>
-                      <MaterialCommunityIcons name="play" size={24} color="#FFFFFF" />
-                    </View>
-                  </ImageBackground>
-                  <View style={styles.listBody}>
-                    <Text variant="titleSmall" numberOfLines={2} style={styles.listTitle}>{video.title}</Text>
-                    <Text variant="labelMedium" numberOfLines={1} style={styles.listCreator}>{video.creator}</Text>
-                    <Text variant="bodySmall" numberOfLines={1} style={styles.listMeta}>
-                      {[video.duration, video.published, video.views].filter(Boolean).join(' · ')}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        </>
-      ) : (
-        <View style={styles.errorCard}>
-          <MaterialCommunityIcons name="youtube" size={22} color="#FF8E8E" />
-          <Text variant="bodyMedium" style={styles.errorText}>검색 결과가 없습니다.</Text>
+        <View style={styles.resultRow}>
+          <Text style={styles.resultLabel}>
+            {selectedCategory ? `${selectedCategory.name} 영상` : '영상 목록'}
+          </Text>
+          <Text style={styles.resultHint}>
+            {videos.length}개 로드됨{hasMore ? ' · 더 불러오는 중' : ' · 마지막 목록'}
+          </Text>
         </View>
-      )}
-    </Screen>
+
+        {error ? (
+          <View style={styles.errorCard}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={20} color={PALETTE.errorText} />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null}
+      </View>
+    );
+  }
+
+  function renderFooter() {
+    if (loadingMore) {
+      return (
+        <View style={styles.footerLoader}>
+          <ActivityIndicator size="small" color={PALETTE.accent} />
+          <Text style={styles.footerText}>추가 영상을 불러오는 중</Text>
+        </View>
+      );
+    }
+
+    if (!hasMore && videos.length > 0) {
+      return (
+        <View style={styles.footerLoader}>
+          <Text style={styles.footerText}>더 표시할 영상이 없습니다.</Text>
+        </View>
+      );
+    }
+
+    return <View style={styles.footerSpacer} />;
+  }
+
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <FlatList
+        data={videos}
+        keyExtractor={(item, index) => `${item.videoId}-${index}`}
+        numColumns={2}
+        columnWrapperStyle={styles.column}
+        contentContainerStyle={styles.content}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              void handleRefresh();
+            }}
+            tintColor={PALETTE.accent}
+          />
+        }
+        onEndReachedThreshold={0.45}
+        onEndReached={() => {
+          void handleEndReached();
+        }}
+        renderItem={({ item }) => (
+          <Pressable style={styles.tileCard} onPress={() => void openVideo(item)}>
+            <ImageBackground
+              source={{ uri: item.thumbnail }}
+              style={styles.tileThumb}
+              imageStyle={styles.tileThumbImage}
+            >
+              <View style={styles.tileShade}>
+                <View style={styles.badge}>
+                  <MaterialCommunityIcons
+                    name={item.isShort ? 'lightning-bolt' : 'youtube'}
+                    size={12}
+                    color="#FFFFFF"
+                  />
+                  <Text style={styles.badgeText}>{item.isShort ? 'SHORTS' : 'YOUTUBE'}</Text>
+                </View>
+                <MaterialCommunityIcons name="play-circle" size={36} color="#FFFFFF" />
+              </View>
+            </ImageBackground>
+            <View style={styles.tileBody}>
+              <Text numberOfLines={2} style={styles.tileTitle}>
+                {item.title}
+              </Text>
+              <Text numberOfLines={1} style={styles.tileCreator}>
+                {item.creator}
+              </Text>
+              <Text numberOfLines={1} style={styles.tileMeta}>
+                {[item.duration, item.views, item.published].filter(Boolean).join(' · ') || 'YouTube'}
+              </Text>
+            </View>
+          </Pressable>
+        )}
+        ListEmptyComponent={
+          loadingInitial ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator size="large" color={PALETTE.accent} />
+              <Text style={styles.emptyText}>유튜브 영상 목록을 불러오는 중</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="television-play" size={42} color={PALETTE.textMuted} />
+              <Text style={styles.emptyText}>표시할 영상이 없습니다.</Text>
+            </View>
+          )
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
     backgroundColor: PALETTE.bg,
   },
+  content: {
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingBottom: 110,
+  },
+  headerWrap: {
+    paddingBottom: 18,
+  },
   header: {
-    marginBottom: 16,
+    paddingTop: 14,
+    paddingBottom: 18,
   },
-  title: {
-    color: PALETTE.text,
+  headerEyebrow: {
+    color: PALETTE.accent,
+    fontSize: 11,
     fontWeight: '900',
-    letterSpacing: 0.6,
+    letterSpacing: 1.4,
   },
-  subtitle: {
-    marginTop: 6,
+  headerTitle: {
+    marginTop: 8,
+    color: PALETTE.text,
+    fontSize: 30,
+    fontWeight: '900',
+    letterSpacing: -1.1,
+  },
+  headerSubtitle: {
+    marginTop: 10,
     color: PALETTE.textDim,
+    lineHeight: 21,
   },
-  categoryRow: {
-    gap: 10,
-    paddingBottom: 12,
-    marginBottom: 14,
-    alignItems: 'center',
+  categoryList: {
+    gap: 12,
+    paddingBottom: 14,
   },
-  categoryChip: {
-    minWidth: 88,
-    height: 42,
-    paddingHorizontal: 14,
-    borderRadius: 999,
+  categoryCard: {
+    width: 170,
+    height: 118,
+    borderRadius: 24,
+    overflow: 'hidden',
     backgroundColor: PALETTE.panel,
     borderWidth: 1,
-    borderColor: PALETTE.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
+    borderColor: PALETTE.cardBorder,
   },
-  categoryChipActive: {
-    backgroundColor: PALETTE.accent,
+  categoryCardActive: {
+    transform: [{ translateY: -2 }],
     borderColor: PALETTE.accent,
   },
-  categoryChipText: {
-    color: PALETTE.textDim,
+  categoryImage: {
+    flex: 1,
+    backgroundColor: '#101826',
+  },
+  categoryImageInner: {
+    borderRadius: 24,
+  },
+  categoryShade: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 14,
+    backgroundColor: PALETTE.overlay,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    borderRadius: 24,
+  },
+  categoryName: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: -0.4,
+  },
+  categoryQuery: {
+    marginTop: 4,
+    color: '#E2E8F0',
+    fontSize: 12,
     fontWeight: '700',
   },
-  categoryChipTextActive: {
-    color: '#1C120F',
-  },
-  loadingCard: {
-    backgroundColor: PALETTE.panel,
-    borderRadius: 24,
-    paddingVertical: 42,
+  loadingCategories: {
+    height: 88,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: PALETTE.border,
-    marginBottom: 20,
+    justifyContent: 'center',
+    gap: 8,
   },
-  loadingText: {
+  loadingCategoriesText: {
     color: PALETTE.textDim,
-    marginTop: 12,
+  },
+  resultRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    gap: 12,
+  },
+  resultLabel: {
+    color: PALETTE.text,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  resultHint: {
+    color: PALETTE.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
   },
   errorCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: PALETTE.errorBg,
+    padding: 14,
     borderRadius: 18,
-    padding: 16,
+    backgroundColor: PALETTE.errorBg,
     borderWidth: 1,
     borderColor: PALETTE.errorBorder,
+    marginBottom: 8,
   },
   errorText: {
     color: PALETTE.errorText,
     flex: 1,
+    fontWeight: '700',
   },
-  playerStage: {
-    width: width,
-    marginLeft: -18,
-    marginRight: -18,
-    marginBottom: 22,
-    backgroundColor: '#0A0908',
+  column: {
+    gap: GRID_GAP,
   },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: PALETTE.accentMuted,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  liveBadgeText: {
-    color: PALETTE.text,
-    fontWeight: '800',
-  },
-  playerTopOverlay: {
-    position: 'absolute',
-    top: 18,
-    left: 18,
-    right: 18,
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-  },
-  playerBottomOverlay: {
-    position: 'absolute',
-    left: 18,
-    right: 18,
-    bottom: 18,
-    paddingTop: 36,
-  },
-  creatorText: {
-    color: PALETTE.accentSoft,
-    fontWeight: '800',
-  },
-  playerFrame: {
-    width: '100%',
-    height: width * 1.62,
+  tileCard: {
+    width: TILE_WIDTH,
+    marginBottom: GRID_GAP,
+    borderRadius: 22,
     overflow: 'hidden',
-    backgroundColor: '#0A0908',
-  },
-  webview: {
-    flex: 1,
-    backgroundColor: '#0A0908',
-  },
-  shortHero: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  shortHeroImage: {
-    resizeMode: 'cover',
-  },
-  shortHeroShade: {
-    flex: 1,
-    justifyContent: 'space-between',
-    padding: 18,
-    backgroundColor: 'rgba(7, 7, 7, 0.34)',
-  },
-  shortHeroBadge: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: PALETTE.overlayStrong,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  shortHeroBadgeText: {
-    color: PALETTE.text,
-    fontWeight: '800',
-  },
-  shortHeroButton: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: PALETTE.accentSoft,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
-  },
-  shortHeroButtonText: {
-    color: '#1C120F',
-    fontWeight: '900',
-  },
-  playerTitle: {
-    marginTop: 8,
-    color: PALETTE.text,
-    fontWeight: '800',
-  },
-  playerMeta: {
-    marginTop: 6,
-    color: PALETTE.accentSoft,
-  },
-  playerDescription: {
-    marginTop: 8,
-    color: '#EEE4D8',
-    lineHeight: 19,
-    maxWidth: '88%',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    color: PALETTE.text,
-    fontWeight: '800',
-  },
-  sectionHint: {
-    color: PALETTE.textMuted,
-  },
-  shortsRow: {
-    paddingBottom: 8,
-    gap: 12,
-    marginBottom: 18,
-  },
-  shortCard: {
-    width: 142,
     backgroundColor: PALETTE.panel,
-    borderRadius: 18,
-    padding: 8,
     borderWidth: 1,
-    borderColor: PALETTE.border,
+    borderColor: PALETTE.cardBorder,
   },
-  shortCardActive: {
-    borderColor: PALETTE.accentSoft,
-    backgroundColor: PALETTE.panelSoft,
-    transform: [{ translateY: -2 }],
-  },
-  shortThumb: {
-    height: 220,
+  tileThumb: {
+    height: TILE_WIDTH * 1.35,
     justifyContent: 'space-between',
-    padding: 10,
   },
-  shortThumbImage: {
-    borderRadius: 14,
+  tileThumbImage: {
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
   },
-  shortOverlay: {
+  tileShade: {
     flex: 1,
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    padding: 12,
+    backgroundColor: PALETTE.overlayStrong,
   },
-  shortPill: {
+  badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: PALETTE.overlayStrong,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    gap: 5,
     borderRadius: 999,
+    backgroundColor: 'rgba(15, 23, 42, 0.78)',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
   },
-  shortPillText: {
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+  },
+  tileBody: {
+    padding: 12,
+  },
+  tileTitle: {
     color: PALETTE.text,
+    fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 0.3,
-  },
-  shortTitle: {
-    color: PALETTE.text,
-    marginTop: 10,
+    lineHeight: 20,
     minHeight: 40,
   },
-  shortCreator: {
-    color: PALETTE.textMuted,
-    marginTop: 4,
+  tileCreator: {
+    marginTop: 8,
+    color: PALETTE.accent,
+    fontSize: 12,
+    fontWeight: '700',
   },
-  list: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingBottom: 18,
-  },
-  listCard: {
-    width: GRID_CARD_WIDTH,
-    backgroundColor: PALETTE.panel,
-    borderRadius: 18,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: PALETTE.border,
-  },
-  listCardActive: {
-    borderColor: PALETTE.accent,
-    backgroundColor: PALETTE.panelSoft,
-  },
-  listThumb: {
-    width: '100%',
-    height: GRID_CARD_WIDTH * 1.38,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listThumbImage: {
-    borderRadius: 12,
-  },
-  listThumbShade: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 12,
-    backgroundColor: PALETTE.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listBody: {
-    paddingTop: 10,
-  },
-  listTitle: {
-    color: PALETTE.text,
-    fontWeight: '800',
-  },
-  listCreator: {
-    color: PALETTE.accentSoft,
+  tileMeta: {
     marginTop: 6,
-  },
-  listMeta: {
     color: PALETTE.textMuted,
-    marginTop: 4,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 72,
+    gap: 12,
+  },
+  emptyText: {
+    color: PALETTE.textDim,
+    fontWeight: '700',
+  },
+  footerLoader: {
+    paddingTop: 8,
+    paddingBottom: 18,
+    alignItems: 'center',
+    gap: 10,
+  },
+  footerText: {
+    color: PALETTE.textMuted,
+    fontWeight: '700',
+  },
+  footerSpacer: {
+    height: 24,
   },
 });

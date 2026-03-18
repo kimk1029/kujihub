@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { HomeScreen } from '../screens/HomeScreen';
 import { FeedScreen } from '../screens/FeedScreen';
+import { MediaScreen } from '../screens/MediaScreen';
 import { KujiDrawStack } from './KujiDrawStack';
 import { CommunityStack } from './CommunityStack';
 import { MyScreen } from '../screens/MyScreen';
@@ -62,6 +63,16 @@ export function MainTabs() {
             title: '피드',
             tabBarIcon: ({ color, size: _size }) => (
               <MaterialCommunityIcons name="rss" size={26} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Media"
+          component={MediaScreen}
+          options={{
+            title: '미디어',
+            tabBarIcon: ({ color, size: _size }) => (
+              <MaterialCommunityIcons name="play-box-multiple" size={26} color={color} />
             ),
           }}
         />

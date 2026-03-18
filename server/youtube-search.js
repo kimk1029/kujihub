@@ -107,8 +107,25 @@ function normalizeResult(video) {
   };
 }
 
-async function fetchYouTubeSearch(query = '쿠지', limit = 18) {
-  const url = `${YOUTUBE_BASE}/results?search_query=${encodeURIComponent(query)}&hl=ko&gl=KR`;
+const SEARCH_SUFFIXES = [
+  '',
+  '피규어',
+  '제일복권',
+  '개봉',
+  '언박싱',
+  '굿즈',
+  'shorts',
+  '후기',
+];
+
+function buildPagedQuery(query, page = 1) {
+  const suffix = SEARCH_SUFFIXES[(Math.max(page, 1) - 1) % SEARCH_SUFFIXES.length];
+  return suffix ? `${query} ${suffix}` : query;
+}
+
+async function fetchYouTubeSearch(query = '쿠지', limit = 18, page = 1) {
+  const effectiveQuery = buildPagedQuery(query, page);
+  const url = `${YOUTUBE_BASE}/results?search_query=${encodeURIComponent(effectiveQuery)}&hl=ko&gl=KR`;
 
   const res = await fetch(url, {
     headers: {
@@ -143,7 +160,7 @@ async function fetchYouTubeSearch(query = '쿠지', limit = 18) {
     if (deduped.length >= limit) break;
   }
 
-  return { query, items: deduped };
+  return { query, effectiveQuery, page, items: deduped };
 }
 
 module.exports = { fetchYouTubeSearch };

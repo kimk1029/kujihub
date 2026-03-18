@@ -18,7 +18,8 @@ const { width } = Dimensions.get('window');
 
 export function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [showLoginOptions, setShowLoginOptions] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const setAuth = useAuthStore((s) => s.setAuth);
   const theme = useTheme();
   const transition = useRef(new Animated.Value(0)).current;
@@ -64,80 +65,95 @@ export function LoginScreen() {
   };
 
   const handlePressButton = () => {
-    if (isExpanded) {
+    if (showLoginOptions || isAnimating) {
       return;
     }
 
     setError(null);
-    setIsExpanded(true);
+    setIsAnimating(true);
 
     Animated.sequence([
       Animated.timing(transition, {
-        toValue: 0.52,
-        duration: 180,
-        easing: Easing.out(Easing.cubic),
+        toValue: 1,
+        duration: 260,
+        easing: Easing.inOut(Easing.cubic),
         useNativeDriver: true,
       }),
+    ]).start(() => {
+      setShowLoginOptions(true);
+      transition.setValue(0);
       Animated.spring(transition, {
         toValue: 1,
         friction: 7,
-        tension: 68,
+        tension: 72,
         useNativeDriver: true,
-      }),
-    ]).start();
+      }).start(() => {
+        setIsAnimating(false);
+      });
+    });
   };
 
   const pressCardStyle = {
-    opacity: transition.interpolate({
-      inputRange: [0, 0.42, 1],
-      outputRange: [1, 0.28, 0],
-    }),
+    opacity: showLoginOptions
+      ? transition.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 0],
+        })
+      : transition.interpolate({
+          inputRange: [0, 0.55, 1],
+          outputRange: [1, 0.24, 0],
+        }),
     transform: [
       { perspective: 1200 },
       {
         rotateX: transition.interpolate({
           inputRange: [0, 1],
-          outputRange: ['0deg', '72deg'],
+          outputRange: showLoginOptions ? ['-82deg', '0deg'] : ['0deg', '82deg'],
         }),
       },
       {
         translateY: transition.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -28],
+          outputRange: showLoginOptions ? [28, 0] : [0, -32],
         }),
       },
       {
         scale: transition.interpolate({
           inputRange: [0, 1],
-          outputRange: [1, 0.9],
+          outputRange: showLoginOptions ? [0.94, 1] : [1, 0.88],
         }),
       },
     ],
   };
 
   const socialCardStyle = {
-    opacity: transition.interpolate({
-      inputRange: [0, 0.38, 1],
-      outputRange: [0, 0.08, 1],
-    }),
+    opacity: showLoginOptions
+      ? transition.interpolate({
+          inputRange: [0, 0.4, 1],
+          outputRange: [0, 0.12, 1],
+        })
+      : transition.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 0],
+        }),
     transform: [
       { perspective: 1200 },
       {
         rotateX: transition.interpolate({
           inputRange: [0, 1],
-          outputRange: ['-78deg', '0deg'],
+          outputRange: showLoginOptions ? ['-82deg', '0deg'] : ['0deg', '82deg'],
         }),
       },
       {
         translateY: transition.interpolate({
           inputRange: [0, 1],
-          outputRange: [34, 0],
+          outputRange: showLoginOptions ? [34, 0] : [0, -30],
         }),
       },
       {
         scale: transition.interpolate({
           inputRange: [0, 1],
-          outputRange: [0.92, 1],
+          outputRange: showLoginOptions ? [0.92, 1] : [1, 0.9],
         }),
       },
     ],
@@ -166,8 +182,12 @@ export function LoginScreen() {
 
         <View style={styles.buttonStage}>
           <Animated.View
-            pointerEvents={isExpanded ? 'none' : 'auto'}
-            style={[styles.pressCard, pressCardStyle]}
+            pointerEvents={showLoginOptions ? 'none' : 'auto'}
+            style={[
+              styles.pressCard,
+              pressCardStyle,
+              showLoginOptions && styles.cardFaceHidden,
+            ]}
           >
             <Pressable
               onPress={handlePressButton}
@@ -178,7 +198,7 @@ export function LoginScreen() {
             >
               <View style={styles.pressButtonGlow} />
               <Text style={styles.pressLabelTop}>ENTER THE HUB</Text>
-              <Text style={styles.pressLabelMain}>PRESS BUTTON</Text>
+              <Text style={styles.pressLabelMain}>PRESS START</Text>
               <View style={styles.pressCtaRow}>
                 <Text style={styles.pressLabelBottom}>tap to unlock social login</Text>
                 <MaterialCommunityIcons name="arrow-right-circle" size={22} color="#F8FAFC" />
@@ -187,8 +207,13 @@ export function LoginScreen() {
           </Animated.View>
 
           <Animated.View
-            pointerEvents={isExpanded ? 'auto' : 'none'}
-            style={[styles.buttonGroup, styles.socialCard, socialCardStyle]}
+            pointerEvents={showLoginOptions ? 'auto' : 'none'}
+            style={[
+              styles.buttonGroup,
+              styles.socialCard,
+              socialCardStyle,
+              !showLoginOptions && styles.cardFaceHidden,
+            ]}
           >
             <TouchableOpacity
               style={[styles.loginBtn, styles.kakaoBtn]}
@@ -323,7 +348,7 @@ const styles = StyleSheet.create({
   },
   buttonStage: {
     width: '100%',
-    minHeight: 320,
+    minHeight: 356,
     position: 'relative',
   },
   pressCard: {
@@ -332,6 +357,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 2,
+    backfaceVisibility: 'hidden',
   },
   pressButton: {
     minHeight: 188,
@@ -399,6 +425,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.16,
     shadowRadius: 28,
     elevation: 7,
+    minHeight: 322,
+    backfaceVisibility: 'hidden',
+    zIndex: 3,
+  },
+  cardFaceHidden: {
+    zIndex: 0,
   },
   loginBtn: {
     width: '100%',

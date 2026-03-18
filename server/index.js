@@ -44,6 +44,7 @@ app.use('/api/community', communityRouter);
 const { fetchLineupForMonth } = require('./kuji-lineup');
 const { hasPapagoConfig, translateLineupMonth } = require('./kuji-translate');
 const { fetchYouTubeSearch } = require('./youtube-search');
+const { fetchAnimeCategories } = require('./anime-media');
 
 app.get('/api/kuji-lineup', async (req, res) => {
   const year = parseInt(req.query.year, 10) || new Date().getFullYear();
@@ -62,11 +63,21 @@ app.get('/api/kuji-lineup', async (req, res) => {
   }
 });
 
+app.get('/api/media/anime-categories', async (_req, res) => {
+  try {
+    res.json({ items: await fetchAnimeCategories() });
+  } catch (e) {
+    console.error('anime-categories:', e.message);
+    res.status(502).json({ error: 'Failed to fetch anime categories', message: e.message });
+  }
+});
+
 app.get('/api/media/youtube-search', async (req, res) => {
   const query = String(req.query.query || '쿠지').trim() || '쿠지';
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 18, 1), 30);
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   try {
-    res.json(await fetchYouTubeSearch(query, limit));
+    res.json(await fetchYouTubeSearch(query, limit, page));
   } catch (e) {
     console.error('youtube-search:', e.message);
     res.status(502).json({ error: 'Failed to fetch YouTube results', message: e.message });
