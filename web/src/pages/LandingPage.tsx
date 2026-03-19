@@ -248,6 +248,14 @@ export function LandingPage() {
     redirectTo(buildNaverAuthUrl());
   }
 
+  if (isCallbackAuthenticating) {
+    return (
+      <div className="arcade-body scanlines crt landing-shell" style={{ background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="blink" style={{ color: 'var(--arcade-primary)', fontWeight: 900 }}>AUTHENTICATING...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="arcade-body scanlines crt landing-shell">
       <div className="landing-topbar">
