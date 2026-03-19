@@ -152,8 +152,8 @@ export function MediaPage() {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '16px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))',
+            gap: '12px',
           }}>
             {categories.map((category) => {
               const active = category.id === selectedCategoryId;
@@ -163,28 +163,45 @@ export function MediaPage() {
                   type="button"
                   onClick={() => setSelectedCategoryId(category.id)}
                   style={{
-                    minHeight: '220px',
+                    minHeight: '164px',
                     padding: 0,
                     border: active ? `3px solid ${category.accentColor || 'var(--arcade-primary)'}` : '2px solid rgba(255,255,255,0.12)',
-                    background: category.imageUrl
-                      ? `linear-gradient(180deg, rgba(3,7,18,0.05), rgba(3,7,18,0.92)), url(${category.imageUrl}) center/cover`
-                      : 'linear-gradient(135deg, rgba(8, 18, 32, 0.95), rgba(40, 10, 48, 0.95))',
+                    background: 'linear-gradient(135deg, rgba(8, 18, 32, 0.95), rgba(40, 10, 48, 0.95))',
                     color: '#fff',
                     cursor: 'pointer',
                     textAlign: 'left',
                     display: 'flex',
-                    alignItems: 'flex-end',
+                    alignItems: 'stretch',
                     boxShadow: active ? `0 0 24px ${category.accentColor || 'rgba(255,255,255,0.2)'}` : 'none',
                     transition: 'transform 0.18s ease, border-color 0.18s ease',
+                    overflow: 'hidden',
+                    position: 'relative',
                   }}
                 >
+                  {category.imageUrl ? (
+                    <img
+                      src={category.imageUrl}
+                      alt={category.name}
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : null}
                   <div style={{
                     width: '100%',
-                    padding: '18px',
-                    background: 'linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.92))',
+                    padding: '14px 12px',
+                    background: 'linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.94))',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'flex-end',
+                    position: 'relative',
                   }}>
-                    <div style={{ fontSize: '1rem', fontWeight: 900, marginBottom: '8px' }}>{category.name}</div>
-                    <div style={{ fontSize: '0.78rem', opacity: 0.75 }}>{category.query}</div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 900, marginBottom: '6px', lineHeight: 1.2 }}>{category.name}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.75, lineHeight: 1.25 }}>{category.query}</div>
                   </div>
                 </button>
               );

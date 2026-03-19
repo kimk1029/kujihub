@@ -13,8 +13,10 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const session = getWebAuthSession();
   if (session?.token) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${session.token}`;
+    const headers = axios.AxiosHeaders.from(config.headers ?? {});
+    headers.set('Authorization', `Bearer ${session.token}`);
+    headers.set('X-Web-Auth-Token', session.token);
+    config.headers = headers;
   }
   return config;
 });

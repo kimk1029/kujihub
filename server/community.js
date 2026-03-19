@@ -15,7 +15,13 @@ function parseLimit(value, fallback = DEFAULT_LIMIT) {
 function getBearerToken(req) {
   const authHeader = String(req.headers.authorization || '').trim();
   if (!authHeader.startsWith('Bearer ')) {
-    return '';
+    const altHeader = String(req.headers['x-web-auth-token'] || '').trim();
+    if (altHeader) {
+      return altHeader;
+    }
+
+    const bodyToken = String(req.body?.token || '').trim();
+    return bodyToken;
   }
   return authHeader.slice('Bearer '.length).trim();
 }

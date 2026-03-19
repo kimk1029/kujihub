@@ -64,8 +64,8 @@ export function CommunityDetailPage() {
       });
       setComments((prev) => [...prev, newComment]);
       setCommentContent('');
-    } catch {
-      window.alert('댓글 등록에 실패했습니다. DB를 확인하세요.');
+    } catch (submitError) {
+      window.alert(submitError instanceof Error ? submitError.message : '댓글 등록에 실패했습니다.');
     } finally {
       setIsSubmitting(false);
     }
