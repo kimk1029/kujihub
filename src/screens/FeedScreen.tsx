@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, TextInput, Keyboard, Pressable, Image } from 'react-native';
 import { ActivityIndicator, Surface, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,19 +24,30 @@ export function FeedScreen() {
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<CommunityFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // DOS Input & Tags state
+  const [inputText, setInputText] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
-  const loadFeed = useCallback(async () => {
-    setLoading(true);
+  const tags = ['가챠교환', '쿠지현황'];
+
+  const loadFeed = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     setError(null);
     try {
-      const data = await communityApi.getFeed(40);
+      const data = await communityApi.getFeed(60);
       setItems(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : '피드를 불러올 수 없습니다.');
       setItems([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -44,15 +55,136 @@ export function FeedScreen() {
     loadFeed();
   }, [loadFeed]);
 
+  const handleQuickPost = async () => {
+    const text = inputText.trim();
+    if (!text || isSubmitting) return;
+
+    const finalTitle = selectedTag ? `[${selectedTag}] ${text}` : text;
+
+    setIsSubmitting(true);
+    try {
+      await communityApi.create({
+        title: finalTitle.length > 40 ? finalTitle.substring(0, 40) + '...' : finalTitle,
+        content: text,
+        author: '익명_CLI',
+        category: selectedTag || '자유',
+        // In a real scenario, we would upload selectedImage here
+      });
+      setInputText('');
+      setSelectedImage(null);
+      Keyboard.dismiss();
+      await loadFeed(false);
+    } catch (e) {
+      console.error('Failed to post from CLI:', e);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const filteredItems = useMemo(() => {
+    if (!selectedTag) return items;
+    return items.filter(item => 
+      item.title.includes(`[${selectedTag}]`) || 
+      item.body.includes(selectedTag)
+    );
+  }, [items, selectedTag]);
+
+  const toggleTag = (tag: string) => {
+    setSelectedTag(prev => prev === tag ? null : tag);
+  };
+
+  const pickImage = () => {
+    // Placeholder for image picker integration
+    // In actual use, call launchImageLibrary from react-native-image-picker
+    // For now, let's toggle a placeholder image to show the UI
+    if (selectedImage) {
+      setSelectedImage(null);
+    } else {
+      setSelectedImage('https://via.placeholder.com/150/000000/39FF14?text=CLI_IMG');
+    }
+  };
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 16 }]}>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>LIVE FEED</Text>
         <Text style={styles.title}>실시간 피드</Text>
-        <Text style={styles.subtitle}>게시글 생성, 수정, 삭제 흐름이 시간순으로 쌓입니다.</Text>
+        
+        {/* DOS Style Input & Tags */}
+        <Surface style={styles.dosContainer} elevation={4}>
+          <View style={styles.dosHeader}>
+            <View style={styles.dosDot} />
+            <Text style={styles.dosHeaderText}>KUJI_TERMINAL_V1.0.EXE</Text>
+          </View>
+          
+          <View style={styles.dosBody}>
+            <View style={styles.dosInputRow}>
+              <Text style={styles.dosPrompt}>C:\FEED> </Text>
+              <TextInput
+                ref={inputRef}
+                style={styles.dosInput}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="입력 후 ENTER..."
+                placeholderTextColor="#2D5A27"
+                selectionColor="#39FF14"
+                onSubmitEditing={handleQuickPost}
+                autoCorrect={false}
+                autoCapitalize="none"
+                returnKeyType="send"
+                editable={!isSubmitting}
+              />
+              <Pressable onPress={pickImage} style={styles.dosImagePicker}>
+                <MaterialCommunityIcons 
+                  name={selectedImage ? "image-check" : "image-plus"} 
+                  size={20} 
+                  color={selectedImage ? "#39FF14" : "#008F11"} 
+                />
+              </Pressable>
+              {isSubmitting && <ActivityIndicator size="small" color="#39FF14" style={{ marginLeft: 8 }} />}
+            </View>
+
+            {/* Image Preview in DOS Style */}
+            {selectedImage && (
+              <View style={styles.dosImagePreviewContainer}>
+                <Text style={styles.dosTagPrompt}>ATTACHED_FILE: </Text>
+                <View style={styles.dosImageFrame}>
+                  <Image source={{ uri: selectedImage }} style={styles.dosPreviewImage} />
+                  <Pressable onPress={() => setSelectedImage(null)} style={styles.dosImageClose}>
+                    <Text style={styles.dosCloseText}>[X]</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
+
+            {/* Retro Tag Selection */}
+            <View style={styles.dosTagRow}>
+              <Text style={styles.dosTagPrompt}>SELECT_TAG: </Text>
+              {tags.map((tag) => (
+                <Pressable 
+                  key={tag} 
+                  onPress={() => toggleTag(tag)}
+                  style={({ pressed }) => [
+                    styles.dosTagButton,
+                    selectedTag === tag && styles.dosTagActive,
+                    pressed && { opacity: 0.7 }
+                  ]}
+                >
+                  <Text style={[
+                    styles.dosTagText, 
+                    selectedTag === tag && styles.dosTagTextActive
+                  ]}>
+                    {selectedTag === tag ? `[*${tag}]` : `[ ${tag} ]`}
+                  </Text>
+                </Pressable>
+              ))}
+              <View style={styles.dosCursor} />
+            </View>
+          </View>
+        </Surface>
       </View>
 
-      {loading ? (
+      {loading && !refreshing ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#151926" />
         </View>
@@ -62,9 +194,14 @@ export function FeedScreen() {
         </Surface>
       ) : (
         <FlatList
-          data={items}
+          data={filteredItems}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.list}
+          refreshing={refreshing}
+          onRefresh={() => {
+            setRefreshing(true);
+            loadFeed(false);
+          }}
           renderItem={({ item }) => (
             <TouchableOpacity
               activeOpacity={item.postId ? 0.8 : 1}
@@ -91,7 +228,9 @@ export function FeedScreen() {
           )}
           ListEmptyComponent={
             <Surface style={styles.emptyCard} elevation={0}>
-              <Text style={styles.emptyText}>아직 표시할 피드가 없습니다.</Text>
+              <Text style={styles.emptyText}>
+                {selectedTag ? `'${selectedTag}' 태그의 소식이 없습니다.` : '아직 표시할 피드가 없습니다.'}
+              </Text>
             </Surface>
           }
         />
@@ -114,19 +253,140 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 1.2,
+    marginBottom: 4,
   },
   title: {
-    marginTop: 6,
     color: '#151926',
     fontSize: 28,
     fontWeight: '900',
     letterSpacing: -0.8,
+    marginBottom: 16,
   },
-  subtitle: {
-    marginTop: 8,
-    color: '#667085',
+  dosContainer: {
+    backgroundColor: '#000000',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  dosHeader: {
+    backgroundColor: '#1A1A1A',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333333',
+  },
+  dosDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#39FF14',
+    opacity: 0.8,
+  },
+  dosHeaderText: {
+    color: '#888888',
+    fontSize: 10,
+    fontWeight: '800',
+    fontFamily: 'monospace',
+  },
+  dosBody: {
+    padding: 14,
+  },
+  dosInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  dosPrompt: {
+    color: '#39FF14',
     fontSize: 14,
-    lineHeight: 21,
+    fontWeight: '700',
+    fontFamily: 'monospace',
+  },
+  dosInput: {
+    flex: 1,
+    color: '#39FF14',
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'monospace',
+    padding: 0,
+    margin: 0,
+  },
+  dosImagePicker: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  dosImagePreviewContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  dosImageFrame: {
+    width: 64,
+    height: 64,
+    borderWidth: 1,
+    borderColor: '#39FF14',
+    padding: 2,
+    position: 'relative',
+  },
+  dosPreviewImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    opacity: 0.8,
+  },
+  dosImageClose: {
+    position: 'absolute',
+    top: -8,
+    right: -24,
+  },
+  dosCloseText: {
+    color: '#FF5F56',
+    fontSize: 12,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  dosTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dosTagPrompt: {
+    color: '#008F11',
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: 'monospace',
+  },
+  dosTagButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  dosTagActive: {
+    backgroundColor: 'rgba(57, 255, 20, 0.15)',
+  },
+  dosTagText: {
+    color: '#008F11',
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: 'monospace',
+  },
+  dosTagTextActive: {
+    color: '#39FF14',
+    textShadowColor: 'rgba(57, 255, 20, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  dosCursor: {
+    width: 8,
+    height: 14,
+    backgroundColor: '#39FF14',
+    marginLeft: 4,
+    opacity: 0.8,
   },
   center: {
     flex: 1,

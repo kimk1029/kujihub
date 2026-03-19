@@ -161,8 +161,17 @@ export function CommunityListScreen() {
 
       <FAB
         icon="pencil"
-        style={[styles.fab, { bottom: insets.bottom + 20 }]}
+        size="small"
+        style={[
+          styles.fab, 
+          { 
+            bottom: insets.bottom + (isSmallDevice ? 16 : 24),
+            right: isSmallDevice ? 16 : 24 
+          }
+        ]}
         onPress={() => navigation.navigate('CommunityPostForm', {})}
+        color="#FFFFFF"
+        elevation={4}
       />
     </View>
   );
