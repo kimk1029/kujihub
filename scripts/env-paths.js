@@ -74,10 +74,12 @@ function getServerEnvCandidates() {
 function getWebEnvCandidates() {
   const envDir = getPersistentEnvDir();
   return uniq(compact([
+    path.join(projectRoot, 'web', '.env'),
+    path.join(projectRoot, 'web', '.env.local'),
+    path.join(projectRoot, 'web', '.env.production'),
+    path.join(projectRoot, 'web', '.env.production.local'),
     process.env.KUJIHUB_WEB_ENV_FILE,
     path.join(envDir, 'web.env'),
-    path.join(projectRoot, 'web', '.env.production.local'),
-    path.join(projectRoot, 'web', '.env.local'),
     path.join(projectRoot, '.env'),
   ]));
 }
