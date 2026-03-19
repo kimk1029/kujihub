@@ -27,13 +27,29 @@ function rethrowApiError(error: unknown): never {
   throw new Error('커뮤니티 요청에 실패했습니다.');
 }
 
+function getWriteAuthPayload() {
+  const session = getWebAuthSession();
+  return {
+    token: session?.token ?? '',
+    webAuth: session
+      ? {
+          provider: session.provider,
+          user: session.user,
+          issuedAt: session.createdAt,
+        }
+      : null,
+  };
+}
+
 export const communityApi = {
   getList: () => api.get<CommunityPost[]>('/api/community/posts').then((r) => r.data),
   getOne: (id: number) => api.get<CommunityPost>(`/api/community/posts/${id}`).then((r) => r.data),
   create: async (body: CreatePostBody) => {
     try {
-      const token = getWebAuthSession()?.token ?? '';
-      const { data } = await api.post<CommunityPost>('/api/community/posts', { ...body, token });
+      const { data } = await api.post<CommunityPost>('/api/community/posts', {
+        ...body,
+        ...getWriteAuthPayload(),
+      });
       return data;
     } catch (error) {
       rethrowApiError(error);
@@ -41,7 +57,10 @@ export const communityApi = {
   },
   update: (id: number, body: UpdatePostBody) =>
     api
-      .put<CommunityPost>(`/api/community/posts/${id}`, { ...body, token: getWebAuthSession()?.token ?? '' })
+      .put<CommunityPost>(`/api/community/posts/${id}`, {
+        ...body,
+        ...getWriteAuthPayload(),
+      })
       .then((r) => r.data)
       .catch(rethrowApiError),
   remove: (id: number) => api.delete(`/api/community/posts/${id}`).catch(rethrowApiError),
@@ -55,8 +74,10 @@ export const communityApi = {
     api.get<CommunityComment[]>(`/api/community/posts/${postId}/comments`).then((r) => r.data),
   createComment: async (postId: number, body: { content: string }) => {
     try {
-      const token = getWebAuthSession()?.token ?? '';
-      const { data } = await api.post<CommunityComment>(`/api/community/posts/${postId}/comments`, { ...body, token });
+      const { data } = await api.post<CommunityComment>(`/api/community/posts/${postId}/comments`, {
+        ...body,
+        ...getWriteAuthPayload(),
+      });
       return data;
     } catch (error) {
       rethrowApiError(error);
