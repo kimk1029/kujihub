@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import '../arcade.css';
@@ -121,10 +121,10 @@ export function LandingPage() {
     return Boolean((provider === 'kakao' || provider === 'naver') && code);
   }, [callbackMessage, location.search]);
 
-  function completeLogin(session: Parameters<typeof setWebAuthSession>[0]) {
+  const completeLogin = useCallback((session: Parameters<typeof setWebAuthSession>[0]) => {
     setWebAuthSession(session);
-    window.location.replace('/dashboard');
-  }
+    navigate('/dashboard', { replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     kujiDrawApi.getList().then(list => {
@@ -173,15 +173,15 @@ export function LandingPage() {
 
       loginPromise
         .then((session) => {
-          completeLogin(session);
           window.history.replaceState({}, '', '/');
+          completeLogin(session);
         })
         .catch((authError) => {
           setError(authError instanceof Error ? authError.message : '로그인 처리에 실패했습니다.');
           window.history.replaceState({}, '', '/');
         });
     }
-  }, [callbackMessage, location.search, navigate]);
+  }, [callbackMessage, completeLogin, location.search]);
 
   const loginHelp = useMemo(() => {
     const missing = [];
