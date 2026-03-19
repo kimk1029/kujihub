@@ -1,10 +1,8 @@
 const path = require('path');
-const os = require('os');
 
 const appDir = __dirname;
 const serverPort = '3000';
 const webPort = '8080';
-const envDir = process.env.KUJIHUB_ENV_DIR || path.join(os.homedir(), '.config', 'kujihub');
 
 module.exports = {
   apps: [

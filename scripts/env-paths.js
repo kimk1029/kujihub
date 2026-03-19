@@ -1,12 +1,7 @@
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const projectRoot = path.resolve(__dirname, '..');
-
-function getPersistentEnvDir() {
-  return process.env.KUJIHUB_ENV_DIR || path.join(os.homedir(), '.config', 'kujihub');
-}
 
 function compact(values) {
   return values.filter(Boolean);
@@ -62,39 +57,29 @@ function mergeEnvFiles(filePaths) {
 }
 
 function getServerEnvCandidates() {
-  const envDir = getPersistentEnvDir();
   return uniq(compact([
     path.join(projectRoot, 'server', '.env'),
-    path.join(projectRoot, '.env'),
-    process.env.KUJIHUB_SERVER_ENV_FILE,
-    path.join(envDir, 'server.env'),
+    path.join(projectRoot, 'server', '.env.local'),
   ]));
 }
 
 function getWebEnvCandidates() {
-  const envDir = getPersistentEnvDir();
   return uniq(compact([
     path.join(projectRoot, 'web', '.env'),
     path.join(projectRoot, 'web', '.env.local'),
     path.join(projectRoot, 'web', '.env.production'),
     path.join(projectRoot, 'web', '.env.production.local'),
-    process.env.KUJIHUB_WEB_ENV_FILE,
-    path.join(envDir, 'web.env'),
-    path.join(projectRoot, '.env'),
   ]));
 }
 
 function getAppEnvCandidates() {
-  const envDir = getPersistentEnvDir();
   return uniq(compact([
     path.join(projectRoot, '.env'),
-    process.env.KUJIHUB_APP_ENV_FILE,
-    path.join(envDir, 'app.env'),
+    path.join(projectRoot, '.env.local'),
   ]));
 }
 
 module.exports = {
-  getPersistentEnvDir,
   getServerEnvCandidates,
   getWebEnvCandidates,
   getAppEnvCandidates,
