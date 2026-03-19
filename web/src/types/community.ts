@@ -44,6 +44,7 @@ export interface CommunityOverview {
 export interface CreatePostBody {
   title: string;
   content?: string;
+  author?: string;
   category?: string;
   isNotice?: boolean;
 }
@@ -51,6 +52,7 @@ export interface CreatePostBody {
 export interface UpdatePostBody {
   title?: string;
   content?: string;
+  author?: string;
   category?: string;
   isNotice?: boolean;
 }
