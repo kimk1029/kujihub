@@ -5,6 +5,7 @@ export interface CommunityPost {
   title: string;
   content: string;
   author: string;
+  commentCount?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -96,7 +96,7 @@ export function CommunityListPage() {
                 </td>
                 <td className="text-left">
                   <span className="bulletin-title-prefix">{post.isNotice ? '[NOTICE]' : '[GENERAL]'}</span>
-                  <span className="bulletin-title">{post.title}</span>
+                  <span className="bulletin-title">{post.title} [{post.commentCount ?? 0}]</span>
                 </td>
                 <td style={{ color: '#fff', opacity: 0.8 }}>{post.author}</td>
                 <td style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>

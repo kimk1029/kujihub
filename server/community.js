@@ -74,6 +74,7 @@ function mapPost(post) {
     title: post.title,
     content: post.content,
     author: post.author,
+    commentCount: post._count?.comments ?? 0,
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt.toISOString(),
   };
@@ -111,6 +112,11 @@ router.get('/posts', async (req, res) => {
   try {
     const limit = parseLimit(req.query.limit);
     const posts = await prisma.communityPost.findMany({
+      include: {
+        _count: {
+          select: { comments: true },
+        },
+      },
       orderBy: [{ isNotice: 'desc' }, { createdAt: 'desc' }],
       take: limit,
     });
@@ -126,7 +132,14 @@ router.get('/posts/:id', async (req, res) => {
   if (!id) return res.status(400).json({ error: 'invalid id' });
 
   try {
-    const post = await prisma.communityPost.findUnique({ where: { id } });
+    const post = await prisma.communityPost.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { comments: true },
+        },
+      },
+    });
     if (!post) return res.status(404).json({ error: 'Not found' });
     res.json(mapPost(post));
   } catch (error) {
@@ -311,6 +324,11 @@ router.get('/overview', async (req, res) => {
 
     const [posts, feed, postCount] = await Promise.all([
       prisma.communityPost.findMany({
+        include: {
+          _count: {
+            select: { comments: true },
+          },
+        },
         orderBy: [{ isNotice: 'desc' }, { createdAt: 'desc' }],
         take: postsLimit,
       }),
