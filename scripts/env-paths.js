@@ -64,10 +64,10 @@ function mergeEnvFiles(filePaths) {
 function getServerEnvCandidates() {
   const envDir = getPersistentEnvDir();
   return uniq(compact([
-    process.env.KUJIHUB_SERVER_ENV_FILE,
-    path.join(envDir, 'server.env'),
     path.join(projectRoot, 'server', '.env'),
     path.join(projectRoot, '.env'),
+    process.env.KUJIHUB_SERVER_ENV_FILE,
+    path.join(envDir, 'server.env'),
   ]));
 }
 
@@ -87,9 +87,9 @@ function getWebEnvCandidates() {
 function getAppEnvCandidates() {
   const envDir = getPersistentEnvDir();
   return uniq(compact([
+    path.join(projectRoot, '.env'),
     process.env.KUJIHUB_APP_ENV_FILE,
     path.join(envDir, 'app.env'),
-    path.join(projectRoot, '.env'),
   ]));
 }
 

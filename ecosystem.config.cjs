@@ -12,7 +12,7 @@ module.exports = {
       name: 'kujihub-server',
       cwd: path.join(appDir, 'server'),
       script: 'index.js',
-      env_file: process.env.KUJIHUB_SERVER_ENV_FILE || path.join(envDir, 'server.env'),
+      env_file: path.join(appDir, 'server', '.env'),
       instances: 1,
       exec_mode: 'fork',
       env: {
