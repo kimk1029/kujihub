@@ -35,10 +35,16 @@ function createOAuthState(provider: 'kakao' | 'naver') {
   return state;
 }
 
+function getStoredOAuthState(provider: 'kakao' | 'naver') {
+  return window.sessionStorage.getItem(`kujihub_oauth_state_${provider}`);
+}
+
+function clearStoredOAuthState(provider: 'kakao' | 'naver') {
+  window.sessionStorage.removeItem(`kujihub_oauth_state_${provider}`);
+}
+
 function validateOAuthState(provider: 'kakao' | 'naver', state: string | null) {
-  const key = `kujihub_oauth_state_${provider}`;
-  const expected = window.sessionStorage.getItem(key);
-  window.sessionStorage.removeItem(key);
+  const expected = getStoredOAuthState(provider);
   return Boolean(state && expected && state === expected);
 }
 
@@ -64,6 +70,10 @@ function buildNaverAuthUrl() {
   return `https://nid.naver.com/oauth2.0/authorize?${params.toString()}`;
 }
 
+function redirectTo(url: string) {
+  window.location.assign(url);
+}
+
 export function LandingPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,6 +82,43 @@ export function LandingPage() {
   const [isGlitching, setIsGlitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authenticating, setAuthenticating] = useState(false);
+
+  const callbackMessage = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const provider = params.get('provider');
+    const state = params.get('state');
+    const errorCode = params.get('error');
+
+    if (!provider) {
+      return null;
+    }
+
+    if (errorCode) {
+      return '소셜 로그인에 실패했습니다. 다시 시도해주세요.';
+    }
+
+    if (provider === 'kakao' || provider === 'naver') {
+      const code = params.get('code');
+      if (code && !validateOAuthState(provider, state)) {
+        return '로그인 검증에 실패했습니다. 다시 시도해주세요.';
+      }
+    }
+
+    return null;
+  }, [location.search]);
+
+  const isCallbackAuthenticating = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const provider = params.get('provider');
+    const code = params.get('code');
+    const errorCode = params.get('error');
+
+    if (errorCode || callbackMessage) {
+      return false;
+    }
+
+    return Boolean((provider === 'kakao' || provider === 'naver') && code);
+  }, [callbackMessage, location.search]);
 
   function completeLogin(session: Parameters<typeof setWebAuthSession>[0]) {
     setWebAuthSession(session);
@@ -102,20 +149,22 @@ export function LandingPage() {
     }
 
     if (errorCode) {
-      setError('소셜 로그인에 실패했습니다. 다시 시도해주세요.');
+      if (provider === 'kakao' || provider === 'naver') {
+        clearStoredOAuthState(provider);
+      }
       window.history.replaceState({}, '', '/');
       return;
     }
 
     if ((provider === 'kakao' || provider === 'naver') && code) {
-      const isValid = validateOAuthState(provider, state);
-      if (!isValid) {
-        setError('로그인 검증에 실패했습니다. 다시 시도해주세요.');
+      if (callbackMessage) {
+        clearStoredOAuthState(provider);
         window.history.replaceState({}, '', '/');
         return;
       }
 
-      setAuthenticating(true);
+      clearStoredOAuthState(provider);
+
       const loginPromise =
         provider === 'kakao'
           ? loginWithKakao(code, buildCallbackUrl('kakao'))
@@ -129,12 +178,9 @@ export function LandingPage() {
         .catch((authError) => {
           setError(authError instanceof Error ? authError.message : '로그인 처리에 실패했습니다.');
           window.history.replaceState({}, '', '/');
-        })
-        .finally(() => {
-          setAuthenticating(false);
         });
     }
-  }, [location.search, navigate]);
+  }, [callbackMessage, location.search, navigate]);
 
   const loginHelp = useMemo(() => {
     const missing = [];
@@ -188,7 +234,7 @@ export function LandingPage() {
         setError('VITE_KAKAO_REST_API_KEY가 없습니다.');
         return;
       }
-      window.location.href = buildKakaoAuthUrl();
+      redirectTo(buildKakaoAuthUrl());
       return;
     }
 
@@ -196,7 +242,7 @@ export function LandingPage() {
       setError('VITE_NAVER_CLIENT_ID가 없습니다.');
       return;
     }
-    window.location.href = buildNaverAuthUrl();
+    redirectTo(buildNaverAuthUrl());
   }
 
   return (
@@ -291,8 +337,8 @@ export function LandingPage() {
           </p>
         </div>
 
-        {error ? <div className="landing-login-error">{error}</div> : null}
-        {authenticating ? (
+        {error || callbackMessage ? <div className="landing-login-error">{error ?? callbackMessage}</div> : null}
+        {authenticating || isCallbackAuthenticating ? (
           <div className="landing-login-hint">
             인증 정보를 확인하는 중입니다...
           </div>

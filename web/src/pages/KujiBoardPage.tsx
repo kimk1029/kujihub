@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ensureKujiPlayer, kujiDrawApi } from '../api/kujiDraw';
 import type { KujiBoardResponse, KujiPlayer, KujiReserveResult, KujiDetail } from '../types/kujiDraw';
@@ -8,6 +9,13 @@ import { KujiRevealModal } from '../components/KujiRevealModal';
 
 function sortNumeric(values: number[]) {
   return [...values].sort((a, b) => a - b);
+}
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError<{ error?: string }>(error)) {
+    return error.response?.data?.error || fallback;
+  }
+  return fallback;
 }
 
 export function KujiBoardPage() {
@@ -69,7 +77,7 @@ export function KujiBoardPage() {
 
   const remainingTotal = useMemo(() => {
     if (!board) return 0;
-    return 80 - Object.values(board.slots).filter((slot: any) => slot.status === 'drawn').length;
+    return 80 - Object.values(board.slots).filter((slot) => slot.status === 'drawn').length;
   }, [board]);
 
   const handleFinishReveal = async () => {
@@ -289,8 +297,8 @@ export function KujiBoardPage() {
                     try {
                       const res = await kujiDrawApi.reserve(id, selectedSlots, player.id, purchaseId);
                       setResults(res);
-                    } catch (e: any) {
-                      setError(e?.response?.data?.error || 'RESERVATION_FAILED');
+                    } catch (e) {
+                      setError(getApiErrorMessage(e, 'RESERVATION_FAILED'));
                     } finally {
                       setReserving(false);
                     }

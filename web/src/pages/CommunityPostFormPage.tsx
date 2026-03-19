@@ -26,9 +26,9 @@ export function CommunityPostFormPage() {
         const currentPlayer = await ensureKujiPlayer();
         if (!cancelled) {
           setPlayer(currentPlayer);
-          if (!editId && author === 'GUEST_USER') {
-            setAuthor(currentPlayer.nickname);
-          }
+          setAuthor((currentAuthor) =>
+            !editId && currentAuthor === 'GUEST_USER' ? currentPlayer.nickname : currentAuthor,
+          );
         }
         
         if (editId) {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ensureKujiPlayer, kujiDrawApi } from '../api/kujiDraw';
 import type { KujiDetail, KujiPlayer } from '../types/kujiDraw';
@@ -36,6 +37,13 @@ export function KujiDetailPage() {
 
   const total = useMemo(() => (kuji ? kuji.price * quantity : 0), [kuji, quantity]);
   const canAfford = (player?.points ?? 0) >= total;
+
+  function getPurchaseError(error: unknown) {
+    if (axios.isAxiosError<{ error?: string }>(error)) {
+      return error.response?.data?.error;
+    }
+    return undefined;
+  }
 
   if (loading) {
     return (
@@ -167,8 +175,8 @@ export function KujiDetailPage() {
                       const response = await kujiDrawApi.createPurchase(id, quantity, player.id);
                       setPlayer(response.player);
                       navigate(`/kuji/${id}/board/${response.purchase.id}?qty=${quantity}`);
-                    } catch (e: any) {
-                      const apiError = e?.response?.data?.error;
+                    } catch (e) {
+                      const apiError = getPurchaseError(e);
                       if (apiError === 'insufficient_points') setError('INSUFFICIENT_CREDITS');
                       else if (apiError === 'not_enough_slots') setError('MACHINE_EMPTY');
                       else setError('TRANSACTION_FAILED');

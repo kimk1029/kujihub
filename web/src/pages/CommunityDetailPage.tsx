@@ -63,7 +63,7 @@ export function CommunityDetailPage() {
       setComments((prev) => [...prev, newComment]);
       setCommentContent('');
       setCommentAuthor('');
-    } catch (err) {
+    } catch {
       window.alert('댓글 등록에 실패했습니다. DB를 확인하세요.');
     } finally {
       setIsSubmitting(false);
