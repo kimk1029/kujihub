@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, useWindowDimensions } from 'react-native';
 import { Text, ActivityIndicator, Button, Surface, Chip, Avatar, useTheme } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,10 +25,17 @@ export function CommunityDetailScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const theme = useTheme();
+  const { width } = useWindowDimensions();
   const { id } = route.params;
+
   const [post, setPost] = useState<CommunityPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Responsive values
+  const isSmallDevice = width < 375;
+  const horizontalPadding = useMemo(() => (width > 600 ? 32 : 20), [width]);
+  const heroTitleSize = useMemo(() => (width > 400 ? 30 : 24), [width]);
 
   const fetchPost = useCallback(async () => {
     setLoading(true);
@@ -110,10 +117,10 @@ export function CommunityDetailScreen() {
   }
 
   return (
-    <Screen style={styles.screen}>
+    <Screen style={styles.screen} contentContainerStyle={{ paddingHorizontal: horizontalPadding }}>
       <AppHeader title="커뮤니티" showBack onBack={() => navigation.goBack()} />
 
-      <Surface style={styles.heroCard} elevation={3}>
+      <Surface style={[styles.heroCard, { padding: isSmallDevice ? 18 : 24 }]} elevation={3}>
         <View style={styles.heroBackdropTop} />
         <View style={styles.heroBackdropBottom} />
         <View style={styles.heroBadgeRow}>
@@ -124,17 +131,17 @@ export function CommunityDetailScreen() {
           </View>
         </View>
 
-        <Text style={styles.heroTitle}>{post.title}</Text>
+        <Text style={[styles.heroTitle, { fontSize: heroTitleSize }]}>{post.title}</Text>
         <Text style={styles.heroSubtitle}>
-          쿠지 팬들이 남긴 현장감 있는 이야기와 정보를 한 화면에서 읽을 수 있게 정리했습니다.
+          쿠지 팬들의 생생한 이야기와 정보를 한 화면에서 확인할 수 있습니다.
         </Text>
 
         <View style={styles.authorRow}>
-          <Avatar.Text size={46} label={authorInitial} color="#151926" style={styles.avatar} />
+          <Avatar.Text size={isSmallDevice ? 40 : 46} label={authorInitial} color="#151926" style={styles.avatar} />
           <View style={styles.authorMeta}>
             <Text style={styles.authorName}>{post.author || '익명'}</Text>
             <Text style={styles.authorSubtext}>
-              {isEdited ? `수정됨 · ${formatDateLabel(post.updatedAt)}` : '최초 등록 게시글'}
+              {isEdited ? `수정됨 · ${formatDateLabel(post.updatedAt)}` : '최초 등록'}
             </Text>
           </View>
         </View>
@@ -142,12 +149,12 @@ export function CommunityDetailScreen() {
 
       <View style={styles.infoStrip}>
         <Surface style={styles.infoCard} elevation={1}>
-          <MaterialCommunityIcons name="file-document-outline" size={18} color="#D4AF37" />
+          <MaterialCommunityIcons name="file-document-outline" size={16} color="#D4AF37" />
           <Text style={styles.infoLabel}>본문 길이</Text>
           <Text style={styles.infoValue}>{contentLength.toLocaleString()}자</Text>
         </Surface>
         <Surface style={styles.infoCard} elevation={1}>
-          <MaterialCommunityIcons name="update" size={18} color="#D4AF37" />
+          <MaterialCommunityIcons name="update" size={16} color="#D4AF37" />
           <Text style={styles.infoLabel}>최근 수정</Text>
           <Text style={styles.infoValue}>{isEdited ? '있음' : '없음'}</Text>
         </Surface>
@@ -163,7 +170,7 @@ export function CommunityDetailScreen() {
         </View>
 
         <Text style={styles.bodyText}>
-          {post.content?.trim() || '아직 입력된 본문이 없습니다. 수정 버튼에서 내용을 추가할 수 있습니다.'}
+          {post.content?.trim() || '아직 입력된 본문이 없습니다.'}
         </Text>
       </Surface>
 
@@ -234,7 +241,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: 18,
     borderRadius: 32,
-    padding: 24,
     backgroundColor: '#151926',
   },
   heroBackdropTop: {
@@ -286,8 +292,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     marginTop: 18,
     color: '#FFFFFF',
-    fontSize: 30,
-    lineHeight: 38,
+    lineHeight: 34,
     fontWeight: '900',
     letterSpacing: -0.9,
   },
@@ -332,13 +337,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFDF8',
   },
   infoLabel: {
-    marginTop: 12,
+    marginTop: 10,
     color: '#7C8799',
     fontSize: 12,
     fontWeight: '700',
   },
   infoValue: {
-    marginTop: 6,
+    marginTop: 4,
     color: '#111827',
     fontSize: 20,
     fontWeight: '900',

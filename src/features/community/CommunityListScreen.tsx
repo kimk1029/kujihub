@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import { View, StyleSheet, TouchableOpacity, FlatList, RefreshControl, useWindowDimensions } from 'react-native';
 import { Text, FAB, ActivityIndicator, Surface, Chip } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,10 +15,17 @@ type Nav = NativeStackNavigationProp<CommunityStackParamList, 'CommunityList'>;
 export function CommunityListScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Responsive values
+  const isSmallDevice = width < 375;
+  const horizontalPadding = useMemo(() => (width > 600 ? 32 : 20), [width]);
+  const heroTitleSize = useMemo(() => (width > 400 ? 34 : 28), [width]);
 
   const fetchList = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -46,7 +53,7 @@ export function CommunityListScreen() {
       onPress={() => navigation.navigate('CommunityDetail', { id: item.id })}
       activeOpacity={0.78}
     >
-      <Surface style={styles.rowCard} elevation={0}>
+      <Surface style={[styles.rowCard, { padding: isSmallDevice ? 12 : 16 }]} elevation={0}>
         <View style={styles.rowIndexWrap}>
           <Text style={styles.rowIndex}>{String(index + 1).padStart(2, '0')}</Text>
         </View>
@@ -57,18 +64,18 @@ export function CommunityListScreen() {
             <Text style={styles.rowDate}>{dayjs(item.createdAt).format('MM.DD HH:mm')}</Text>
           </View>
 
-          <Text style={styles.rowTitle} numberOfLines={1}>{item.title}</Text>
-          <Text style={styles.rowExcerpt} numberOfLines={2}>
+          <Text style={[styles.rowTitle, { fontSize: isSmallDevice ? 16 : 18 }]} numberOfLines={1}>{item.title}</Text>
+          <Text style={[styles.rowExcerpt, { fontSize: isSmallDevice ? 13 : 14 }]} numberOfLines={2}>
             {item.content?.trim() || '내용이 없는 게시글입니다.'}
           </Text>
 
           <View style={styles.rowMeta}>
             <View style={styles.metaPill}>
-              <MaterialCommunityIcons name="account-circle-outline" size={16} color="#B08A1E" />
+              <MaterialCommunityIcons name="account-circle-outline" size={14} color="#B08A1E" />
               <Text style={styles.metaText}>{item.author}</Text>
             </View>
             <View style={styles.metaPill}>
-              <MaterialCommunityIcons name="text-box-outline" size={16} color="#B08A1E" />
+              <MaterialCommunityIcons name="text-box-outline" size={14} color="#B08A1E" />
               <Text style={styles.metaText}>{item.content.trim().length.toLocaleString()}자</Text>
             </View>
           </View>
@@ -97,16 +104,20 @@ export function CommunityListScreen() {
         data={posts}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
-        contentContainerStyle={[styles.listContent, posts.length === 0 && styles.listEmpty]}
+        contentContainerStyle={[
+          styles.listContent, 
+          { paddingHorizontal: horizontalPadding },
+          posts.length === 0 && styles.listEmpty
+        ]}
         ListHeaderComponent={
           <View style={styles.headerWrap}>
-            <Surface style={styles.heroCard} elevation={3}>
+            <Surface style={[styles.heroCard, { paddingHorizontal: isSmallDevice ? 18 : 22 }]} elevation={3}>
               <View style={styles.heroGlowA} />
               <View style={styles.heroGlowB} />
               <Text style={styles.heroEyebrow}>COMMUNITY BOARD</Text>
-              <Text style={styles.heroTitle}>게시판</Text>
+              <Text style={[styles.heroTitle, { fontSize: heroTitleSize }]}>게시판</Text>
               <Text style={styles.heroBody}>
-                제목과 작성 시각이 먼저 보이도록 정리한 목록 화면입니다. 필요한 글을 빠르게 훑고 바로 상세로 이동할 수 있습니다.
+                쿠지 팬들의 생생한 후기와 정보를 확인하세요. 필요한 글을 빠르게 훑고 바로 상세로 이동할 수 있습니다.
               </Text>
               <View style={styles.heroFooter}>
                 <View style={styles.heroStat}>
@@ -117,7 +128,7 @@ export function CommunityListScreen() {
                 <View style={styles.heroStat}>
                   <Text style={styles.heroStatLabel}>최신 등록</Text>
                   <Text style={styles.heroStatSmall}>
-                    {posts[0] ? dayjs(posts[0].createdAt).format('YYYY.MM.DD HH:mm') : '아직 글이 없습니다'}
+                    {posts[0] ? dayjs(posts[0].createdAt).format('MM.DD HH:mm') : '없음'}
                   </Text>
                 </View>
               </View>
@@ -189,7 +200,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   listContent: {
-    paddingHorizontal: 18,
     paddingBottom: 108,
   },
   listEmpty: {
@@ -203,7 +213,6 @@ const styles = StyleSheet.create({
     marginTop: 18,
     borderRadius: 30,
     paddingVertical: 24,
-    paddingHorizontal: 22,
     backgroundColor: '#151926',
   },
   heroGlowA: {
@@ -233,7 +242,6 @@ const styles = StyleSheet.create({
   heroTitle: {
     marginTop: 10,
     color: '#FFFFFF',
-    fontSize: 31,
     fontWeight: '900',
     letterSpacing: -0.9,
   },
@@ -320,12 +328,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFDF8',
     borderWidth: 1,
     borderColor: '#E8DFD2',
-    padding: 16,
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   rowIndexWrap: {
-    width: 42,
+    width: 36,
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 6,
@@ -351,6 +358,7 @@ const styles = StyleSheet.create({
   categoryChipText: {
     color: '#8B6B12',
     fontWeight: '800',
+    fontSize: 11,
   },
   rowDate: {
     color: '#8A94A5',
@@ -358,36 +366,34 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   rowTitle: {
-    marginTop: 10,
+    marginTop: 8,
     color: '#141B2D',
-    fontSize: 18,
     fontWeight: '900',
     letterSpacing: -0.4,
   },
   rowExcerpt: {
-    marginTop: 8,
+    marginTop: 6,
     color: '#5B6472',
-    fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   rowMeta: {
-    marginTop: 14,
+    marginTop: 12,
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     flexWrap: 'wrap',
   },
   metaPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     borderRadius: 999,
     backgroundColor: '#F8F3E9',
   },
   metaText: {
     color: '#5B6472',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   emptyCard: {
