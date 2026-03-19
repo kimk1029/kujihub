@@ -139,13 +139,13 @@ export function Layout() {
         boxSizing: 'border-box',
         overflowX: 'hidden'
       }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{
+        <div className="page-shell" style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <div className="layout-userbar" style={{
             display: 'flex',
             justifyContent: 'flex-end',
             marginBottom: '24px',
           }}>
-            <div style={{
+            <div className="layout-usercard" style={{
               minWidth: '240px',
               maxWidth: '100%',
               display: 'flex',
@@ -186,7 +186,7 @@ export function Layout() {
                 </div>
               )}
 
-              <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <div className="layout-usercopy" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
                 <div className="arcade-font-pixel" style={{ color: 'var(--arcade-accent)', fontSize: '0.55rem' }}>
                   {providerLabel} LOGIN
                 </div>

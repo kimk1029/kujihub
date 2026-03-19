@@ -92,7 +92,7 @@ export function ProfilePage() {
 
   return (
     <div className="animate-in">
-      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header className="page-header" style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem' }}>
           MY PROFILE
         </h1>
@@ -187,7 +187,7 @@ export function ProfilePage() {
         </aside>
 
         <section className="profile-main" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          <div className="arcade-grid" style={{ padding: 0, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <div className="arcade-grid profile-stat-grid" style={{ padding: 0, gridTemplateColumns: 'repeat(3, 1fr)' }}>
             {statCards.map((card) => (
               <ArcadeBox key={card.label} label={card.label} variant="primary">
                 <div style={{ fontSize: '2rem', color: card.tone, fontWeight: 900 }}>
@@ -241,7 +241,7 @@ export function ProfilePage() {
           </ArcadeBox>
 
           <ArcadeBox label="QUICK ACTIONS" variant="accent">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div className="quick-action-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               <ArcadeButton variant="primary" size="sm" onClick={() => navigate('/kuji')}>
                 GO_KUJI
               </ArcadeButton>

@@ -41,7 +41,7 @@ export function CommunityListPage() {
 
   return (
     <div className="animate-in">
-      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header className="page-header" style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2.5rem', marginBottom: '16px', fontWeight: 900 }}>
             COMMUNITY_LOGS
@@ -75,7 +75,7 @@ export function CommunityListPage() {
           </ArcadeButton>
         </ArcadeBox>
       ) : (
-        <table className="bulletin-board">
+        <table className="bulletin-board bulletin-board-compact">
           <thead>
             <tr className="bulletin-header">
               <th style={{ width: '80px' }}>ID</th>

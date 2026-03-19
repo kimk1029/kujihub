@@ -63,7 +63,7 @@ export function HomePage() {
 
   return (
     <div className="animate-in">
-      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header className="page-header" style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem' }}>
           SYSTEM_OVERVIEW
         </h1>
@@ -72,18 +72,18 @@ export function HomePage() {
         </ArcadeButton>
       </header>
 
-      <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
+      <div className="dashboard-grid overview-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
         <ArcadeBox label="LIVE_SESSIONS" variant="primary">
-          <div style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>1,204</div>
+          <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>1,204</div>
         </ArcadeBox>
         <ArcadeBox label="TOTAL_KUJI" variant="secondary">
-          <div style={{ fontSize: '1.5rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>085</div>
+          <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>085</div>
         </ArcadeBox>
         <ArcadeBox label="ACTIVE_DRAWERS" variant="accent">
-          <div style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>342</div>
+          <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>342</div>
         </ArcadeBox>
         <ArcadeBox label="STATUS" variant="default">
-          <div className="blink" style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>ONLINE</div>
+          <div className="blink overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>ONLINE</div>
         </ArcadeBox>
       </div>
 
@@ -196,9 +196,9 @@ export function HomePage() {
         </ArcadeBox>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px', marginBottom: '32px' }}>
+      <div className="page-stack" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px', marginBottom: '32px' }}>
         <ArcadeBox label="SIGNAL_FEED" variant="primary">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+          <div className="signal-feed-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
             {[1, 2, 3, 4].map(i => (
               <div key={i} style={{ 
                 padding: '12px', 
