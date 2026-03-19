@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const prisma = require('./db');
+const { verifyWebAuthToken } = require('./auth-web');
 
 const router = Router();
 const DEFAULT_LIMIT = 20;
@@ -9,6 +10,31 @@ function parseLimit(value, fallback = DEFAULT_LIMIT) {
   const parsed = Number.parseInt(String(value || ''), 10);
   if (!parsed || parsed < 1) return fallback;
   return Math.min(parsed, MAX_LIMIT);
+}
+
+function getBearerToken(req) {
+  const authHeader = String(req.headers.authorization || '').trim();
+  if (!authHeader.startsWith('Bearer ')) {
+    return '';
+  }
+  return authHeader.slice('Bearer '.length).trim();
+}
+
+function requireWebAuth(req, res, next) {
+  try {
+    req.webAuth = verifyWebAuthToken(getBearerToken(req));
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'AUTH_REQUIRED' });
+  }
+}
+
+function getAuthedAuthor(req) {
+  return String(req.webAuth?.user?.name || '').trim() || '익명';
+}
+
+function canManagePost(req, post) {
+  return post.author === getAuthedAuthor(req);
 }
 
 function mapPost(post) {
@@ -99,11 +125,11 @@ router.get('/posts/:id/comments', async (req, res) => {
   }
 });
 
-router.post('/posts/:id/comments', async (req, res) => {
+router.post('/posts/:id/comments', requireWebAuth, async (req, res) => {
   const postId = Number(req.params.id);
   if (!postId) return res.status(400).json({ error: 'invalid id' });
   
-  const { author, content } = req.body || {};
+  const { content } = req.body || {};
   if (!content || !String(content).trim()) {
     return res.status(400).json({ error: 'content is required' });
   }
@@ -112,7 +138,7 @@ router.post('/posts/:id/comments', async (req, res) => {
     const comment = await prisma.communityComment.create({
       data: {
         postId,
-        author: String(author || '익명').trim() || '익명',
+        author: getAuthedAuthor(req),
         content: String(content).trim(),
       },
     });
@@ -123,13 +149,14 @@ router.post('/posts/:id/comments', async (req, res) => {
   }
 });
 
-router.post('/posts', async (req, res) => {
-  const { title, content = '', author = '익명', category = '자유', isNotice = false } = req.body || {};
+router.post('/posts', requireWebAuth, async (req, res) => {
+  const { title, content = '', category = '자유', isNotice = false } = req.body || {};
   if (!title || !String(title).trim()) {
     return res.status(400).json({ error: 'title is required' });
   }
 
   try {
+    const author = getAuthedAuthor(req);
     const post = await prisma.$transaction(async (tx) => {
       const created = await tx.communityPost.create({
         data: {
@@ -160,15 +187,18 @@ router.post('/posts', async (req, res) => {
   }
 });
 
-router.put('/posts/:id', async (req, res) => {
+router.put('/posts/:id', requireWebAuth, async (req, res) => {
   const id = Number(req.params.id);
   if (!id) return res.status(400).json({ error: 'invalid id' });
 
-  const { title, content, author, category, isNotice } = req.body || {};
+  const { title, content, category, isNotice } = req.body || {};
 
   try {
     const existing = await prisma.communityPost.findUnique({ where: { id } });
     if (!existing) return res.status(404).json({ error: 'Not found' });
+    if (!canManagePost(req, existing)) {
+      return res.status(403).json({ error: 'FORBIDDEN' });
+    }
 
     const updated = await prisma.$transaction(async (tx) => {
       const post = await tx.communityPost.update({
@@ -176,7 +206,6 @@ router.put('/posts/:id', async (req, res) => {
         data: {
           ...(title !== undefined ? { title: String(title).trim() } : {}),
           ...(content !== undefined ? { content: String(content).trim() } : {}),
-          ...(author !== undefined ? { author: String(author).trim() || '익명' } : {}),
           ...(category !== undefined ? { category: String(category).trim() || '자유' } : {}),
           ...(isNotice !== undefined ? { isNotice: Boolean(isNotice) } : {}),
         },
@@ -201,13 +230,16 @@ router.put('/posts/:id', async (req, res) => {
   }
 });
 
-router.delete('/posts/:id', async (req, res) => {
+router.delete('/posts/:id', requireWebAuth, async (req, res) => {
   const id = Number(req.params.id);
   if (!id) return res.status(400).json({ error: 'invalid id' });
 
   try {
     const existing = await prisma.communityPost.findUnique({ where: { id } });
     if (!existing) return res.status(404).json({ error: 'Not found' });
+    if (!canManagePost(req, existing)) {
+      return res.status(403).json({ error: 'FORBIDDEN' });
+    }
 
     await prisma.$transaction(async (tx) => {
       await createFeedItem(tx, {

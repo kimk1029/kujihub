@@ -5,6 +5,7 @@ import { ensureKujiPlayer } from '../api/kujiDraw';
 import type { KujiPlayer } from '../types/kujiDraw';
 import { ArcadeBox } from '../components/arcade/ArcadeBox';
 import { ArcadeButton } from '../components/arcade/ArcadeButton';
+import { getWebAuthSession } from '../auth/webAuth';
 
 export function CommunityPostFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,11 +14,13 @@ export function CommunityPostFormPage() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [author, setAuthor] = useState('GUEST_USER');
   const [isNotice, setIsNotice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true); // default true for player load
   const [player, setPlayer] = useState<KujiPlayer | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const session = getWebAuthSession();
+  const authorName = session?.user.name?.trim() || 'PLAYER';
 
   useEffect(() => {
     let cancelled = false;
@@ -26,17 +29,17 @@ export function CommunityPostFormPage() {
         const currentPlayer = await ensureKujiPlayer();
         if (!cancelled) {
           setPlayer(currentPlayer);
-          setAuthor((currentAuthor) =>
-            !editId && currentAuthor === 'GUEST_USER' ? currentPlayer.nickname : currentAuthor,
-          );
         }
         
         if (editId) {
           const post = await communityApi.getOne(editId);
           if (!cancelled) {
+            if (post.author !== authorName) {
+              navigate(`/community/${editId}`, { replace: true });
+              return;
+            }
             setTitle(post.title);
             setContent(post.content);
-            setAuthor(post.author);
             setIsNotice(!!post.isNotice);
           }
         }
@@ -49,36 +52,36 @@ export function CommunityPostFormPage() {
     return () => {
       cancelled = true;
     };
-  }, [editId]);
+  }, [authorName, editId, navigate]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const t = title.trim();
       if (!t) return;
+      setError(null);
       setLoading(true);
       try {
         if (editId) {
           await communityApi.update(editId, {
             title: t,
             content: content.trim(),
-            author: author.trim(),
             isNotice: player?.role === 'admin' ? isNotice : undefined,
           });
         } else {
           await communityApi.create({
             title: t,
             content: content.trim(),
-            author: author.trim() || 'GUEST_USER',
             isNotice: player?.role === 'admin' ? isNotice : false,
           });
         }
         navigate('/community');
-      } catch {
+      } catch (submitError) {
+        setError(submitError instanceof Error ? submitError.message : '저장에 실패했습니다.');
         setLoading(false);
       }
     },
-    [editId, title, content, author, isNotice, player, navigate]
+    [editId, title, content, isNotice, player, navigate]
   );
 
   if (fetching) {
@@ -104,6 +107,11 @@ export function CommunityPostFormPage() {
 
       <ArcadeBox label="DATA_INPUT_TERMINAL" variant="primary">
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {error ? (
+            <div style={{ color: 'var(--error)', fontWeight: 900 }}>
+              [ ERROR: {error} ]
+            </div>
+          ) : null}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <label htmlFor="title" style={{ fontSize: '0.8rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>
               LOG_HEADER
@@ -128,27 +136,20 @@ export function CommunityPostFormPage() {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <label htmlFor="author" style={{ fontSize: '0.8rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
-              SENDER_ID
-            </label>
-            <input
-              id="author"
-              type="text"
-              value={author}
-              onChange={(e) => setAuthor(e.currentTarget.value)}
-              placeholder="GUEST_USER"
-              style={{ 
-                background: 'rgba(0,0,0,0.5)', 
-                border: '2px solid rgba(255,255,255,0.1)', 
-                padding: '16px', 
-                color: '#fff', 
-                fontSize: '1rem',
-                outline: 'none',
-                width: '100%',
-                fontFamily: 'Galmuri11, sans-serif'
-              }}
-            />
+          <div style={{
+            background: 'rgba(0,0,0,0.5)',
+            border: '2px solid rgba(255,255,255,0.1)',
+            padding: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
+              POSTING_AS
+            </div>
+            <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 700 }}>
+              {authorName}
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

@@ -5,6 +5,7 @@ import { communityApi } from '../api/community';
 import type { CommunityPost, CommunityComment } from '../types/community';
 import { ArcadeBox } from '../components/arcade/ArcadeBox';
 import { ArcadeButton } from '../components/arcade/ArcadeButton';
+import { getWebAuthSession } from '../auth/webAuth';
 
 export function CommunityDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -14,8 +15,10 @@ export function CommunityDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [commentContent, setCommentContent] = useState('');
-  const [commentAuthor, setCommentAuthor] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const session = getWebAuthSession();
+  const authorName = session?.user.name?.trim() || 'PLAYER';
+  const canManagePost = post?.author === authorName;
 
   const fetchPostAndComments = useCallback(async () => {
     if (!id) return;
@@ -57,12 +60,10 @@ export function CommunityDetailPage() {
     setIsSubmitting(true);
     try {
       const newComment = await communityApi.createComment(Number(id), {
-        author: commentAuthor.trim() || '익명',
         content: commentContent.trim(),
       });
       setComments((prev) => [...prev, newComment]);
       setCommentContent('');
-      setCommentAuthor('');
     } catch {
       window.alert('댓글 등록에 실패했습니다. DB를 확인하세요.');
     } finally {
@@ -115,12 +116,16 @@ export function CommunityDetailPage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '16px' }}>
-          <ArcadeButton variant="secondary" size="sm" onClick={() => navigate(`/community/edit/${post.id}`)}>
-            EDIT_DATA
-          </ArcadeButton>
-          <ArcadeButton variant="primary" size="sm" onClick={handleDelete}>
-            ERASE_LOG
-          </ArcadeButton>
+          {canManagePost ? (
+            <>
+              <ArcadeButton variant="secondary" size="sm" onClick={() => navigate(`/community/edit/${post.id}`)}>
+                EDIT_DATA
+              </ArcadeButton>
+              <ArcadeButton variant="primary" size="sm" onClick={handleDelete}>
+                ERASE_LOG
+              </ArcadeButton>
+            </>
+          ) : null}
         </div>
       </header>
 
@@ -157,22 +162,18 @@ export function CommunityDetailPage() {
             )}
 
             <form onSubmit={handleCommentSubmit} className="comment-input-area">
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <input
-                  type="text"
-                  placeholder="AUTHOR (OPTIONAL)"
-                  value={commentAuthor}
-                  onChange={(e) => setCommentAuthor(e.target.value)}
-                  style={{
-                    background: 'rgba(0,0,0,0.5)',
-                    border: '2px solid rgba(255,255,255,0.2)',
-                    color: '#fff',
-                    padding: '8px 12px',
-                    fontFamily: 'Galmuri11, sans-serif',
-                    width: '150px'
-                  }}
-                  disabled={isSubmitting}
-                />
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{
+                  background: 'rgba(0,0,0,0.5)',
+                  border: '2px solid rgba(255,255,255,0.2)',
+                  color: '#fff',
+                  padding: '8px 12px',
+                  fontFamily: 'Galmuri11, sans-serif',
+                  width: '150px',
+                  boxSizing: 'border-box'
+                }}>
+                  {authorName}
+                </div>
                 <input
                   type="text"
                   placeholder="ENTER COMMENT DATA..."

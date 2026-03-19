@@ -32,6 +32,34 @@ function signPayload(payload) {
   return `${encoded}.${signature}`;
 }
 
+function verifyPayload(token) {
+  const raw = String(token || '').trim();
+  if (!raw) {
+    throw new Error('AUTH_TOKEN_REQUIRED');
+  }
+
+  const [encoded, signature] = raw.split('.');
+  if (!encoded || !signature) {
+    throw new Error('INVALID_AUTH_TOKEN');
+  }
+
+  const expectedSignature = crypto
+    .createHmac('sha256', WEB_AUTH_SECRET)
+    .update(encoded)
+    .digest('base64url');
+
+  if (signature !== expectedSignature) {
+    throw new Error('INVALID_AUTH_TOKEN');
+  }
+
+  const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
+  if (!payload?.user?.id || !payload?.user?.name) {
+    throw new Error('INVALID_AUTH_TOKEN');
+  }
+
+  return payload;
+}
+
 function createSession(provider, user) {
   const session = {
     provider,
@@ -44,6 +72,10 @@ function createSession(provider, user) {
     provider,
     user,
   };
+}
+
+function verifyWebAuthToken(token) {
+  return verifyPayload(token);
 }
 
 async function fetchGoogleProfile(accessToken) {
@@ -239,4 +271,5 @@ function registerWebAuthRoutes(app) {
 
 module.exports = {
   registerWebAuthRoutes,
+  verifyWebAuthToken,
 };
