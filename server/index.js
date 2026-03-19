@@ -6,13 +6,7 @@
  */
 
 try {
-  const path = require('path');
-  const dotenv = require('dotenv');
-
-  // PM2 production runs the server with cwd=server/, while local commands often
-  // start from the repo root. Load both so auth env works in either path layout.
-  dotenv.config({ path: path.resolve(__dirname, '.env') });
-  dotenv.config({ path: path.resolve(__dirname, '..', '.env'), override: false });
+  require('./load-env');
 } catch (error) {
   if (error.code !== 'MODULE_NOT_FOUND') throw error;
   console.warn('dotenv is not installed; continuing with process environment only');

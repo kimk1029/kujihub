@@ -136,4 +136,5 @@ server/uploads/
 web/node_modules/
 web/dist/
 web/dist-ssr/
+web/public/runtime-config.js
 *.local

@@ -1,8 +1,10 @@
 const path = require('path');
+const os = require('os');
 
 const appDir = __dirname;
 const serverPort = '3000';
 const webPort = '8080';
+const envDir = process.env.KUJIHUB_ENV_DIR || path.join(os.homedir(), '.config', 'kujihub');
 
 module.exports = {
   apps: [
@@ -10,7 +12,7 @@ module.exports = {
       name: 'kujihub-server',
       cwd: path.join(appDir, 'server'),
       script: 'index.js',
-      env_file: path.join(appDir, 'server', '.env'),
+      env_file: process.env.KUJIHUB_SERVER_ENV_FILE || path.join(envDir, 'server.env'),
       instances: 1,
       exec_mode: 'fork',
       env: {

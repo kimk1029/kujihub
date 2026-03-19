@@ -7,6 +7,7 @@ import { kujiDrawApi } from '../api/kujiDraw';
 import type { KujiListItem } from '../types/kujiDraw';
 import { getWebAuthSession, setWebAuthSession } from '../auth/webAuth';
 import { loginWithDev, loginWithGoogle, loginWithKakao, loginWithNaver } from '../api/webAuth';
+import { getClientEnv } from '../config/runtimeConfig';
 
 type WebLoginOption = {
   id: 'kakao' | 'naver' | 'google' | 'dev';
@@ -21,9 +22,9 @@ const LOGIN_OPTIONS: WebLoginOption[] = [
   { id: 'dev', label: '바로가기(개발용)', tone: 'accent' },
 ];
 
-const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY ?? '';
-const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID ?? '';
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+const KAKAO_REST_API_KEY = getClientEnv('VITE_KAKAO_REST_API_KEY');
+const NAVER_CLIENT_ID = getClientEnv('VITE_NAVER_CLIENT_ID');
+const GOOGLE_CLIENT_ID = getClientEnv('VITE_GOOGLE_CLIENT_ID');
 
 function buildCallbackUrl(provider: 'kakao' | 'naver') {
   return `${window.location.origin}/?provider=${provider}`;

@@ -1,52 +1,17 @@
 const fs = require('fs');
 const path = require('path');
+const { getAppEnvCandidates, mergeEnvFiles } = require('./env-paths');
 
 const projectRoot = path.resolve(__dirname, '..');
-const envPath = path.join(projectRoot, '.env');
 const outputDir = path.join(projectRoot, 'src', 'generated');
 const outputPath = path.join(outputDir, 'authEnv.js');
-
-function parseEnvFile(filePath) {
-  if (!fs.existsSync(filePath)) {
-    return {};
-  }
-
-  const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
-  const env = {};
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('#')) {
-      continue;
-    }
-
-    const separatorIndex = line.indexOf('=');
-    if (separatorIndex < 0) {
-      continue;
-    }
-
-    const key = line.slice(0, separatorIndex).trim();
-    let value = line.slice(separatorIndex + 1).trim();
-
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-
-    env[key] = value;
-  }
-
-  return env;
-}
 
 function pick(env, key, fallback = '') {
   const value = process.env[key] ?? env[key] ?? fallback;
   return typeof value === 'string' ? value : String(value);
 }
 
-const parsedEnv = parseEnvFile(envPath);
+const parsedEnv = mergeEnvFiles(getAppEnvCandidates());
 
 const authEnv = {
   GOOGLE_WEB_CLIENT_ID: pick(parsedEnv, 'GOOGLE_WEB_CLIENT_ID'),

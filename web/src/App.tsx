@@ -13,8 +13,9 @@ import { CommunityPostFormPage } from './pages/CommunityPostFormPage';
 import { MediaPage } from './pages/MediaPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { getWebAuthSession } from './auth/webAuth';
+import { getClientEnv } from './config/runtimeConfig';
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+const googleClientId = getClientEnv('VITE_GOOGLE_CLIENT_ID');
 
 export default function App() {
   const app = (
