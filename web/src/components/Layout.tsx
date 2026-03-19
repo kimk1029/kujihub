@@ -37,6 +37,7 @@ export function Layout() {
   const navItems = [
     { path: '/dashboard', label: 'HOME', icon: '🏠' },
     { path: '/kuji', label: 'KUJI', icon: '🎰' },
+    { path: '/media', label: 'MEDIA', icon: '📺' },
     { path: '/feed', label: 'FEED', icon: '📡' },
     { path: '/community', label: 'COMM', icon: '👥' },
     { path: '/profile', label: 'MY', icon: '👤' },

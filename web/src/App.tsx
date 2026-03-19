@@ -10,6 +10,7 @@ import { FeedPage } from './pages/FeedPage';
 import { CommunityListPage } from './pages/CommunityListPage';
 import { CommunityDetailPage } from './pages/CommunityDetailPage';
 import { CommunityPostFormPage } from './pages/CommunityPostFormPage';
+import { MediaPage } from './pages/MediaPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { getWebAuthSession } from './auth/webAuth';
 
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="kuji/:id" element={<KujiDetailPage />} />
             <Route path="kuji/:id/board/:purchaseId" element={<KujiBoardPage />} />
             <Route path="feed" element={<FeedPage />} />
+            <Route path="media" element={<MediaPage />} />
             <Route path="community" element={<CommunityListPage />} />
             <Route path="community/new" element={<CommunityPostFormPage />} />
             <Route path="community/edit/:id" element={<CommunityPostFormPage />} />
