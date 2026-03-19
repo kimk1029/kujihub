@@ -12,6 +12,9 @@ function buildYouTubeUrl(video: MediaVideo) {
 export function MediaPage() {
   const requestIdRef = useRef(0);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(true);
+  const loadingMoreRef = useRef(false);
   const [categories, setCategories] = useState<AnimeCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [videos, setVideos] = useState<MediaVideo[]>([]);
@@ -27,21 +30,36 @@ export function MediaPage() {
     [categories, selectedCategoryId],
   );
 
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
+
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+  }, [loadingMore]);
+
   const loadVideos = useCallback(async (reset: boolean, category: AnimeCategory) => {
     if (reset) {
       setLoadingInitial(true);
       setPage(1);
       setHasMore(true);
+      pageRef.current = 1;
+      hasMoreRef.current = true;
     } else {
-      if (loadingMore || !hasMore) {
+      if (loadingMoreRef.current || !hasMoreRef.current) {
         return;
       }
+      loadingMoreRef.current = true;
       setLoadingMore(true);
     }
 
     setError(null);
     const requestId = ++requestIdRef.current;
-    const targetPage = reset ? 1 : page + 1;
+    const targetPage = reset ? 1 : pageRef.current + 1;
 
     try {
       const data = await mediaApi.searchVideos(category.query, targetPage, 18);
@@ -60,7 +78,10 @@ export function MediaPage() {
       });
 
       setPage(targetPage);
-      setHasMore(data.items.length >= 12);
+      pageRef.current = targetPage;
+      const nextHasMore = data.items.length >= 12;
+      setHasMore(nextHasMore);
+      hasMoreRef.current = nextHasMore;
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : '영상 목록을 불러오지 못했습니다.');
       if (reset) {
@@ -69,8 +90,9 @@ export function MediaPage() {
     } finally {
       setLoadingInitial(false);
       setLoadingMore(false);
+      loadingMoreRef.current = false;
     }
-  }, [hasMore, loadingMore, page]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,7 +130,7 @@ export function MediaPage() {
     }
 
     void loadVideos(true, selectedCategory);
-  }, [loadVideos, selectedCategory]);
+  }, [loadVideos, selectedCategory, selectedCategoryId]);
 
   useEffect(() => {
     if (!loadMoreRef.current || !selectedCategory) {
@@ -118,7 +140,7 @@ export function MediaPage() {
     const observer = new IntersectionObserver(
       (entries) => {
         const target = entries[0];
-        if (target?.isIntersecting && !loadingInitial && !loadingMore && hasMore) {
+        if (target?.isIntersecting && !loadingInitial && !loadingMoreRef.current && hasMoreRef.current) {
           void loadVideos(false, selectedCategory);
         }
       },
@@ -127,7 +149,7 @@ export function MediaPage() {
 
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loadVideos, loadingInitial, loadingMore, selectedCategory]);
+  }, [loadVideos, loadingInitial, selectedCategory, selectedCategoryId]);
 
   return (
     <div className="animate-in">
@@ -152,8 +174,8 @@ export function MediaPage() {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))',
-            gap: '12px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(124px, 1fr))',
+            gap: '10px',
           }}>
             {categories.map((category) => {
               const active = category.id === selectedCategoryId;
@@ -163,7 +185,7 @@ export function MediaPage() {
                   type="button"
                   onClick={() => setSelectedCategoryId(category.id)}
                   style={{
-                    minHeight: '164px',
+                    minHeight: '154px',
                     padding: 0,
                     border: active ? `3px solid ${category.accentColor || 'var(--arcade-primary)'}` : '2px solid rgba(255,255,255,0.12)',
                     background: 'linear-gradient(135deg, rgba(8, 18, 32, 0.95), rgba(40, 10, 48, 0.95))',
@@ -187,21 +209,24 @@ export function MediaPage() {
                         inset: 0,
                         width: '100%',
                         height: '100%',
-                        objectFit: 'cover',
+                        objectFit: 'contain',
+                        padding: '8px',
+                        boxSizing: 'border-box',
+                        background: 'rgba(4, 8, 18, 0.92)',
                       }}
                     />
                   ) : null}
                   <div style={{
                     width: '100%',
-                    padding: '14px 12px',
-                    background: 'linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.94))',
+                    padding: '12px 10px',
+                    background: 'linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.96))',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'flex-end',
                     position: 'relative',
                   }}>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 900, marginBottom: '6px', lineHeight: 1.2 }}>{category.name}</div>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.75, lineHeight: 1.25 }}>{category.query}</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 900, marginBottom: '5px', lineHeight: 1.18 }}>{category.name}</div>
+                    <div style={{ fontSize: '0.65rem', opacity: 0.75, lineHeight: 1.2 }}>{category.query}</div>
                   </div>
                 </button>
               );

@@ -1,5 +1,6 @@
 import { api } from './client';
 import axios from 'axios';
+import { getWebAuthSession } from '../auth/webAuth';
 import type {
   CommunityFeedItem,
   CommunityOverview,
@@ -31,14 +32,18 @@ export const communityApi = {
   getOne: (id: number) => api.get<CommunityPost>(`/api/community/posts/${id}`).then((r) => r.data),
   create: async (body: CreatePostBody) => {
     try {
-      const { data } = await api.post<CommunityPost>('/api/community/posts', body);
+      const token = getWebAuthSession()?.token ?? '';
+      const { data } = await api.post<CommunityPost>('/api/community/posts', { ...body, token });
       return data;
     } catch (error) {
       rethrowApiError(error);
     }
   },
   update: (id: number, body: UpdatePostBody) =>
-    api.put<CommunityPost>(`/api/community/posts/${id}`, body).then((r) => r.data).catch(rethrowApiError),
+    api
+      .put<CommunityPost>(`/api/community/posts/${id}`, { ...body, token: getWebAuthSession()?.token ?? '' })
+      .then((r) => r.data)
+      .catch(rethrowApiError),
   remove: (id: number) => api.delete(`/api/community/posts/${id}`).catch(rethrowApiError),
   getFeed: (limit = 30) =>
     api.get<CommunityFeedItem[]>('/api/community/feed', { params: { limit } }).then((r) => r.data),
@@ -50,7 +55,8 @@ export const communityApi = {
     api.get<CommunityComment[]>(`/api/community/posts/${postId}/comments`).then((r) => r.data),
   createComment: async (postId: number, body: { content: string }) => {
     try {
-      const { data } = await api.post<CommunityComment>(`/api/community/posts/${postId}/comments`, body);
+      const token = getWebAuthSession()?.token ?? '';
+      const { data } = await api.post<CommunityComment>(`/api/community/posts/${postId}/comments`, { ...body, token });
       return data;
     } catch (error) {
       rethrowApiError(error);
