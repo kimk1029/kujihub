@@ -3,11 +3,36 @@ import logoImg from '../assets/logo.png';
 import '../components/arcade/Arcade.css';
 import '../arcade.css';
 import { ArcadeButton } from './arcade/ArcadeButton';
-import { clearWebAuthSession } from '../auth/webAuth';
+import { clearWebAuthSession, getWebAuthSession } from '../auth/webAuth';
+
+function getProviderLabel(provider: string) {
+  switch (provider) {
+    case 'google':
+      return 'GOOGLE';
+    case 'kakao':
+      return 'KAKAO';
+    case 'naver':
+      return 'NAVER';
+    default:
+      return 'DEV';
+  }
+}
+
+function getInitials(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return 'U';
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+}
 
 export function Layout() {
   const loc = useLocation();
   const navigate = useNavigate();
+  const session = getWebAuthSession();
+  const userName = session?.user.name?.trim() || 'PLAYER';
+  const userEmail = session?.user.email?.trim() || '로그인 세션';
+  const providerLabel = getProviderLabel(session?.provider || 'dev');
   
   const navItems = [
     { path: '/dashboard', label: 'HOME', icon: '🏠' },
@@ -114,6 +139,78 @@ export function Layout() {
         overflowX: 'hidden'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              minWidth: '240px',
+              maxWidth: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              padding: '14px 16px',
+              border: '3px solid var(--arcade-secondary)',
+              background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.88), rgba(36, 8, 46, 0.92))',
+              boxShadow: '0 0 24px rgba(255, 0, 255, 0.18)',
+            }}>
+              {session?.user.image ? (
+                <img
+                  src={session.user.image}
+                  alt={userName}
+                  style={{
+                    width: '52px',
+                    height: '52px',
+                    objectFit: 'cover',
+                    borderRadius: '50%',
+                    border: '2px solid var(--arcade-primary)',
+                    flexShrink: 0,
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '52px',
+                  height: '52px',
+                  borderRadius: '50%',
+                  border: '2px solid var(--arcade-primary)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: 'var(--arcade-primary)',
+                  fontWeight: 900,
+                  background: 'rgba(6, 10, 16, 0.92)',
+                  flexShrink: 0,
+                }}>
+                  {getInitials(userName)}
+                </div>
+              )}
+
+              <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <div className="arcade-font-pixel" style={{ color: 'var(--arcade-accent)', fontSize: '0.55rem' }}>
+                  {providerLabel} LOGIN
+                </div>
+                <div style={{
+                  color: '#fff',
+                  fontWeight: 900,
+                  fontSize: '1rem',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}>
+                  {userName}
+                </div>
+                <div style={{
+                  color: 'rgba(255,255,255,0.72)',
+                  fontSize: '0.8rem',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}>
+                  {userEmail}
+                </div>
+              </div>
+            </div>
+          </div>
           <Outlet />
         </div>
       </main>
