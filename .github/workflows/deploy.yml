@@ -23,12 +23,10 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           test -n "$DEPLOY_USER" || { echo "DEPLOY_USER is empty"; exit 1; }
           test -n "$DEPLOY_PATH" || { echo "DEPLOY_PATH is empty"; exit 1; }
           test -n "$DEPLOY_SSH_KEY" || { echo "DEPLOY_SSH_KEY is empty"; exit 1; }
-          test -n "$DATABASE_URL" || { echo "DATABASE_URL is empty"; exit 1; }
           echo "Secrets look present"
 
       - name: Install rsync
@@ -84,12 +82,8 @@ jobs:
         env:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          WEB_API_BASE_URL: ${{ secrets.WEB_API_BASE_URL }}
         run: |
-          DATABASE_URL_B64=$(printf '%s' "$DATABASE_URL" | base64 -w0)
-          WEB_API_BASE_URL_B64=$(printf '%s' "${WEB_API_BASE_URL:-}" | base64 -w0)
-          ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "export KUJIHUB_APP_DIR='$DEPLOY_PATH'; export DATABASE_URL_B64='$DATABASE_URL_B64'; export WEB_API_BASE_URL_B64='$WEB_API_BASE_URL_B64'; bash -se" <<'EOF'
+          ssh -i ~/.ssh/deploy_key -p 9922 "$DEPLOY_USER@112.169.110.183" "export KUJIHUB_APP_DIR='$DEPLOY_PATH'; bash -se" <<'EOF'
           set -euo pipefail
 
           export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
@@ -102,12 +96,6 @@ jobs:
 
           cd "$KUJIHUB_APP_DIR"
           mkdir -p server web
-          DATABASE_URL=$(printf '%s' "$DATABASE_URL_B64" | base64 -d | tr -d '\r')
-          DATABASE_URL=${DATABASE_URL/localhost/127.0.0.1}
-          WEB_API_BASE_URL=$(printf '%s' "$WEB_API_BASE_URL_B64" | base64 -d | tr -d '\r')
-          WEB_API_BASE_URL=${WEB_API_BASE_URL:-http://kimk1029.synology.me:9933}
-          printf 'DATABASE_URL=%s\nPORT=3000\nNODE_ENV=production\n' "$DATABASE_URL" > server/.env
-          printf 'VITE_API_BASE_URL=%s\n' "$WEB_API_BASE_URL" > web/.env.production
           command -v node >/dev/null 2>&1 || { echo "node is not installed on server"; exit 1; }
           command -v npm >/dev/null 2>&1 || { echo "npm is not installed on server"; exit 1; }
           node -v
@@ -116,6 +104,7 @@ jobs:
           command -v pm2 >/dev/null 2>&1 || npm install -g pm2
 
           test -f server/.env || { echo "server/.env is missing"; exit 1; }
+          test -f web/.env.production || { echo "web/.env.production is missing"; exit 1; }
           (
             cd server
             npm install --workspaces=false
@@ -123,6 +112,7 @@ jobs:
             set -a
             . ./.env
             set +a
+            DATABASE_URL=${DATABASE_URL/localhost/127.0.0.1}
             DB_HOST=$(printf '%s' "$DATABASE_URL" | sed -E 's#^postgres(ql)?://[^@]+@([^:/]+).*#\2#')
             DB_PORT=$(printf '%s' "$DATABASE_URL" | sed -E 's#^postgres(ql)?://[^@]+@[^:/]+:([0-9]+).*#\2#')
             [ "$DB_HOST" = "$DATABASE_URL" ] && DB_HOST=127.0.0.1
