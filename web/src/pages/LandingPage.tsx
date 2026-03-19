@@ -12,14 +12,16 @@ import { getClientEnv } from '../config/runtimeConfig';
 type WebLoginOption = {
   id: 'kakao' | 'naver' | 'google' | 'dev';
   label: string;
+  shortLabel: string;
+  chip: string;
   tone: 'accent' | 'primary' | 'secondary';
 };
 
 const LOGIN_OPTIONS: WebLoginOption[] = [
-  { id: 'kakao', label: '카카오 로그인', tone: 'accent' },
-  { id: 'naver', label: '네이버 로그인', tone: 'secondary' },
-  { id: 'google', label: '구글 로그인', tone: 'primary' },
-  { id: 'dev', label: '바로가기(개발용)', tone: 'accent' },
+  { id: 'kakao', label: '카카오 로그인', shortLabel: '카카오', chip: 'KAKAO', tone: 'accent' },
+  { id: 'naver', label: '네이버 로그인', shortLabel: '네이버', chip: 'NAVER', tone: 'secondary' },
+  { id: 'google', label: '구글 로그인', shortLabel: '구글', chip: 'GOOGLE', tone: 'primary' },
+  { id: 'dev', label: '바로가기(개발용)', shortLabel: '바로가기', chip: 'DEV', tone: 'accent' },
 ];
 
 const KAKAO_REST_API_KEY = getClientEnv('VITE_KAKAO_REST_API_KEY');
@@ -311,8 +313,9 @@ export function LandingPage() {
                         className="web-login-btn tone-primary"
                         onClick={() => setError('VITE_GOOGLE_CLIENT_ID가 없습니다.')}
                       >
-                        <span className="web-login-btn-label">구글 로그인</span>
-                        <span className="web-login-btn-sub">웹 로그인</span>
+                        <span className="web-login-btn-chip">GOOGLE</span>
+                        <span className="web-login-btn-label">구글</span>
+                        <span className="web-login-btn-sub">WEB</span>
                       </button>
                     )
                   ) : (
@@ -322,9 +325,10 @@ export function LandingPage() {
                       className={`web-login-btn tone-${option.tone}`}
                       onClick={() => handleLogin(option.id)}
                     >
-                      <span className="web-login-btn-label">{option.label}</span>
+                      <span className="web-login-btn-chip">{option.chip}</span>
+                      <span className="web-login-btn-label">{option.shortLabel}</span>
                       <span className="web-login-btn-sub">
-                        {option.id === 'dev' ? '개발용 바로 진입' : '웹 로그인'}
+                        {option.id === 'dev' ? 'FAST' : 'WEB'}
                       </span>
                     </button>
                   )
@@ -406,8 +410,9 @@ function GoogleLoginButton({
         login();
       }}
     >
-      <span className="web-login-btn-label">구글 로그인</span>
-      <span className="web-login-btn-sub">웹 로그인</span>
+      <span className="web-login-btn-chip">GOOGLE</span>
+      <span className="web-login-btn-label">구글</span>
+      <span className="web-login-btn-sub">WEB</span>
     </button>
   );
 }
