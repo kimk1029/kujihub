@@ -72,7 +72,7 @@ export function KujiDetailPage() {
 
   return (
     <div className="animate-in">
-      <header style={{ marginBottom: '32px' }}>
+      <header style={{ marginBottom: '24px' }}>
         <div style={{ color: 'var(--arcade-primary)', fontWeight: 900, marginBottom: '12px' }}>
           KUJI SELECT
         </div>
@@ -84,41 +84,44 @@ export function KujiDetailPage() {
         </p>
       </header>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '16px',
-        marginBottom: '28px',
-      }}>
-        <ArcadeBox label="STATUS" variant="secondary">
-          <div style={{ fontSize: '1.5rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>
-            {kuji.remaining}
-          </div>
-          <div style={{ marginTop: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
-            REMAINING SLOTS
-          </div>
-        </ArcadeBox>
-        <ArcadeBox label="BOARD" variant="default">
-          <div style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>
-            {kuji.boardSize}
-          </div>
-          <div style={{ marginTop: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
-            TOTAL SLOTS
-          </div>
-        </ArcadeBox>
-        <ArcadeBox label="PRICE" variant="primary">
-          <div style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
-            {kuji.price.toLocaleString()} P
-          </div>
-          <div style={{ marginTop: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
-            PER DRAW
-          </div>
-        </ArcadeBox>
-      </div>
-
       <div style={{ maxWidth: '1180px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '28px' }}>
-          <ArcadeBox label="PURCHASE CONSOLE" variant="primary" style={{ maxWidth: '560px', width: '100%', margin: '0 auto' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(260px, 0.85fr) minmax(320px, 1.1fr) minmax(220px, 0.85fr)',
+            gap: '20px',
+            alignItems: 'stretch',
+            marginBottom: '22px',
+          }}
+        >
+          <ArcadeBox label="STATUS" variant="secondary">
+            <div style={{ display: 'grid', gap: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', opacity: 0.65, fontWeight: 900 }}>REMAINING</span>
+                <span style={{ fontSize: '1.4rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>
+                  {kuji.remaining}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', opacity: 0.65, fontWeight: 900 }}>BOARD</span>
+                <span style={{ fontSize: '1.1rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>
+                  {kuji.boardSize}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', opacity: 0.65, fontWeight: 900 }}>PRICE</span>
+                <span style={{ fontSize: '1.1rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
+                  {kuji.price.toLocaleString()} P
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', opacity: 0.65, fontWeight: 900 }}>TIERS</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 900 }}>{kuji.prizes.length}</span>
+              </div>
+            </div>
+          </ArcadeBox>
+
+          <ArcadeBox label="PURCHASE CONSOLE" variant="primary" style={{ width: '100%', margin: '0 auto' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 900 }}>PLAYER_CREDITS</span>
@@ -133,7 +136,7 @@ export function KujiDetailPage() {
                 </span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', gap: '14px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', gap: '14px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 900 }}>QUANTITY</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <ArcadeButton
@@ -161,13 +164,7 @@ export function KujiDetailPage() {
                 </div>
               </div>
 
-              {error ? (
-                <div style={{ color: 'var(--error)', fontSize: '0.85rem', textAlign: 'center', marginTop: '8px', fontWeight: 900 }}>
-                  [ ERROR: {error} ]
-                </div>
-              ) : null}
-
-              <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <ArcadeButton
                   variant="accent"
                   className="coin-btn"
@@ -197,50 +194,57 @@ export function KujiDetailPage() {
                   EXIT_MACHINE
                 </ArcadeButton>
               </div>
+
+              {error ? (
+                <div style={{ color: 'var(--error)', fontSize: '0.8rem', textAlign: 'center', fontWeight: 900 }}>
+                  [ ERROR: {error} ]
+                </div>
+              ) : null}
             </div>
           </ArcadeBox>
 
-          <div className="detail-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '28px', alignItems: 'start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', minWidth: 0 }}>
-          <ArcadeBox label="KUJI INFO" variant="default">
-            <div style={{ display: 'grid', gap: '18px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '14px' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 900, opacity: 0.65 }}>CURRENT STATUS</span>
-                <span style={{ fontSize: '0.95rem', fontWeight: 900, color: kuji.remaining > 0 ? 'var(--arcade-accent)' : 'var(--error)' }}>
-                  {kuji.remaining > 0 ? 'AVAILABLE' : 'SOLD OUT'}
-                </span>
+          <ArcadeBox label="GUIDE" variant="default">
+            <div style={{ display: 'grid', gap: '10px' }}>
+              <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.82rem', lineHeight: 1.55 }}>
+                수량을 먼저 고른 뒤 시작하면 다음 화면에서 실제 슬롯을 선택합니다.
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '14px' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 900, opacity: 0.65 }}>PLAYER CREDITS</span>
-                <span style={{ fontSize: '0.95rem', fontWeight: 900 }}>{player?.points.toLocaleString() ?? 0} P</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 900, opacity: 0.65 }}>PRIZE TIERS</span>
-                <span style={{ fontSize: '0.95rem', fontWeight: 900 }}>{kuji.prizes.length}</span>
+              <div style={{ display: 'grid', gap: '8px' }}>
+                {kuji.prizes.map((prize) => (
+                  <div key={prize.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', fontSize: '0.76rem' }}>
+                    <span style={{ color: prize.color, fontWeight: 900 }}>{prize.grade}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.68)' }}>
+                      {(prize.chance * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </ArcadeBox>
+        </div>
 
-          <ArcadeBox label="PRIZE LIST" variant="secondary">
-            <div style={{ fontSize: '0.9rem', opacity: 0.6, fontWeight: 700 }}>
-              WINS REMAINING: {kuji.remaining} / {kuji.boardSize}
-            </div>
-            <div style={{ display: 'grid', gap: '14px', marginTop: '22px' }}>
+        <ArcadeBox label="PRIZE STOCK" variant="secondary">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '12px',
+            }}
+          >
               {kuji.prizes.map((prize, idx) => (
                 <div
                   key={idx}
                   style={{
-                    padding: '14px 14px',
+                    padding: '12px 12px',
                     background: 'rgba(0,0,0,0.24)',
                     border: `1px solid ${prize.color}55`,
-                    minHeight: '116px',
+                    minHeight: '104px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '10px',
+                    gap: '8px',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div style={{ color: prize.color, fontSize: '1.45rem', fontWeight: 900 }}>
+                    <div style={{ color: prize.color, fontSize: '1.2rem', fontWeight: 900 }}>
                       {prize.grade}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>
@@ -250,7 +254,7 @@ export function KujiDetailPage() {
                   <div style={{ fontSize: '0.82rem', color: '#fff', fontWeight: 700, lineHeight: 1.4 }}>
                     {prize.name}
                   </div>
-                  <div style={{ height: '10px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                  <div style={{ height: '8px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
                     <div
                       style={{
                         width: `${prize.totalCount > 0 ? (prize.remainingCount / prize.totalCount) * 100 : 0}%`,
@@ -265,32 +269,8 @@ export function KujiDetailPage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </ArcadeBox>
-        </div>
-
-        <aside style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <ArcadeBox label="NOTICE" variant="default">
-            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.86rem', lineHeight: 1.6 }}>
-              수량을 먼저 고른 뒤 시작하면 다음 화면에서 실제 슬롯을 선택합니다. 모바일에서도 같은 흐름으로 바로 이어집니다.
-            </div>
-          </ArcadeBox>
-
-          <ArcadeBox label="DROP RATE" variant="secondary">
-            <div style={{ display: 'grid', gap: '10px' }}>
-              {kuji.prizes.map((prize) => (
-                <div key={prize.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', fontSize: '0.8rem' }}>
-                  <span style={{ color: prize.color, fontWeight: 900 }}>{prize.grade}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.72)' }}>
-                    {(prize.chance * 100).toFixed(1)}%
-                  </span>
-                </div>
-              ))}
-            </div>
-          </ArcadeBox>
-        </aside>
-      </div>
-        </div>
+          </div>
+        </ArcadeBox>
       </div>
     </div>
   );
