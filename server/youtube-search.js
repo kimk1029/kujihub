@@ -1,4 +1,5 @@
 const YOUTUBE_BASE = 'https://www.youtube.com';
+const YOUTUBE_UPLOAD_DATE_SORT = 'CAI%253D';
 
 /**
  * ytInitialData JSON을 HTML에서 추출 (괄호 depth 추적 방식 - regex보다 안정적)
@@ -107,25 +108,46 @@ function normalizeResult(video) {
   };
 }
 
-const SEARCH_SUFFIXES = [
-  '',
-  '피규어',
-  '제일복권',
-  '개봉',
-  '언박싱',
-  '굿즈',
-  'shorts',
-  '후기',
-];
+function getPublishedAgeHours(publishedText) {
+  const text = String(publishedText || '').trim().toLowerCase();
+  if (!text) {
+    return Number.MAX_SAFE_INTEGER;
+  }
 
-function buildPagedQuery(query, page = 1) {
-  const suffix = SEARCH_SUFFIXES[(Math.max(page, 1) - 1) % SEARCH_SUFFIXES.length];
-  return suffix ? `${query} ${suffix}` : query;
+  const rules = [
+    { pattern: /(\d+)\s*분\s*전/, multiplier: 1 / 60 },
+    { pattern: /(\d+)\s*시간\s*전/, multiplier: 1 },
+    { pattern: /(\d+)\s*일\s*전/, multiplier: 24 },
+    { pattern: /(\d+)\s*주\s*전/, multiplier: 24 * 7 },
+    { pattern: /(\d+)\s*개월\s*전/, multiplier: 24 * 30 },
+    { pattern: /(\d+)\s*년\s*전/, multiplier: 24 * 365 },
+    { pattern: /(\d+)\s*minute[s]?\s*ago/, multiplier: 1 / 60 },
+    { pattern: /(\d+)\s*hour[s]?\s*ago/, multiplier: 1 },
+    { pattern: /(\d+)\s*day[s]?\s*ago/, multiplier: 24 },
+    { pattern: /(\d+)\s*week[s]?\s*ago/, multiplier: 24 * 7 },
+    { pattern: /(\d+)\s*month[s]?\s*ago/, multiplier: 24 * 30 },
+    { pattern: /(\d+)\s*year[s]?\s*ago/, multiplier: 24 * 365 },
+  ];
+
+  for (const rule of rules) {
+    const match = text.match(rule.pattern);
+    if (match) {
+      return Number(match[1]) * rule.multiplier;
+    }
+  }
+
+  if (text.includes('방금') || text.includes('just now')) {
+    return 0;
+  }
+
+  return Number.MAX_SAFE_INTEGER;
 }
 
 async function fetchYouTubeSearch(query = '쿠지', limit = 18, page = 1) {
-  const effectiveQuery = buildPagedQuery(query, page);
-  const url = `${YOUTUBE_BASE}/results?search_query=${encodeURIComponent(effectiveQuery)}&hl=ko&gl=KR`;
+  const effectiveQuery = String(query || '쿠지').trim() || '쿠지';
+  const url =
+    `${YOUTUBE_BASE}/results?search_query=${encodeURIComponent(effectiveQuery)}` +
+    `&sp=${YOUTUBE_UPLOAD_DATE_SORT}&hl=ko&gl=KR`;
 
   const res = await fetch(url, {
     headers: {
@@ -149,18 +171,30 @@ async function fetchYouTubeSearch(query = '쿠지', limit = 18, page = 1) {
 
   const initialData = extractInitialData(html);
   const rawVideos = collectByKey(initialData, 'videoRenderer');
+  const sortedVideos = rawVideos
+    .map(normalizeResult)
+    .filter(Boolean)
+    .sort((a, b) => getPublishedAgeHours(a.published) - getPublishedAgeHours(b.published));
 
   const deduped = [];
   const seen = new Set();
-  for (const raw of rawVideos) {
-    const video = normalizeResult(raw);
-    if (!video || seen.has(video.videoId)) continue;
+  const targetCount = Math.max(limit, 1) * Math.max(page, 1);
+  for (const video of sortedVideos) {
+    if (seen.has(video.videoId)) continue;
     seen.add(video.videoId);
     deduped.push(video);
-    if (deduped.length >= limit) break;
+    if (deduped.length >= targetCount) break;
   }
 
-  return { query, effectiveQuery, page, items: deduped };
+  const start = (Math.max(page, 1) - 1) * Math.max(limit, 1);
+  const end = start + Math.max(limit, 1);
+
+  return {
+    query,
+    effectiveQuery,
+    page,
+    items: deduped.slice(start, end),
+  };
 }
 
 module.exports = { fetchYouTubeSearch };
