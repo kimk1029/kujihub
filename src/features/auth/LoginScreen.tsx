@@ -4,12 +4,11 @@ import {
   StyleSheet,
   Image,
   Dimensions,
-  TouchableOpacity,
   Animated,
   Easing,
   Pressable,
 } from 'react-native';
-import { Button, Text, Surface, useTheme } from 'react-native-paper';
+import { Text, Surface, useTheme } from 'react-native-paper';
 import { useAuthStore } from './auth.store';
 import { signInWithGoogle, signInWithKakao, signInWithNaver } from './auth.service';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -204,32 +203,64 @@ export function LoginScreen() {
               !showLoginOptions && styles.cardFaceHidden,
             ]}
           >
-            <TouchableOpacity
-              style={[styles.loginBtn, styles.kakaoBtn]}
-              onPress={handleKakaoLogin}
-              activeOpacity={0.88}
-            >
-              <MaterialCommunityIcons name="chat" size={24} color="#3C1E1E" />
-              <Text style={styles.kakaoBtnText}>카카오톡으로 시작하기</Text>
-            </TouchableOpacity>
+            <View style={styles.socialRow}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.loginBtn,
+                  styles.kakaoBtn,
+                  pressed && styles.loginBtnPressed,
+                ]}
+                onPress={handleKakaoLogin}
+              >
+                <View style={[styles.pixelButtonFace, styles.kakaoFace]}>
+                  <View style={styles.pixelTopEdge} />
+                  <View style={[styles.pixelCorner, styles.pixelCornerLeft]} />
+                  <View style={[styles.pixelCorner, styles.pixelCornerRight]} />
+                  <View style={styles.pixelScanline} />
+                  <Text style={styles.pixelTag}>SNS</Text>
+                  <MaterialCommunityIcons name="chat" size={18} color="#3C1E1E" />
+                  <Text style={styles.kakaoBtnText}>KAKAO</Text>
+                </View>
+              </Pressable>
 
-            <TouchableOpacity
-              style={[styles.loginBtn, styles.googleBtn]}
-              onPress={handleGoogleLogin}
-              activeOpacity={0.88}
-            >
-              <MaterialCommunityIcons name="google" size={24} color="#FFFFFF" />
-              <Text style={styles.googleBtnText}>Google 계정으로 로그인</Text>
-            </TouchableOpacity>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.loginBtn,
+                  styles.googleBtn,
+                  pressed && styles.loginBtnPressed,
+                ]}
+                onPress={handleGoogleLogin}
+              >
+                <View style={[styles.pixelButtonFace, styles.googleFace, styles.darkPixelFace]}>
+                  <View style={styles.pixelTopEdge} />
+                  <View style={[styles.pixelCorner, styles.pixelCornerLeft]} />
+                  <View style={[styles.pixelCorner, styles.pixelCornerRight]} />
+                  <View style={styles.pixelScanline} />
+                  <Text style={[styles.pixelTag, styles.pixelTagLight]}>SNS</Text>
+                  <MaterialCommunityIcons name="google" size={18} color="#FFFFFF" />
+                  <Text style={styles.googleBtnText}>GOOGLE</Text>
+                </View>
+              </Pressable>
 
-            <TouchableOpacity
-              style={[styles.loginBtn, styles.naverBtn]}
-              onPress={handleNaverLogin}
-              activeOpacity={0.88}
-            >
-              <MaterialCommunityIcons name="alpha-n-circle" size={24} color="#FFFFFF" />
-              <Text style={styles.naverBtnText}>네이버로 빠르게 시작하기</Text>
-            </TouchableOpacity>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.loginBtn,
+                  styles.naverBtn,
+                  pressed && styles.loginBtnPressed,
+                ]}
+                onPress={handleNaverLogin}
+              >
+                <View style={[styles.pixelButtonFace, styles.naverFace, styles.darkPixelFace]}>
+                  <View style={styles.pixelTopEdge} />
+                  <View style={[styles.pixelCorner, styles.pixelCornerLeft]} />
+                  <View style={[styles.pixelCorner, styles.pixelCornerRight]} />
+                  <View style={styles.pixelScanline} />
+                  <Text style={[styles.pixelTag, styles.pixelTagLight]}>SNS</Text>
+                  <MaterialCommunityIcons name="alpha-n-circle" size={18} color="#FFFFFF" />
+                  <Text style={styles.naverBtnText}>NAVER</Text>
+                </View>
+              </Pressable>
+            </View>
 
             <View style={styles.divider}>
               <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
@@ -322,7 +353,7 @@ const styles = StyleSheet.create({
   },
   buttonStage: {
     width: '100%',
-    minHeight: 356,
+    minHeight: 286,
     position: 'relative',
   },
   pressCard: {
@@ -391,63 +422,148 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    padding: 18,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 3,
+    borderColor: '#0F172A',
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.16,
-    shadowRadius: 28,
-    elevation: 7,
-    minHeight: 322,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 6,
+    minHeight: 196,
     backfaceVisibility: 'hidden',
     zIndex: 3,
   },
   cardFaceHidden: {
     zIndex: 0,
   },
-  loginBtn: {
+  socialRow: {
     width: '100%',
-    height: 56,
-    borderRadius: 16,
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  loginBtn: {
+    flex: 1,
+    minHeight: 84,
+    borderRadius: 0,
+    borderWidth: 3,
+    borderColor: '#0F172A',
+    padding: 0,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 0,
+    elevation: 0,
+    overflow: 'hidden',
+  },
+  loginBtnPressed: {
+    transform: [{ translateX: 2 }, { translateY: 2 }],
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.28,
+  },
+  pixelButtonFace: {
+    minHeight: 78,
+    paddingTop: 8,
+    paddingBottom: 10,
+    paddingHorizontal: 6,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    justifyContent: 'space-between',
+    borderWidth: 2,
+    borderTopColor: 'rgba(255,255,255,0.55)',
+    borderLeftColor: 'rgba(255,255,255,0.45)',
+    borderRightColor: 'rgba(15,23,42,0.34)',
+    borderBottomColor: 'rgba(15,23,42,0.4)',
+    transform: [{ translateX: -1 }, { translateY: -1 }],
+  },
+  darkPixelFace: {
+    borderTopColor: 'rgba(255,255,255,0.28)',
+    borderLeftColor: 'rgba(255,255,255,0.22)',
+    borderRightColor: 'rgba(15,23,42,0.5)',
+    borderBottomColor: 'rgba(15,23,42,0.56)',
+  },
+  pixelTopEdge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.28)',
+  },
+  pixelScanline: {
+    position: 'absolute',
+    left: 6,
+    right: 6,
+    top: 16,
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  pixelCorner: {
+    position: 'absolute',
+    top: 4,
+    width: 6,
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  pixelCornerLeft: {
+    left: 4,
+  },
+  pixelCornerRight: {
+    right: 4,
+  },
+  pixelTag: {
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    color: 'rgba(15, 23, 42, 0.55)',
+  },
+  pixelTagLight: {
+    color: 'rgba(255,255,255,0.72)',
   },
   googleBtn: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#334155',
+  },
+  googleFace: {
+    backgroundColor: '#475569',
   },
   googleBtnText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.8,
   },
   kakaoBtn: {
     backgroundColor: '#FEE500',
   },
+  kakaoFace: {
+    backgroundColor: '#FFE95C',
+  },
   kakaoBtnText: {
     color: '#3C1E1E',
-    fontSize: 16,
+    fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.8,
   },
   naverBtn: {
     backgroundColor: '#03C75A',
   },
+  naverFace: {
+    backgroundColor: '#12D36B',
+  },
   naverBtnText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.8,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 12,
     width: '100%',
   },
   line: {
@@ -460,21 +576,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   lockedNotice: {
-    minHeight: 52,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    minHeight: 44,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
   lockedNoticeText: {
     flex: 1,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: '700',
   },
   errorContainer: {
