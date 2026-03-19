@@ -21,6 +21,7 @@ export function LoginScreen() {
   const [isAnimating, setIsAnimating] = useState(false);
   const theme = useTheme();
   const transition = useRef(new Animated.Value(0)).current;
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -50,6 +51,11 @@ export function LoginScreen() {
     } catch (e) {
       setError(e instanceof Error ? e.message : '네이버 로그인 실패');
     }
+  };
+
+  const handleDevLogin = () => {
+    setError(null);
+    setAuth(true, null, 'dev-mode');
   };
 
   const handlePressButton = () => {
@@ -222,7 +228,6 @@ export function LoginScreen() {
                   <Text style={styles.kakaoBtnText}>KAKAO</Text>
                 </View>
               </Pressable>
-
               <Pressable
                 style={({ pressed }) => [
                   styles.loginBtn,
@@ -241,7 +246,6 @@ export function LoginScreen() {
                   <Text style={styles.googleBtnText}>GOOGLE</Text>
                 </View>
               </Pressable>
-
               <Pressable
                 style={({ pressed }) => [
                   styles.loginBtn,
@@ -258,6 +262,24 @@ export function LoginScreen() {
                   <Text style={[styles.pixelTag, styles.pixelTagLight]}>SNS</Text>
                   <MaterialCommunityIcons name="alpha-n-circle" size={18} color="#FFFFFF" />
                   <Text style={styles.naverBtnText}>NAVER</Text>
+                </View>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.loginBtn,
+                  styles.devBtn,
+                  pressed && styles.loginBtnPressed,
+                ]}
+                onPress={handleDevLogin}
+              >
+                <View style={[styles.pixelButtonFace, styles.devFace, styles.darkPixelFace]}>
+                  <View style={styles.pixelTopEdge} />
+                  <View style={[styles.pixelCorner, styles.pixelCornerLeft]} />
+                  <View style={[styles.pixelCorner, styles.pixelCornerRight]} />
+                  <View style={styles.pixelScanline} />
+                  <Text style={[styles.pixelTag, styles.pixelTagLight]}>SNS</Text>
+                  <MaterialCommunityIcons name="gamepad-variant" size={16} color="#FFFFFF" />
+                  <Text style={styles.devBtnText}>DEV</Text>
                 </View>
               </Pressable>
             </View>
@@ -353,7 +375,7 @@ const styles = StyleSheet.create({
   },
   buttonStage: {
     width: '100%',
-    minHeight: 286,
+    minHeight: 248,
     position: 'relative',
   },
   pressCard: {
@@ -422,18 +444,18 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 18,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
+    borderWidth: 4,
     borderColor: '#0F172A',
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    elevation: 6,
-    minHeight: 196,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+    minHeight: 122,
     backfaceVisibility: 'hidden',
     zIndex: 3,
   },
@@ -443,33 +465,34 @@ const styles = StyleSheet.create({
   socialRow: {
     width: '100%',
     flexDirection: 'row',
+    alignItems: 'stretch',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 6,
   },
   loginBtn: {
     flex: 1,
-    minHeight: 84,
+    minHeight: 68,
     borderRadius: 0,
     borderWidth: 3,
     borderColor: '#0F172A',
     padding: 0,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.45,
+    shadowOffset: { width: 5, height: 5 },
+    shadowOpacity: 0.52,
     shadowRadius: 0,
     elevation: 0,
     overflow: 'hidden',
   },
   loginBtnPressed: {
-    transform: [{ translateX: 2 }, { translateY: 2 }],
+    transform: [{ translateX: 3 }, { translateY: 3 }],
     shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.28,
+    shadowOpacity: 0.24,
   },
   pixelButtonFace: {
-    minHeight: 78,
-    paddingTop: 8,
-    paddingBottom: 10,
-    paddingHorizontal: 6,
+    minHeight: 62,
+    paddingTop: 6,
+    paddingBottom: 7,
+    paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 2,
@@ -495,9 +518,9 @@ const styles = StyleSheet.create({
   },
   pixelScanline: {
     position: 'absolute',
-    left: 6,
-    right: 6,
-    top: 16,
+    left: 4,
+    right: 4,
+    top: 13,
     height: 2,
     backgroundColor: 'rgba(255,255,255,0.12)',
   },
@@ -515,10 +538,10 @@ const styles = StyleSheet.create({
     right: 4,
   },
   pixelTag: {
-    fontSize: 8,
-    lineHeight: 10,
+    fontSize: 7,
+    lineHeight: 8,
     fontWeight: '900',
-    letterSpacing: 1.2,
+    letterSpacing: 0.8,
     color: 'rgba(15, 23, 42, 0.55)',
   },
   pixelTagLight: {
@@ -532,9 +555,9 @@ const styles = StyleSheet.create({
   },
   googleBtnText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   kakaoBtn: {
     backgroundColor: '#FEE500',
@@ -544,9 +567,9 @@ const styles = StyleSheet.create({
   },
   kakaoBtnText: {
     color: '#3C1E1E',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   naverBtn: {
     backgroundColor: '#03C75A',
@@ -556,9 +579,21 @@ const styles = StyleSheet.create({
   },
   naverBtnText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
+  },
+  devBtn: {
+    backgroundColor: '#7C3AED',
+  },
+  devFace: {
+    backgroundColor: '#8B5CF6',
+  },
+  devBtnText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.6,
   },
   divider: {
     flexDirection: 'row',
