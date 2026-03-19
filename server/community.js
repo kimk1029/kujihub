@@ -88,6 +88,7 @@ function mapFeedItem(item) {
     title: item.title,
     body: item.body,
     author: item.author,
+    imageUrl: item.imageUrl,
     link: item.link,
     postId: item.postId,
     createdAt: item.createdAt.toISOString(),

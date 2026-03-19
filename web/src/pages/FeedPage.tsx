@@ -22,8 +22,9 @@ export function FeedPage() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Visibility toggle
+  // Visibility & Animation state
   const [isWriteVisible, setIsWriteVisible] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // DOS Input & Tags state
   const [inputText, setInputText] = useState('');
@@ -70,6 +71,7 @@ export function FeedPage() {
       setInputText('');
       setSelectedTag(null);
       setSelectedImage(null);
+      setIsExpanded(false); // Collapse on success
       await loadFeed(false);
     } catch (err) {
       console.error('Failed to post from CLI:', err);
@@ -103,6 +105,13 @@ export function FeedPage() {
     }
   };
 
+  const handleTerminalClick = () => {
+    if (!isExpanded) {
+      setIsExpanded(true);
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  };
+
   if (loading && !refreshing) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
@@ -129,9 +138,12 @@ export function FeedPage() {
             <ArcadeButton 
               variant={isWriteVisible ? "accent" : "primary"} 
               size="sm" 
-              onClick={() => setIsWriteVisible(!isWriteVisible)}
+              onClick={() => {
+                setIsWriteVisible(!isWriteVisible);
+                if (!isWriteVisible) setIsExpanded(false);
+              }}
             >
-              {isWriteVisible ? 'CLOSE_TERMINAL' : 'WRITE_SIGNAL'}
+              {isWriteVisible ? 'HIDE_TERMINAL' : 'WRITE_SIGNAL'}
             </ArcadeButton>
             <ArcadeButton variant="secondary" size="sm" onClick={() => loadFeed()}>
               REFRESH
@@ -141,14 +153,34 @@ export function FeedPage() {
 
         {/* DOS Style Input Section */}
         {isWriteVisible && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
-            <div className="dos-container" style={dosStyles.container}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '48px' }}>
+            <div 
+              className="dos-container" 
+              style={{
+                ...dosStyles.container,
+                width: isExpanded ? '85%' : '60%',
+                transition: 'width 0.4s cubic-bezier(0.19, 1, 0.22, 1)'
+              }}
+              onClick={handleTerminalClick}
+            >
               <div className="dos-header" style={dosStyles.header}>
                 <div style={dosStyles.dot} />
                 <span style={dosStyles.headerText}>KUJI_TERMINAL_V1.0.WEB</span>
+                <span style={{ marginLeft: 'auto', color: '#555', fontSize: '10px' }}>
+                  {isExpanded ? 'EXPANDED' : 'CLICK TO EXPAND'}
+                </span>
               </div>
               
-              <div className="dos-body" style={dosStyles.body}>
+              <div 
+                className="dos-body" 
+                style={{
+                  ...dosStyles.body,
+                  maxHeight: isExpanded ? '600px' : '60px',
+                  opacity: isExpanded ? 1 : 0.8,
+                  overflow: 'hidden',
+                  transition: 'max-height 0.4s ease, opacity 0.3s ease'
+                }}
+              >
                 <form onSubmit={handleQuickPost} style={dosStyles.inputRow}>
                   <span style={dosStyles.prompt}>C:\FEED{'>'} </span>
                   <input
@@ -156,22 +188,34 @@ export function FeedPage() {
                     style={dosStyles.input}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
-                    placeholder="INPUT DATA AND PRESS ENTER..."
+                    placeholder={isExpanded ? "INPUT DATA AND PRESS ENTER..." : "READY..."}
                     autoComplete="off"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !isExpanded}
                   />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <button type="button" onClick={() => fileInputRef.current?.click()} style={dosStyles.imageBtn}>
-                      <span style={{ fontSize: '1.4rem', color: selectedImage ? '#39FF14' : '#008F11' }}>
-                        +
-                      </span>
-                    </button>
-                    <button type="button" onClick={() => handleQuickPost()} style={dosStyles.submitBtn}>
-                      <span style={{ fontSize: '1.2rem', color: '#39FF14' }}>
-                        ↵
-                      </span>
-                    </button>
-                  </div>
+                  {isExpanded && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <button 
+                        type="button" 
+                        onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} 
+                        style={dosStyles.imageBtn}
+                        title="Add Image"
+                      >
+                        <span style={{ fontSize: '1.6rem', color: selectedImage ? '#39FF14' : '#008F11', fontWeight: 900 }}>
+                          +
+                        </span>
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={(e) => { e.stopPropagation(); handleQuickPost(); }} 
+                        style={dosStyles.submitBtn}
+                        title="Submit Signal"
+                      >
+                        <span style={{ fontSize: '1.4rem', color: '#39FF14', fontWeight: 900 }}>
+                          ↵
+                        </span>
+                      </button>
+                    </div>
+                  )}
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -182,32 +226,36 @@ export function FeedPage() {
                   {isSubmitting && <div className="blink" style={{ color: '#39FF14', marginLeft: '12px' }}>...</div>}
                 </form>
 
-                {selectedImage && (
-                  <div style={dosStyles.previewRow}>
-                    <span style={dosStyles.tagPrompt}>ATTACHED_FILE: </span>
-                    <div style={dosStyles.imageFrame}>
-                      <img src={selectedImage} alt="preview" style={dosStyles.previewImage} />
-                      <button onClick={() => setSelectedImage(null)} style={dosStyles.closeBtn}>[X]</button>
+                {isExpanded && (
+                  <div style={{ borderTop: '1px dashed #222', paddingTop: '16px', marginTop: '16px' }}>
+                    {selectedImage && (
+                      <div style={dosStyles.previewRow}>
+                        <span style={dosStyles.tagPrompt}>ATTACHED_FILE: </span>
+                        <div style={dosStyles.imageFrame}>
+                          <img src={selectedImage} alt="preview" style={dosStyles.previewImage} />
+                          <button onClick={() => setSelectedImage(null)} style={dosStyles.closeBtn}>[X]</button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={dosStyles.tagRow}>
+                      <span style={dosStyles.tagPrompt}>SELECT_TAG: </span>
+                      {tags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={(e) => { e.stopPropagation(); toggleTag(tag); }}
+                          style={{
+                            ...dosStyles.tagButton,
+                            ...(selectedTag === tag ? dosStyles.tagActive : {})
+                          }}
+                        >
+                          {selectedTag === tag ? `[*${tag}]` : `[ ${tag} ]`}
+                        </button>
+                      ))}
+                      <div className="blink" style={dosStyles.cursor} />
                     </div>
                   </div>
                 )}
-
-                <div style={dosStyles.tagRow}>
-                  <span style={dosStyles.tagPrompt}>SELECT_TAG: </span>
-                  {tags.map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() => toggleTag(tag)}
-                      style={{
-                        ...dosStyles.tagButton,
-                        ...(selectedTag === tag ? dosStyles.tagActive : {})
-                      }}
-                    >
-                      {selectedTag === tag ? `[*${tag}]` : `[ ${tag} ]`}
-                    </button>
-                  ))}
-                  <div className="blink" style={dosStyles.cursor} />
-                </div>
               </div>
             </div>
           </div>
@@ -268,11 +316,12 @@ export function FeedPage() {
 const dosStyles: Record<string, React.CSSProperties> = {
   container: {
     backgroundColor: '#000',
-    borderRadius: '8px',
+    borderRadius: '4px',
     border: '2px solid #333',
     overflow: 'hidden',
     fontFamily: "'VT323', monospace",
-    width: '80%',
+    cursor: 'pointer',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
   },
   header: {
     backgroundColor: '#1a1a1a',
@@ -301,7 +350,7 @@ const dosStyles: Record<string, React.CSSProperties> = {
   inputRow: {
     display: 'flex',
     alignItems: 'center',
-    marginBottom: '16px',
+    height: '24px',
   },
   prompt: {
     color: '#39ff14',
@@ -321,14 +370,20 @@ const dosStyles: Record<string, React.CSSProperties> = {
     textShadow: '0 0 5px rgba(57, 255, 20, 0.5)',
   },
   imageBtn: {
-    padding: '0 8px',
+    padding: '0 4px',
     color: '#008f11',
     fontWeight: 900,
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
   },
   submitBtn: {
-    padding: '0 8px',
+    padding: '0 4px',
     color: '#39ff14',
     fontWeight: 900,
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
   },
   previewRow: {
     display: 'flex',
@@ -354,6 +409,7 @@ const dosStyles: Record<string, React.CSSProperties> = {
     height: '100px',
     border: '1px solid rgba(57, 255, 20, 0.3)',
     padding: '4px',
+    backgroundColor: '#000',
   },
   itemPreviewImage: {
     width: '100%',
@@ -366,6 +422,9 @@ const dosStyles: Record<string, React.CSSProperties> = {
     right: '-30px',
     color: '#ff0033',
     fontWeight: 900,
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
   },
   tagRow: {
     display: 'flex',
@@ -383,6 +442,9 @@ const dosStyles: Record<string, React.CSSProperties> = {
     fontSize: '1rem',
     fontWeight: 700,
     transition: 'all 0.2s',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
   },
   tagActive: {
     color: '#39ff14',
