@@ -160,7 +160,7 @@ input[type='reset']:active {
 
 .login-gate-stage {
   position: relative;
-  min-height: 118px;
+  min-height: 80px;
   perspective: 1400px;
 }
 
@@ -228,13 +228,15 @@ input[type='reset']:active {
 }
 
 .web-login-panel {
-  width: 100%;
+  width: auto;
+  max-width: 480px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  padding: 10px;
-  border: 4px solid #dbe4ff;
-  border-radius: 10px;
+  gap: 8px;
+  padding: 8px;
+  border: 2px solid #dbe4ff;
+  border-radius: 4px;
   background:
     linear-gradient(180deg, rgba(10, 16, 34, 0.98), rgba(26, 34, 58, 0.96)),
     repeating-linear-gradient(
@@ -243,91 +245,80 @@ input[type='reset']:active {
       rgba(0, 0, 0, 0.04) 2px 4px
     );
   box-shadow:
-    0 0 0 4px rgba(15, 23, 42, 0.9),
-    0 14px 0 rgba(15, 23, 42, 0.96),
-    0 24px 38px rgba(0, 0, 0, 0.42);
+    0 0 0 2px rgba(15, 23, 42, 0.9),
+    0 4px 0 rgba(15, 23, 42, 0.96);
 }
 
 .web-login-btn {
-  min-height: 74px;
-  padding: 8px 8px 10px;
-  border: 3px solid #0f172a;
+  min-height: 48px;
+  padding: 4px 4px 6px;
+  border: 2px solid #0f172a;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   cursor: pointer;
   white-space: nowrap;
   text-align: center;
   image-rendering: pixelated;
-  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.96);
-  transition: transform 0.08s steps(2, end), box-shadow 0.08s steps(2, end), filter 0.08s steps(2, end);
+  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.96);
+  transition: all 0.1s steps(2, end);
 }
 
 .web-login-btn:hover {
-  filter: brightness(1.04);
+  filter: brightness(1.2);
+  text-shadow: 1px 1px var(--arcade-primary), -1px -1px var(--arcade-secondary);
 }
 
 .web-login-btn:active {
-  transform: translate(3px, 3px);
-  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.96);
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 rgba(15, 23, 42, 0.96);
 }
 
 .web-login-btn::before {
   content: '';
   position: absolute;
-  inset: 3px 3px auto 3px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.28);
-}
-
-.web-login-btn::after {
-  content: '';
-  position: absolute;
-  inset: 8px 8px auto 8px;
+  inset: 2px 2px auto 2px;
   height: 2px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .web-login-btn.tone-accent {
   background: #f7e600;
   color: #241616;
-  box-shadow: 5px 5px 0 #6c5600;
+  box-shadow: 3px 3px 0 #6c5600;
 }
 
 .web-login-btn.tone-primary {
   background: #3b82f6;
   color: #ffffff;
-  box-shadow: 5px 5px 0 #172554;
+  box-shadow: 3px 3px 0 #172554;
 }
 
 .web-login-btn.tone-secondary {
   background: #16a34a;
   color: #ffffff;
-  box-shadow: 5px 5px 0 #14532d;
+  box-shadow: 3px 3px 0 #14532d;
 }
 
 .web-login-btn-chip {
-  font-size: 0.42rem;
+  font-size: 0.35rem;
   line-height: 1;
   font-weight: 700;
-  letter-spacing: 0.14rem;
+  letter-spacing: 0.05rem;
   opacity: 0.72;
+  margin-bottom: 2px;
 }
 
 .web-login-btn-label {
-  font-size: 0.72rem;
-  line-height: 1.1;
+  font-size: 0.6rem;
+  line-height: 1;
   font-weight: 900;
 }
 
 .web-login-btn-sub {
-  font-size: 0.5rem;
-  line-height: 1;
-  font-weight: 700;
-  opacity: 0.82;
-  letter-spacing: 0.12rem;
+  display: none;
 }
 
 .landing-gate-caption {
@@ -429,38 +420,38 @@ input[type='reset']:active {
   }
 
   .login-gate-stage {
-    min-height: 112px;
+    min-height: 72px;
   }
 
   .web-login-panel {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    padding: 8px;
+    gap: 4px;
+    padding: 6px;
+    max-width: 90vw;
   }
 
   .web-login-btn {
-    min-height: 62px;
-    padding: 7px 4px 8px;
-    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.96);
-  }
-
-  .web-login-btn:active {
-    transform: translate(2px, 2px);
+    min-height: 40px;
+    padding: 4px 2px;
     box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.96);
   }
 
+  .web-login-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 rgba(15, 23, 42, 0.96);
+  }
+
   .web-login-btn-chip {
-    font-size: 0.33rem;
-    letter-spacing: 0.08rem;
+    font-size: 0.28rem;
+    letter-spacing: 0.04rem;
   }
 
   .web-login-btn-label {
-    font-size: 0.56rem;
+    font-size: 0.48rem;
   }
 
   .web-login-btn-sub {
-    font-size: 0.4rem;
-    letter-spacing: 0.08rem;
+    display: none;
   }
 
   .landing-footer {
