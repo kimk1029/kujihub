@@ -39,6 +39,38 @@ function activeSlotWhere() {
   };
 }
 
+function buildPrizeStats(prizes, boardSize, usedByGrade) {
+  let previousChance = 0;
+  let assignedTotal = 0;
+
+  return prizes.map((prize, index) => {
+    const bandChance = Math.max(prize.chance - previousChance, 0);
+    previousChance = prize.chance;
+
+    const rawTotal = boardSize * bandChance;
+    let totalCount = index === prizes.length - 1
+      ? Math.max(boardSize - assignedTotal, 0)
+      : Math.max(Math.round(rawTotal), 0);
+
+    assignedTotal += totalCount;
+
+    const usedCount = usedByGrade.get(prize.grade) ?? 0;
+    const remainingCount = Math.max(totalCount - usedCount, 0);
+
+    return {
+      id: String(prize.id),
+      grade: prize.grade,
+      name: prize.name,
+      color: prize.color,
+      chance: prize.chance,
+      displayOrder: prize.displayOrder,
+      totalCount,
+      remainingCount,
+      usedCount,
+    };
+  });
+}
+
 function mapPurchase(purchase) {
   return {
     id: purchase.id,
@@ -122,6 +154,22 @@ router.get('/:id', async (req, res) => {
 
     if (!kuji) return res.status(404).json({ error: 'Not found' });
 
+    const activeSlots = await prisma.kujiSlot.findMany({
+      where: {
+        kujiId: id,
+        ...activeSlotWhere(),
+        grade: { not: null },
+      },
+      select: { grade: true },
+    });
+
+    const usedByGrade = new Map();
+    for (const slot of activeSlots) {
+      const grade = String(slot.grade || '').trim();
+      if (!grade) continue;
+      usedByGrade.set(grade, (usedByGrade.get(grade) ?? 0) + 1);
+    }
+
     let imageUrl = kuji.imageUrl;
     if (!imageUrl) {
       try {
@@ -144,14 +192,7 @@ router.get('/:id', async (req, res) => {
       boardSize: kuji.boardSize,
       status: kuji.status,
       remaining: kuji.boardSize - kuji._count.slots,
-      prizes: kuji.prizes.map((p) => ({
-        id: String(p.id),
-        grade: p.grade,
-        name: p.name,
-        color: p.color,
-        chance: p.chance,
-        displayOrder: p.displayOrder,
-      })),
+      prizes: buildPrizeStats(kuji.prizes, kuji.boardSize, usedByGrade),
     });
   } catch (e) {
     console.error('[kuji detail]', e.message);

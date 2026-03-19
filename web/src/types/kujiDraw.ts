@@ -16,6 +16,9 @@ export interface KujiPrizeItem {
   color: string;
   chance: number;
   displayOrder: number;
+  totalCount: number;
+  remainingCount: number;
+  usedCount: number;
 }
 
 export interface KujiDetail extends KujiListItem {
