@@ -317,6 +317,30 @@ router.get('/feed', async (req, res) => {
   }
 });
 
+router.post('/feed', requireWebAuth, async (req, res) => {
+  const { title, body, imageUrl, type = 'quick_post' } = req.body || {};
+  if (!title || !String(title).trim()) {
+    return res.status(400).json({ error: 'title is required' });
+  }
+
+  try {
+    const item = await prisma.communityFeedItem.create({
+      data: {
+        type: String(type).trim(),
+        source: 'community_cli',
+        title: String(title).trim(),
+        body: String(body ?? '').trim(),
+        author: getAuthedAuthor(req),
+        imageUrl: imageUrl ? String(imageUrl).trim() : null,
+      },
+    });
+    res.status(201).json(mapFeedItem(item));
+  } catch (error) {
+    console.error('[create feed item]', error.message);
+    res.status(500).json({ error: 'DB error' });
+  }
+});
+
 router.get('/overview', async (req, res) => {
   try {
     const postsLimit = parseLimit(req.query.postsLimit, 8);

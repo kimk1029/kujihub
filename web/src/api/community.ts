@@ -8,6 +8,7 @@ import type {
   CommunityComment,
   CreatePostBody,
   UpdatePostBody,
+  CreateFeedItemBody,
 } from '../types/community';
 
 function rethrowApiError(error: unknown): never {
@@ -66,6 +67,28 @@ export const communityApi = {
   remove: (id: number) => api.delete(`/api/community/posts/${id}`).catch(rethrowApiError),
   getFeed: (limit = 30) =>
     api.get<CommunityFeedItem[]>('/api/community/feed', { params: { limit } }).then((r) => r.data),
+  
+  createFeedItem: async (body: CreateFeedItemBody) => {
+    try {
+      const { data } = await api.post<CommunityFeedItem>('/api/community/feed', {
+        ...body,
+        ...getWriteAuthPayload(),
+      });
+      return data;
+    } catch (error) {
+      rethrowApiError(error);
+    }
+  },
+
+  uploadImage: async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  },
+
   getOverview: (postsLimit = 8, feedLimit = 20) =>
     api
       .get<CommunityOverview>('/api/community/overview', { params: { postsLimit, feedLimit } })

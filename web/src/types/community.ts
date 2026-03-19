@@ -25,9 +25,17 @@ export interface CommunityFeedItem {
   title: string;
   body: string;
   author?: string | null;
+  imageUrl?: string | null;
   link?: string | null;
   postId?: number | null;
   createdAt: string;
+}
+
+export interface CreateFeedItemBody {
+  type?: string;
+  title: string;
+  body?: string;
+  imageUrl?: string;
 }
 
 export interface CommunityOverview {

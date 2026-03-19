@@ -11,6 +11,7 @@ function feedLabel(item: CommunityFeedItem) {
   if (item.type === 'post_updated') return 'UPDATE';
   if (item.type === 'post_deleted') return 'DELETE';
   if (item.type === 'lineup_alert') return 'ALERT';
+  if (item.type === 'quick_post') return 'QUICK_SIGNAL';
   return 'SIGNAL';
 }
 
@@ -21,12 +22,16 @@ export function FeedPage() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Visibility toggle
+  const [isWriteVisible, setIsWriteVisible] = useState(false);
+
   // DOS Input & Tags state
   const [inputText, setInputText] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const tags = ['가챠교환', '쿠지현황'];
 
@@ -49,20 +54,18 @@ export function FeedPage() {
     loadFeed();
   }, [loadFeed]);
 
-  const handleQuickPost = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleQuickPost = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     const text = inputText.trim();
     if (!text || isSubmitting) return;
 
-    const finalTitle = selectedTag ? `[${selectedTag}] ${text}` : text;
-
     setIsSubmitting(true);
     try {
-      await communityApi.create({
-        title: finalTitle.length > 40 ? finalTitle.substring(0, 40) + '...' : finalTitle,
-        content: text,
-        author: '익명_WEB_CLI',
-        category: selectedTag || '자유',
+      await communityApi.createFeedItem({
+        type: 'quick_post',
+        title: selectedTag ? `[${selectedTag}] ${text}` : text,
+        body: text,
+        imageUrl: selectedImage || undefined,
       });
       setInputText('');
       setSelectedTag(null);
@@ -79,7 +82,8 @@ export function FeedPage() {
     if (!selectedTag) return items;
     return items.filter(item => 
       item.title.includes(`[${selectedTag}]`) || 
-      item.body.includes(selectedTag)
+      item.body.includes(selectedTag) ||
+      (item.type === 'quick_post' && item.title.includes(selectedTag))
     );
   }, [items, selectedTag]);
 
@@ -87,12 +91,15 @@ export function FeedPage() {
     setSelectedTag(prev => prev === tag ? null : tag);
   };
 
-  const pickImage = () => {
-    // Placeholder simulation
-    if (selectedImage) {
-      setSelectedImage(null);
-    } else {
-      setSelectedImage('https://via.placeholder.com/150/000000/39FF14?text=CLI_IMG');
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const base64 = await communityApi.uploadImage(file);
+      setSelectedImage(base64);
+    } catch (err) {
+      console.error('File read error:', err);
     }
   };
 
@@ -118,66 +125,93 @@ export function FeedPage() {
               REAL-TIME SECTOR MONITORING & DATA INPUT.
             </p>
           </div>
-          <ArcadeButton variant="primary" size="sm" onClick={() => loadFeed()}>
-            REFRESH
-          </ArcadeButton>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <ArcadeButton 
+              variant={isWriteVisible ? "accent" : "primary"} 
+              size="sm" 
+              onClick={() => setIsWriteVisible(!isWriteVisible)}
+            >
+              {isWriteVisible ? 'CLOSE_TERMINAL' : 'WRITE_SIGNAL'}
+            </ArcadeButton>
+            <ArcadeButton variant="secondary" size="sm" onClick={() => loadFeed()}>
+              REFRESH
+            </ArcadeButton>
+          </div>
         </div>
 
         {/* DOS Style Input Section */}
-        <div className="dos-container" style={dosStyles.container}>
-          <div className="dos-header" style={dosStyles.header}>
-            <div style={dosStyles.dot} />
-            <span style={dosStyles.headerText}>KUJI_TERMINAL_V1.0.WEB</span>
-          </div>
-          
-          <div className="dos-body" style={dosStyles.body}>
-            <form onSubmit={handleQuickPost} style={dosStyles.inputRow}>
-              <span style={dosStyles.prompt}>C:\FEED{'>'} </span>
-              <input
-                ref={inputRef}
-                style={dosStyles.input}
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="INPUT DATA AND PRESS ENTER..."
-                autoComplete="off"
-                disabled={isSubmitting}
-              />
-              <button type="button" onClick={pickImage} style={dosStyles.imageBtn}>
-                <span style={{ fontSize: '1.2rem', color: selectedImage ? '#39FF14' : '#008F11' }}>
-                  {selectedImage ? '▣' : '▤'}
-                </span>
-              </button>
-              {isSubmitting && <div className="blink" style={{ color: '#39FF14', marginLeft: '12px' }}>...</div>}
-            </form>
+        {isWriteVisible && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+            <div className="dos-container" style={dosStyles.container}>
+              <div className="dos-header" style={dosStyles.header}>
+                <div style={dosStyles.dot} />
+                <span style={dosStyles.headerText}>KUJI_TERMINAL_V1.0.WEB</span>
+              </div>
+              
+              <div className="dos-body" style={dosStyles.body}>
+                <form onSubmit={handleQuickPost} style={dosStyles.inputRow}>
+                  <span style={dosStyles.prompt}>C:\FEED{'>'} </span>
+                  <input
+                    ref={inputRef}
+                    style={dosStyles.input}
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="INPUT DATA AND PRESS ENTER..."
+                    autoComplete="off"
+                    disabled={isSubmitting}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button type="button" onClick={() => fileInputRef.current?.click()} style={dosStyles.imageBtn}>
+                      <span style={{ fontSize: '1.4rem', color: selectedImage ? '#39FF14' : '#008F11' }}>
+                        +
+                      </span>
+                    </button>
+                    <button type="button" onClick={() => handleQuickPost()} style={dosStyles.submitBtn}>
+                      <span style={{ fontSize: '1.2rem', color: '#39FF14' }}>
+                        ↵
+                      </span>
+                    </button>
+                  </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                    onChange={onFileChange}
+                  />
+                  {isSubmitting && <div className="blink" style={{ color: '#39FF14', marginLeft: '12px' }}>...</div>}
+                </form>
 
-            {selectedImage && (
-              <div style={dosStyles.previewRow}>
-                <span style={dosStyles.tagPrompt}>ATTACHED_FILE: </span>
-                <div style={dosStyles.imageFrame}>
-                  <img src={selectedImage} alt="preview" style={dosStyles.previewImage} />
-                  <button onClick={() => setSelectedImage(null)} style={dosStyles.closeBtn}>[X]</button>
+                {selectedImage && (
+                  <div style={dosStyles.previewRow}>
+                    <span style={dosStyles.tagPrompt}>ATTACHED_FILE: </span>
+                    <div style={dosStyles.imageFrame}>
+                      <img src={selectedImage} alt="preview" style={dosStyles.previewImage} />
+                      <button onClick={() => setSelectedImage(null)} style={dosStyles.closeBtn}>[X]</button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={dosStyles.tagRow}>
+                  <span style={dosStyles.tagPrompt}>SELECT_TAG: </span>
+                  {tags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => toggleTag(tag)}
+                      style={{
+                        ...dosStyles.tagButton,
+                        ...(selectedTag === tag ? dosStyles.tagActive : {})
+                      }}
+                    >
+                      {selectedTag === tag ? `[*${tag}]` : `[ ${tag} ]`}
+                    </button>
+                  ))}
+                  <div className="blink" style={dosStyles.cursor} />
                 </div>
               </div>
-            )}
-
-            <div style={dosStyles.tagRow}>
-              <span style={dosStyles.tagPrompt}>SELECT_TAG: </span>
-              {tags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  style={{
-                    ...dosStyles.tagButton,
-                    ...(selectedTag === tag ? dosStyles.tagActive : {})
-                  }}
-                >
-                  {selectedTag === tag ? `[*${tag}]` : `[ ${tag} ]`}
-                </button>
-              ))}
-              <div className="blink" style={dosStyles.cursor} />
             </div>
           </div>
-        </div>
+        )}
       </header>
 
       {error && (
@@ -202,9 +236,16 @@ export function FeedPage() {
                 <h2 style={{ fontSize: '1.1rem', color: 'var(--arcade-secondary)', marginBottom: '12px', fontWeight: 900 }}>
                   {item.title}
                 </h2>
-                <p style={{ fontSize: '0.95rem', color: '#fff', opacity: 0.8, lineHeight: '1.4' }}>
-                  {item.body}
-                </p>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                  {item.imageUrl && (
+                    <div style={dosStyles.itemImageFrame}>
+                      <img src={item.imageUrl} alt="feed-content" style={dosStyles.itemPreviewImage} />
+                    </div>
+                  )}
+                  <p style={{ fontSize: '0.95rem', color: '#fff', opacity: 0.8, lineHeight: '1.4', flex: 1 }}>
+                    {item.body}
+                  </p>
+                </div>
               </div>
               <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', marginLeft: '24px', fontWeight: 700 }}>
                 {dayjs(item.createdAt).format('HH:mm:ss')}
@@ -231,6 +272,7 @@ const dosStyles: Record<string, React.CSSProperties> = {
     border: '2px solid #333',
     overflow: 'hidden',
     fontFamily: "'VT323', monospace",
+    width: '80%',
   },
   header: {
     backgroundColor: '#1a1a1a',
@@ -279,12 +321,14 @@ const dosStyles: Record<string, React.CSSProperties> = {
     textShadow: '0 0 5px rgba(57, 255, 20, 0.5)',
   },
   imageBtn: {
-    marginLeft: '12px',
-    padding: '4px 8px',
-    border: '1px solid #008f11',
+    padding: '0 8px',
     color: '#008f11',
-    borderRadius: '4px',
-    transition: 'all 0.2s',
+    fontWeight: 900,
+  },
+  submitBtn: {
+    padding: '0 8px',
+    color: '#39ff14',
+    fontWeight: 900,
   },
   previewRow: {
     display: 'flex',
@@ -304,6 +348,17 @@ const dosStyles: Record<string, React.CSSProperties> = {
     height: '100%',
     objectFit: 'cover',
     opacity: 0.8,
+  },
+  itemImageFrame: {
+    width: '100px',
+    height: '100px',
+    border: '1px solid rgba(57, 255, 20, 0.3)',
+    padding: '4px',
+  },
+  itemPreviewImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
   },
   closeBtn: {
     position: 'absolute',
