@@ -24,6 +24,7 @@ export function FeedPage() {
 
   // Visibility & Animation state
   const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
 
   // DOS Input & Tags state
   const [inputText, setInputText] = useState('');
@@ -293,8 +294,12 @@ export function FeedPage() {
             key={item.id} 
             label={feedLabel(item)} 
             variant={item.type === 'lineup_alert' ? 'accent' : 'secondary'}
-            onClick={() => item.postId && navigate(`/community/${item.postId}`)}
-            style={{ cursor: item.postId ? 'pointer' : 'default' }}
+            onClick={() => {
+              if (item.postId) {
+                navigate(`/community/${item.postId}`);
+              }
+            }}
+            style={{ cursor: item.postId || item.imageUrl ? 'pointer' : 'default' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ flex: 1 }}>
@@ -303,7 +308,16 @@ export function FeedPage() {
                 </h2>
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
                   {item.imageUrl && (
-                    <div style={dosStyles.itemImageFrame}>
+                    <div 
+                      style={{
+                        ...dosStyles.itemImageFrame,
+                        cursor: 'zoom-in'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPreviewImage(item.imageUrl || null);
+                      }}
+                    >
                       <img src={item.imageUrl} alt="feed-content" style={dosStyles.itemPreviewImage} />
                     </div>
                   )}
@@ -326,9 +340,75 @@ export function FeedPage() {
           </ArcadeBox>
         )}
       </div>
+
+      {/* Image Preview Modal */}
+      {selectedPreviewImage && (
+        <div 
+          style={modalStyles.overlay} 
+          onClick={() => setSelectedPreviewImage(null)}
+        >
+          <div style={modalStyles.content} onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={selectedPreviewImage} 
+              alt="preview-large" 
+              style={modalStyles.image} 
+            />
+            <button 
+              style={modalStyles.closeBtn}
+              onClick={() => setSelectedPreviewImage(null)}
+            >
+              [ CLOSE_X ]
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+const modalStyles: Record<string, React.CSSProperties> = {
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10000,
+    cursor: 'zoom-out',
+    padding: '20px',
+  },
+  content: {
+    position: 'relative',
+    maxWidth: '95%',
+    maxHeight: '95%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  image: {
+    maxWidth: '100%',
+    maxHeight: 'calc(100vh - 120px)',
+    objectFit: 'contain',
+    border: '4px solid #fff',
+    boxShadow: '0 0 30px rgba(255, 0, 255, 0.3)',
+  },
+  closeBtn: {
+    marginTop: '20px',
+    backgroundColor: 'var(--arcade-primary)',
+    color: '#000',
+    border: 'none',
+    padding: '8px 24px',
+    fontFamily: "'VT323', monospace",
+    fontSize: '1.2rem',
+    fontWeight: 900,
+    cursor: 'pointer',
+    boxShadow: '4px 4px 0 #000',
+  }
+};
 
 const dosStyles: Record<string, React.CSSProperties> = {
   container: {
