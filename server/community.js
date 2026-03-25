@@ -200,30 +200,17 @@ router.post('/posts', requireWebAuth, async (req, res) => {
 
   try {
     const author = getAuthedAuthor(req);
-    const post = await prisma.$transaction(async (tx) => {
-      const created = await tx.communityPost.create({
-        data: {
-          title: String(title).trim(),
-          content: String(content ?? '').trim(),
-          author: String(author ?? '익명').trim() || '익명',
-          category: String(category ?? '자유').trim() || '자유',
-          isNotice: Boolean(isNotice),
-        },
-      });
-
-      await createFeedItem(tx, {
-        type: 'post_created',
-        title: created.title,
-        body: `${created.author}님이 새 글을 등록했습니다.`,
-        author: created.author,
-        link: `/community/${created.id}`,
-        postId: created.id,
-      });
-
-      return created;
+    const created = await prisma.communityPost.create({
+      data: {
+        title: String(title).trim(),
+        content: String(content ?? '').trim(),
+        author: String(author ?? '익명').trim() || '익명',
+        category: String(category ?? '자유').trim() || '자유',
+        isNotice: Boolean(isNotice),
+      },
     });
 
-    res.status(201).json(mapPost(post));
+    res.status(201).json(mapPost(created));
   } catch (error) {
     console.error('[community post create]', error.message);
     res.status(500).json({ error: 'DB error' });
@@ -243,27 +230,14 @@ router.put('/posts/:id', requireWebAuth, async (req, res) => {
       return res.status(403).json({ error: 'FORBIDDEN' });
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const post = await tx.communityPost.update({
-        where: { id },
-        data: {
-          ...(title !== undefined ? { title: String(title).trim() } : {}),
-          ...(content !== undefined ? { content: String(content).trim() } : {}),
-          ...(category !== undefined ? { category: String(category).trim() || '자유' } : {}),
-          ...(isNotice !== undefined ? { isNotice: Boolean(isNotice) } : {}),
-        },
-      });
-
-      await createFeedItem(tx, {
-        type: 'post_updated',
-        title: post.title,
-        body: `${post.author}님이 게시글을 수정했습니다.`,
-        author: post.author,
-        link: `/community/${post.id}`,
-        postId: post.id,
-      });
-
-      return post;
+    const updated = await prisma.communityPost.update({
+      where: { id },
+      data: {
+        ...(title !== undefined ? { title: String(title).trim() } : {}),
+        ...(content !== undefined ? { content: String(content).trim() } : {}),
+        ...(category !== undefined ? { category: String(category).trim() || '자유' } : {}),
+        ...(isNotice !== undefined ? { isNotice: Boolean(isNotice) } : {}),
+      },
     });
 
     res.json(mapPost(updated));
@@ -284,18 +258,7 @@ router.delete('/posts/:id', requireWebAuth, async (req, res) => {
       return res.status(403).json({ error: 'FORBIDDEN' });
     }
 
-    await prisma.$transaction(async (tx) => {
-      await createFeedItem(tx, {
-        type: 'post_deleted',
-        title: existing.title,
-        body: `${existing.author}님이 게시글을 삭제했습니다.`,
-        author: existing.author,
-        link: null,
-        postId: existing.id,
-      });
-
-      await tx.communityPost.delete({ where: { id } });
-    });
+    await prisma.communityPost.delete({ where: { id } });
 
     res.status(204).send();
   } catch (error) {
