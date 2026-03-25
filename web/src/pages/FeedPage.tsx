@@ -155,15 +155,15 @@ export function FeedPage() {
             className="dos-container" 
             style={{
               ...dosStyles.container,
-              width: isExpanded ? '85%' : '60%',
-              transition: 'width 0.4s cubic-bezier(0.19, 1, 0.22, 1)'
+              width: '100%',
+              maxWidth: '800px',
             }}
           >
             <div className="dos-header" style={dosStyles.header} onClick={handleTerminalHeaderClick}>
               <div style={dosStyles.dot} />
               <span style={dosStyles.headerText}>KUJI_TERMINAL_V1.0.WEB</span>
-              <span style={{ marginLeft: 'auto', color: '#555', fontSize: '10px' }}>
-                {isExpanded ? 'ACTIVE' : 'READY (CLICK TO OPEN)'}
+              <span style={{ marginLeft: 'auto', color: '#555', fontSize: '10px', fontWeight: 900 }}>
+                {isExpanded ? '[ CLICK TO COLLAPSE ]' : '[ CLICK TO EXPAND ]'}
               </span>
             </div>
             
@@ -172,10 +172,10 @@ export function FeedPage() {
               style={{
                 ...dosStyles.body,
                 maxHeight: isExpanded ? '600px' : '0px',
-                padding: isExpanded ? '20px' : '0px 20px',
+                padding: isExpanded ? '24px' : '0px 24px',
                 opacity: isExpanded ? 1 : 0,
                 overflow: 'hidden',
-                transition: 'max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease'
+                transition: 'max-height 0.4s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.2s ease, padding 0.4s ease'
               }}
             >
               <form onSubmit={handleQuickPost} style={dosStyles.inputRow}>
