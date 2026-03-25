@@ -180,17 +180,51 @@ export function FeedPage() {
             >
               <form onSubmit={handleQuickPost} style={dosStyles.inputRow}>
                 <span style={dosStyles.prompt}>C:\FEED{'>'} </span>
-                <input
-                  ref={inputRef}
-                  style={dosStyles.input}
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  placeholder="INPUT DATA AND PRESS ENTER..."
-                  autoComplete="off"
-                  disabled={isSubmitting || !isExpanded}
-                />
-                {isExpanded && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    ref={inputRef}
+                    style={dosStyles.input}
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder={isExpanded ? "INPUT DATA AND PRESS ENTER..." : ""}
+                    autoComplete="off"
+                    disabled={isSubmitting || !isExpanded}
+                  />
+                  {isExpanded && !isSubmitting && (
+                    <div 
+                      className="blink" 
+                      style={{
+                        ...dosStyles.cursor,
+                        position: 'absolute',
+                        left: 0,
+                        transform: `translateX(${inputText.length === 0 ? 0 : 0}px)`,
+                        pointerEvents: 'none',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      {/* This invisible span mirrors the text to push the cursor to the right position */}
+                      <span style={{ 
+                        opacity: 0, 
+                        fontSize: dosStyles.input.fontSize, 
+                        fontWeight: dosStyles.input.fontWeight,
+                        whiteSpace: 'pre',
+                        fontFamily: dosStyles.container.fontFamily
+                      }}>
+                        {inputText}
+                      </span>
+                      <div style={{
+                        width: '10px',
+                        height: '20px',
+                        backgroundColor: '#39ff14',
+                        boxShadow: '0 0 5px #39ff14',
+                      }} />
+                    </div>
+                  )}
+                  {isSubmitting && <div className="blink" style={{ color: '#39FF14', marginLeft: '12px' }}>...</div>}
+                </div>
+                {isExpanded && !isSubmitting && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '12px' }}>
                     <button 
                       type="button" 
                       onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} 
@@ -220,7 +254,6 @@ export function FeedPage() {
                   accept="image/*"
                   onChange={onFileChange}
                 />
-                {isSubmitting && <div className="blink" style={{ color: '#39FF14', marginLeft: '12px' }}>...</div>}
               </form>
 
               {isExpanded && (
@@ -364,6 +397,7 @@ const dosStyles: Record<string, React.CSSProperties> = {
     padding: 0,
     outline: 'none',
     textShadow: '0 0 5px rgba(57, 255, 20, 0.5)',
+    caretColor: 'transparent', // Hide the native cursor
   },
   imageBtn: {
     padding: '0 4px',
