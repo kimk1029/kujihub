@@ -227,8 +227,10 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/player/ensure', async (req, res) => {
-  const { playerId, nickname } = req.body || {};
+  const { playerId, nickname: rawNickname } = req.body || {};
   const id = String(playerId || '').trim();
+  const nickname = sanitizeNickname(rawNickname);
+  
   if (!id) return res.status(400).json({ error: 'playerId is required' });
 
   try {
@@ -241,13 +243,18 @@ router.post('/player/ensure', async (req, res) => {
         player = await tx.kujiPlayer.create({
           data: {
             id,
-            nickname: sanitizeNickname(nickname),
+            nickname,
             points: DEFAULT_PLAYER_POINTS,
             lastLoginAt: now,
           },
         });
         await tx.pointTransaction.create({
-          data: { playerId: id, amount: DEFAULT_PLAYER_POINTS, type: 'admin_adjust', description: '가입 축하 포인트' }
+          data: { 
+            playerId: id, 
+            amount: DEFAULT_PLAYER_POINTS, 
+            type: 'admin_adjust', 
+            description: '가입 축하 포인트' 
+          }
         });
         earnedToday = true;
       } else {
@@ -258,11 +265,31 @@ router.post('/player/ensure', async (req, res) => {
           lastLogin.getUTCDate() !== now.getUTCDate();
 
         if (isNewDay) {
-          player = await addPoints(tx, id, REWARDS.DAILY_LOGIN, 'login_reward', '일일 로그인 보상');
-          await tx.kujiPlayer.update({ where: { id }, data: { lastLoginAt: now, nickname: sanitizeNickname(nickname) } });
+          // 일일 로그인 보상 지급 + 닉네임/마지막 로그인 시간 업데이트 통합
+          await tx.pointTransaction.create({
+            data: {
+              playerId: id,
+              amount: REWARDS.DAILY_LOGIN,
+              type: 'login_reward',
+              description: '일일 로그인 보상',
+            },
+          });
+          
+          player = await tx.kujiPlayer.update({
+            where: { id },
+            data: {
+              points: { increment: REWARDS.DAILY_LOGIN },
+              lastLoginAt: now,
+              nickname,
+            }
+          });
           earnedToday = true;
         } else {
-          player = await tx.kujiPlayer.update({ where: { id }, data: { nickname: sanitizeNickname(nickname) } });
+          // 로그인 시간만 업데이트 (또는 닉네임)
+          player = await tx.kujiPlayer.update({
+            where: { id },
+            data: { nickname }
+          });
         }
       }
       return { player, earnedToday };
@@ -278,8 +305,13 @@ router.post('/player/ensure', async (req, res) => {
       updatedAt: result.player.updatedAt,
     });
   } catch (e) {
-    console.error('[player ensure]', e.message);
-    res.status(500).json({ error: 'DB error' });
+    console.error('[player ensure error detail]:', {
+      message: e.message,
+      code: e.code,
+      meta: e.meta,
+      stack: e.stack
+    });
+    res.status(500).json({ error: 'Internal Server Error', message: e.message });
   }
 });
 
