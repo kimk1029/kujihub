@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { communityApi } from '../api/community';
 import { ensureKujiPlayer } from '../api/kujiDraw';
@@ -12,7 +12,6 @@ export function CommunityPostFormPage() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [titleCaretPos, setTitleCaretPos] = useState(0);
   const [isNotice, setIsNotice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true); // default true for player load
@@ -20,8 +19,6 @@ export function CommunityPostFormPage() {
   const [error, setError] = useState<string | null>(null);
   const session = getWebAuthSession();
   const authorName = session?.user.name?.trim() || 'PLAYER';
-
-  const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,18 +51,6 @@ export function CommunityPostFormPage() {
       cancelled = true;
     };
   }, [authorName, editId, navigate]);
-
-  const updateTitleCaret = () => {
-    if (titleInputRef.current) {
-      setTitleCaretPos(titleInputRef.current.selectionStart || 0);
-    }
-  };
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-    // selectionStart might not be updated yet in onChange, use setTimeout or just updateTitleCaret
-    setTimeout(updateTitleCaret, 0);
-  };
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
@@ -146,44 +131,34 @@ export function CommunityPostFormPage() {
                 <span style={dosStyles.prompt}>ENTER_TITLE{'>'} </span>
                 <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
                   <input
-                    ref={titleInputRef}
                     type="text"
                     value={title}
-                    onChange={handleTitleChange}
-                    onKeyUp={updateTitleCaret}
-                    onClick={updateTitleCaret}
+                    onChange={(e) => setTitle(e.target.value)}
                     required
                     autoFocus
                     autoComplete="off"
                     style={dosStyles.input}
                   />
-                  <div 
-                    className="blink" 
-                    style={{
-                      ...dosStyles.inlineCursor,
-                      position: 'absolute',
-                      left: 0,
-                      pointerEvents: 'none',
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <span style={{ 
-                      opacity: 0, 
-                      fontSize: dosStyles.input.fontSize, 
-                      fontWeight: dosStyles.input.fontWeight,
-                      whiteSpace: 'pre',
-                      fontFamily: dosStyles.container.fontFamily
-                    }}>
-                      {title.substring(0, titleCaretPos)}
-                    </span>
-                    <div style={{
-                      width: '12px',
-                      height: '24px',
-                      backgroundColor: '#39ff14',
-                      boxShadow: '0 0 5px #39ff14',
-                    }} />
-                  </div>
+                  {title.length === 0 && (
+                    <div 
+                      className="blink" 
+                      style={{
+                        ...dosStyles.inlineCursor,
+                        position: 'absolute',
+                        left: 0,
+                        pointerEvents: 'none',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div style={{
+                        width: '12px',
+                        height: '24px',
+                        backgroundColor: '#39ff14',
+                        boxShadow: '0 0 5px #39ff14',
+                      }} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -265,7 +240,7 @@ const dosStyles: Record<string, React.CSSProperties> = {
     borderRadius: '4px',
     border: '2px solid #333',
     overflow: 'hidden',
-    fontFamily: "'VT323', monospace",
+    fontFamily: "'Galmuri11', 'VT323', monospace",
     boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
     maxWidth: '900px',
     margin: '0 auto',
@@ -327,7 +302,7 @@ const dosStyles: Record<string, React.CSSProperties> = {
     padding: 0,
     outline: 'none',
     width: '100%',
-    fontFamily: "'VT323', monospace",
+    fontFamily: "'Galmuri11', 'VT323', monospace",
     caretColor: 'transparent',
   },
   textarea: {
@@ -340,7 +315,7 @@ const dosStyles: Record<string, React.CSSProperties> = {
     outline: 'none',
     width: '100%',
     lineHeight: '1.4',
-    fontFamily: "'VT323', monospace",
+    fontFamily: "'Galmuri11', 'VT323', monospace",
     caretColor: '#39ff14',
     resize: 'none',
   },
@@ -362,7 +337,7 @@ const dosStyles: Record<string, React.CSSProperties> = {
     padding: '12px 30px',
     fontSize: '1.2rem',
     fontWeight: 900,
-    fontFamily: "'VT323', monospace",
+    fontFamily: "'Galmuri11', 'VT323', monospace",
     cursor: 'pointer',
     border: 'none',
     transition: 'all 0.2s',
