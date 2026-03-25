@@ -156,35 +156,78 @@ export function KujiBoardPage() {
                       justifyContent: 'center',
                       cursor: (isDrawn || isLocked) ? 'not-allowed' : 'pointer',
                       background: isDrawn 
-                        ? 'rgba(0,0,0,0.8)' 
+                        ? (info?.color || '#333')
                         : isSelected 
-                          ? 'var(--arcade-primary)' 
-                          : isLocked 
-                            ? 'rgba(255,255,255,0.1)' 
-                            : 'rgba(255,255,255,0.05)',
+                          ? 'var(--arcade-accent)' 
+                          : 'var(--arcade-surface)',
                       border: '2px solid',
                       borderColor: isSelected 
-                        ? 'var(--arcade-primary)' 
+                        ? '#fff' 
                         : isDrawn 
-                          ? 'rgba(255,255,255,0.05)' 
-                          : 'rgba(255,255,255,0.2)',
-                      color: isDrawn ? 'rgba(255,255,255,0.1)' : isSelected ? '#000' : '#fff',
-                      opacity: isDrawn ? 0.4 : 1,
-                      transition: 'all 0.15s ease',
+                          ? 'rgba(0,0,0,0.2)' 
+                          : '#333',
+                      color: isSelected ? '#000' : isDrawn ? '#fff' : 'rgba(255,255,255,0.4)',
+                      opacity: isLocked && !isDrawn ? 0.6 : 1,
+                      transition: 'all 0.1s steps(2)',
                       position: 'relative',
-                      boxShadow: isSelected ? '0 0 15px var(--arcade-primary)' : 'none',
-                      transform: isSelected ? 'scale(1.1) translateY(-2px)' : 'none',
-                      zIndex: isSelected ? 10 : 1
+                      boxShadow: isSelected ? '0 0 15px var(--arcade-accent)' : 'none',
+                      transform: isSelected ? 'scale(1.05)' : 'none',
+                      zIndex: isSelected ? 10 : 1,
+                      overflow: 'hidden',
+                      imageRendering: 'pixelated'
                     }}
                   >
-                    {isDrawn ? 'X' : isSelected ? '✓' : slot}
+                    {isDrawn ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', width: '100%', height: '100%', justifyContent: 'center' }}>
+                        <span style={{ fontSize: '1.25rem', textShadow: '2px 2px 0 rgba(0,0,0,0.5)' }}>{info?.grade}</span>
+                        <div style={{ 
+                          position: 'absolute', 
+                          top: '2px', 
+                          right: '-10px', 
+                          background: 'var(--arcade-error)', 
+                          color: '#fff', 
+                          fontSize: '0.5rem', 
+                          padding: '1px 12px',
+                          transform: 'rotate(15deg)',
+                          fontWeight: 900,
+                          boxShadow: '2px 2px 0 rgba(0,0,0,0.3)'
+                        }}>HIT!</div>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ 
+                          position: 'absolute', 
+                          left: 0, 
+                          top: 0, 
+                          bottom: 0, 
+                          width: '4px', 
+                          background: 'rgba(0,0,0,0.2)',
+                          borderRight: '1px dashed rgba(255,255,255,0.1)'
+                        }} />
+                        {isSelected ? '✓' : slot}
+                        <div style={{ 
+                          position: 'absolute', 
+                          bottom: 0, 
+                          left: 0, 
+                          right: 0, 
+                          height: '2px', 
+                          background: 'rgba(0,0,0,0.3)' 
+                        }} />
+                      </>
+                    )}
+                    
                     {isLocked && !isDrawn && (
                       <div className="blink" style={{ 
                         position: 'absolute', 
                         inset: 0, 
-                        border: '2px solid var(--arcade-accent)',
-                        boxShadow: 'inset 0 0 10px var(--arcade-accent)'
-                      }}></div>
+                        border: '2px solid var(--arcade-primary)',
+                        background: 'rgba(255,0,255,0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.6rem',
+                        color: 'var(--arcade-primary)'
+                      }}>LOCKED</div>
                     )}
                   </button>
                 );
