@@ -15,7 +15,33 @@ const { fetchYouTubeSearch } = require('./youtube-search');
 
 const router = Router();
 const LOCK_TIMEOUT_MS = 2 * 60 * 1000; // 2분
-const DEFAULT_PLAYER_POINTS = 100000;
+const DEFAULT_PLAYER_POINTS = 1000;
+const REWARDS = {
+  DAILY_LOGIN: 100,
+  POST_CREATE: 50,
+  COMMENT_CREATE: 10,
+};
+
+/**
+ * 포인트 가감 및 로그 기록 (트랜잭션 내부에서 사용 권장)
+ */
+async function addPoints(tx, playerId, amount, type, description = null) {
+  const updated = await tx.kujiPlayer.update({
+    where: { id: playerId },
+    data: { points: { increment: amount } },
+  });
+
+  await tx.pointTransaction.create({
+    data: {
+      playerId,
+      amount,
+      type,
+      description,
+    },
+  });
+
+  return updated;
+}
 
 function lockExpiry() {
   return new Date(Date.now() - LOCK_TIMEOUT_MS);
@@ -206,23 +232,50 @@ router.post('/player/ensure', async (req, res) => {
   if (!id) return res.status(400).json({ error: 'playerId is required' });
 
   try {
-    const player = await prisma.kujiPlayer.upsert({
-      where: { id },
-      update: { nickname: sanitizeNickname(nickname) },
-      create: {
-        id,
-        nickname: sanitizeNickname(nickname),
-        points: DEFAULT_PLAYER_POINTS,
-      },
+    const now = new Date();
+    const result = await prisma.$transaction(async (tx) => {
+      let player = await tx.kujiPlayer.findUnique({ where: { id } });
+      let earnedToday = false;
+
+      if (!player) {
+        player = await tx.kujiPlayer.create({
+          data: {
+            id,
+            nickname: sanitizeNickname(nickname),
+            points: DEFAULT_PLAYER_POINTS,
+            lastLoginAt: now,
+          },
+        });
+        await tx.pointTransaction.create({
+          data: { playerId: id, amount: DEFAULT_PLAYER_POINTS, type: 'admin_adjust', description: '가입 축하 포인트' }
+        });
+        earnedToday = true;
+      } else {
+        const lastLogin = player.lastLoginAt;
+        const isNewDay = !lastLogin || 
+          lastLogin.getUTCFullYear() !== now.getUTCFullYear() ||
+          lastLogin.getUTCMonth() !== now.getUTCMonth() ||
+          lastLogin.getUTCDate() !== now.getUTCDate();
+
+        if (isNewDay) {
+          player = await addPoints(tx, id, REWARDS.DAILY_LOGIN, 'login_reward', '일일 로그인 보상');
+          await tx.kujiPlayer.update({ where: { id }, data: { lastLoginAt: now, nickname: sanitizeNickname(nickname) } });
+          earnedToday = true;
+        } else {
+          player = await tx.kujiPlayer.update({ where: { id }, data: { nickname: sanitizeNickname(nickname) } });
+        }
+      }
+      return { player, earnedToday };
     });
 
     res.json({
-      id: player.id,
-      nickname: player.nickname,
-      points: player.points,
-      role: player.role,
-      createdAt: player.createdAt,
-      updatedAt: player.updatedAt,
+      id: result.player.id,
+      nickname: result.player.nickname,
+      points: result.player.points,
+      role: result.player.role,
+      earnedToday: result.earnedToday,
+      createdAt: result.player.createdAt,
+      updatedAt: result.player.updatedAt,
     });
   } catch (e) {
     console.error('[player ensure]', e.message);
@@ -295,10 +348,7 @@ router.post('/:id/purchase', async (req, res) => {
         },
       });
 
-      const updatedPlayer = await tx.kujiPlayer.update({
-        where: { id: playerId },
-        data: { points: { decrement: totalPrice } },
-      });
+      const updatedPlayer = await addPoints(tx, playerId, -totalPrice, 'kuji_draw', `${kuji.title} ${quantity}회 뽑기`);
 
       return { kuji, purchase, player: updatedPlayer, remaining: remaining - quantity };
     });

@@ -26,15 +26,31 @@ model Kuji {
 }
 
 model KujiPlayer {
-  id        String         @id
-  nickname  String         @default("게스트")
-  points    Int            @default(100000)
-  role      String         @default("user") // "user" or "admin"
-  createdAt DateTime       @default(now()) @map("created_at")
-  updatedAt DateTime       @updatedAt @map("updated_at")
-  purchases KujiPurchase[]
+  id          String             @id
+  nickname    String             @default("게스트")
+  points      Int                @default(1000) // Default starting points
+  role        String             @default("user") // "user" or "admin"
+  lastLoginAt DateTime?          @map("last_login_at")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  purchases   KujiPurchase[]
+  pointLogs   PointTransaction[]
 
   @@map("kuji_players")
+}
+
+model PointTransaction {
+  id        Int      @id @default(autoincrement())
+  playerId  String   @map("player_id")
+  amount    Int      // Positive for earn, negative for spend
+  type      String   // login_reward | post_reward | comment_reward | kuji_draw | admin_adjust
+  description String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  player KujiPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@map("point_transactions")
 }
 
 model KujiPurchase {

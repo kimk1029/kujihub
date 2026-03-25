@@ -30,6 +30,7 @@ export interface KujiPlayer {
   nickname: string;
   points: number;
   role?: string;
+  earnedToday?: boolean;
 }
 
 export interface KujiPurchase {

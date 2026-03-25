@@ -3,7 +3,16 @@ import { ArcadeBox } from '../components/arcade/ArcadeBox';
 import { ArcadeButton } from '../components/arcade/ArcadeButton';
 import { ArcadeTicker } from '../components/arcade/ArcadeTicker';
 import { fetchLineup } from '../api/kujiLineup';
+import { communityApi } from '../api/community';
+import { ensureKujiPlayer } from '../api/kujiDraw';
 import type { KujiLineupItem } from '../types/kuji';
+import type { CommunityOverview } from '../types/community';
+import type { KujiPlayer } from '../types/kujiDraw';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { getWebAuthSession } from '../auth/webAuth';
+
+dayjs.extend(relativeTime);
 
 export function HomePage() {
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
@@ -12,13 +21,26 @@ export function HomePage() {
   const [year] = useState(new Date().getFullYear());
   const [month] = useState(new Date().getMonth() + 1);
 
-  const loadEvents = useCallback(async () => {
+  const [overview, setOverview] = useState<CommunityOverview | null>(null);
+  const [player, setPlayer] = useState<KujiPlayer | null>(null);
+
+  const session = getWebAuthSession();
+  const userName = session?.user.name || 'PLAYER';
+
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchLineup(year, month);
+      const [lineupData, commOverview, playerData] = await Promise.all([
+        fetchLineup(year, month),
+        communityApi.getOverview(0, 6),
+        ensureKujiPlayer(userName)
+      ]);
+
+      setOverview(commOverview);
+      setPlayer(playerData);
+
       const byDay: Record<number, KujiLineupItem[]> = {};
-      
-      data.items.forEach(item => {
+      lineupData.items.forEach(item => {
         const dateStr = item.storeDate || item.onlineDate;
         if (dateStr) {
           const match = dateStr.match(/(\d{1,2})日/);
@@ -37,7 +59,6 @@ export function HomePage() {
       });
       setEventsByDay(byDay);
       
-      // Select the first day with events if current day has no events
       const currentDay = new Date().getDate();
       if (!byDay[currentDay]) {
         const sortedDays = Object.keys(byDay).map(Number).sort((a, b) => a - b);
@@ -50,11 +71,11 @@ export function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [year, month]);
+  }, [year, month, userName]);
 
   useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+    loadData();
+  }, [loadData]);
 
   const selectedEvents = eventsByDay[selectedDay] || [];
   const selectedEvent = selectedEvents[0];
@@ -73,14 +94,18 @@ export function HomePage() {
       </header>
 
       <div className="dashboard-grid overview-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
-        <ArcadeBox label="LIVE_SESSIONS" variant="primary">
-          <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>1,204</div>
+        <ArcadeBox label="PLAYER_RANK" variant="primary">
+          <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>LV.99</div>
         </ArcadeBox>
-        <ArcadeBox label="TOTAL_KUJI" variant="secondary">
-          <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>085</div>
+        <ArcadeBox label="TOTAL_CREDITS" variant="secondary">
+          <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>
+            {player ? player.points.toLocaleString() : '---'}P
+          </div>
         </ArcadeBox>
-        <ArcadeBox label="ACTIVE_DRAWERS" variant="accent">
-          <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>342</div>
+        <ArcadeBox label="COMM_SIGNALS" variant="accent">
+          <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
+            {overview ? overview.stats.postCount : '---'}
+          </div>
         </ArcadeBox>
         <ArcadeBox label="STATUS" variant="default">
           <div className="blink overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>ONLINE</div>
@@ -197,26 +222,37 @@ export function HomePage() {
       </div>
 
       <div className="page-stack" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px', marginBottom: '32px' }}>
-        <ArcadeBox label="SIGNAL_FEED" variant="primary">
+        <ArcadeBox label="LATEST_SIGNALS" variant="primary">
           <div className="signal-feed-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} style={{ 
+            {(overview?.feed || []).map(item => (
+              <div key={item.id} style={{ 
                 padding: '12px', 
                 border: '2px solid rgba(255,255,255,0.1)', 
                 display: 'flex', 
                 gap: '16px',
                 background: 'rgba(0,0,0,0.2)'
               }}>
-                <div style={{ width: '48px', height: '48px', background: '#333', flexShrink: 0, imageRendering: 'pixelated', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🤖</div>
-                <div>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>USER_{i}029 // PULLED_A</p>
-                  <p style={{ fontSize: '0.75rem', color: '#fff', opacity: 0.5, marginTop: '4px' }}>5 MINS AGO // SECTOR_7</p>
+                <div style={{ width: '48px', height: '48px', background: '#111', flexShrink: 0, imageRendering: 'pixelated', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', border: '1px solid #333' }}>
+                  {item.imageUrl ? <img src={item.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📡'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--arcade-secondary)', fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.author || 'UNKNOWN'} // {item.title}
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: '#fff', opacity: 0.5, marginTop: '4px' }}>
+                    {dayjs(item.createdAt).fromNow().toUpperCase()} // SECTOR_WEB
+                  </p>
                 </div>
               </div>
             ))}
+            {(!overview?.feed || overview.feed.length === 0) && (
+              <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '20px', color: 'rgba(255,255,255,0.3)' }}>
+                NO RECENT SIGNALS DETECTED
+              </div>
+            )}
           </div>
-          <ArcadeButton variant="primary" size="sm" style={{ width: '100%', marginTop: '24px' }}>
-            OPEN_CHANNEL
+          <ArcadeButton variant="primary" size="sm" style={{ width: '100%', marginTop: '24px' }} onClick={() => window.location.href = '/feed'}>
+            OPEN_CHANNEL_FEED
           </ArcadeButton>
         </ArcadeBox>
       </div>

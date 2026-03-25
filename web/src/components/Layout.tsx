@@ -1,9 +1,12 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import logoImg from '../assets/logo.png';
 import '../components/arcade/Arcade.css';
 import '../arcade.css';
 import { ArcadeButton } from './arcade/ArcadeButton';
 import { clearWebAuthSession, getWebAuthSession } from '../auth/webAuth';
+import { ensureKujiPlayer } from '../api/kujiDraw';
+import type { KujiPlayer } from '../types/kujiDraw';
 
 function getProviderLabel(provider: string) {
   switch (provider) {
@@ -33,6 +36,19 @@ export function Layout() {
   const userName = session?.user.name?.trim() || 'PLAYER';
   const userEmail = session?.user.email?.trim() || '로그인 세션';
   const providerLabel = getProviderLabel(session?.provider || 'dev');
+
+  const [player, setPlayer] = useState<KujiPlayer | null>(null);
+  const [showReward, setShowReward] = useState(false);
+
+  useEffect(() => {
+    ensureKujiPlayer(userName).then(p => {
+      setPlayer(p);
+      if (p.earnedToday) {
+        setShowReward(true);
+        setTimeout(() => setShowReward(false), 5000);
+      }
+    }).catch(console.error);
+  }, [userName]);
   
   const navItems = [
     { path: '/dashboard', label: 'HOME', icon: '🏠' },
@@ -187,8 +203,22 @@ export function Layout() {
               )}
 
               <div className="layout-usercopy" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                <div className="arcade-font-pixel" style={{ color: 'var(--arcade-accent)', fontSize: '0.55rem' }}>
-                  {providerLabel} LOGIN
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="arcade-font-pixel" style={{ color: 'var(--arcade-accent)', fontSize: '0.55rem' }}>
+                    {providerLabel} LOGIN
+                  </div>
+                  {player && (
+                    <div style={{ 
+                      backgroundColor: 'var(--arcade-accent)', 
+                      color: '#000', 
+                      padding: '1px 6px', 
+                      fontSize: '0.65rem', 
+                      fontWeight: 900,
+                      borderRadius: '2px'
+                    }}>
+                      {player.points.toLocaleString()}P
+                    </div>
+                  )}
                 </div>
                 <div style={{
                   color: '#fff',
@@ -197,8 +227,21 @@ export function Layout() {
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
+                  position: 'relative'
                 }}>
                   {userName}
+                  {showReward && (
+                    <span className="blink" style={{ 
+                      position: 'absolute', 
+                      right: '-80px', 
+                      top: 0, 
+                      color: 'var(--arcade-accent)', 
+                      fontSize: '0.7rem',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      +100P LOGIN_REWARD
+                    </span>
+                  )}
                 </div>
                 <div style={{
                   color: 'rgba(255,255,255,0.72)',

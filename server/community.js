@@ -109,6 +109,31 @@ async function createFeedItem(tx, data) {
   });
 }
 
+async function rewardPoints(nickname, amount, type, description) {
+  if (!nickname || nickname === '익명' || nickname === '게스트') return;
+  try {
+    const player = await prisma.kujiPlayer.findFirst({ where: { nickname } });
+    if (!player) return;
+
+    await prisma.$transaction([
+      prisma.kujiPlayer.update({
+        where: { id: player.id },
+        data: { points: { increment: amount } },
+      }),
+      prisma.pointTransaction.create({
+        data: {
+          playerId: player.id,
+          amount,
+          type,
+          description,
+        },
+      }),
+    ]);
+  } catch (err) {
+    console.error('[reward points error]', err.message);
+  }
+}
+
 router.get('/posts', async (req, res) => {
   try {
     const limit = parseLimit(req.query.limit);
@@ -178,13 +203,18 @@ router.post('/posts/:id/comments', requireWebAuth, async (req, res) => {
   }
   
   try {
+    const author = getAuthedAuthor(req);
     const comment = await prisma.communityComment.create({
       data: {
         postId,
-        author: getAuthedAuthor(req),
+        author,
         content: String(content).trim(),
       },
     });
+
+    // 보상 지급: 10P
+    await rewardPoints(author, 10, 'comment_reward', `${postId}번 글에 댓글 작성`);
+
     res.status(201).json(comment);
   } catch (error) {
     console.error('[create comment]', error.message);
@@ -209,6 +239,9 @@ router.post('/posts', requireWebAuth, async (req, res) => {
         isNotice: Boolean(isNotice),
       },
     });
+
+    // 보상 지급: 50P
+    await rewardPoints(author, 50, 'post_reward', '새 게시글 작성');
 
     res.status(201).json(mapPost(created));
   } catch (error) {
@@ -288,16 +321,21 @@ router.post('/feed', requireWebAuth, async (req, res) => {
   }
 
   try {
+    const author = getAuthedAuthor(req);
     const item = await prisma.communityFeedItem.create({
       data: {
         type: String(type).trim(),
         source: 'community_cli',
         title: String(title).trim(),
         body: String(body ?? '').trim(),
-        author: getAuthedAuthor(req),
+        author,
         imageUrl: imageUrl ? String(imageUrl).trim() : null,
       },
     });
+
+    // 보상 지급: 퀵포스트도 20P 보상
+    await rewardPoints(author, 20, 'post_reward', '피드 퀵 시그널 전송');
+
     res.status(201).json(mapFeedItem(item));
   } catch (error) {
     console.error('[create feed item]', error.message);

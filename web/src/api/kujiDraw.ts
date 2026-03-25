@@ -18,10 +18,10 @@ function getPlayerId() {
   return created;
 }
 
-export async function ensureKujiPlayer(): Promise<KujiPlayer> {
+export async function ensureKujiPlayer(nickname?: string): Promise<KujiPlayer> {
   const { data } = await api.post<KujiPlayer>('/api/kujis/player/ensure', {
     playerId: getPlayerId(),
-    nickname: '웹 게스트',
+    nickname: nickname || '웹 게스트',
   });
   return data;
 }
