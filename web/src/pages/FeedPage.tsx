@@ -30,10 +30,22 @@ export function FeedPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const tags = ['가챠교환', '쿠지현황'];
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+    setIsTyping(true);
+    
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      setIsTyping(false);
+    }, 600);
+  };
 
   const loadFeed = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -185,19 +197,18 @@ export function FeedPage() {
                     ref={inputRef}
                     style={dosStyles.input}
                     value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    onChange={handleInputChange}
                     placeholder={isExpanded ? "INPUT DATA AND PRESS ENTER..." : ""}
                     autoComplete="off"
                     disabled={isSubmitting || !isExpanded}
                   />
                   {isExpanded && !isSubmitting && (
                     <div 
-                      className="blink" 
+                      className={isTyping ? "" : "blink"} 
                       style={{
                         ...dosStyles.cursor,
                         position: 'absolute',
                         left: 0,
-                        transform: `translateX(${inputText.length === 0 ? 0 : 0}px)`,
                         pointerEvents: 'none',
                         display: 'flex',
                         alignItems: 'center'
@@ -282,7 +293,6 @@ export function FeedPage() {
                         {selectedTag === tag ? `[*${tag}]` : `[ ${tag} ]`}
                       </button>
                     ))}
-                    <div className="blink" style={dosStyles.cursor} />
                   </div>
                 </div>
               )}
