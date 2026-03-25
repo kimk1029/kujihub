@@ -30,22 +30,10 @@ export function FeedPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const tags = ['가챠교환', '쿠지현황'];
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputText(e.target.value);
-    setIsTyping(true);
-    
-    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-    typingTimerRef.current = setTimeout(() => {
-      setIsTyping(false);
-    }, 600);
-  };
 
   const loadFeed = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -197,14 +185,14 @@ export function FeedPage() {
                     ref={inputRef}
                     style={dosStyles.input}
                     value={inputText}
-                    onChange={handleInputChange}
+                    onChange={(e) => setInputText(e.target.value)}
                     placeholder={isExpanded ? "INPUT DATA AND PRESS ENTER..." : ""}
                     autoComplete="off"
                     disabled={isSubmitting || !isExpanded}
                   />
-                  {isExpanded && !isSubmitting && (
+                  {isExpanded && !isSubmitting && inputText.length === 0 && (
                     <div 
-                      className={isTyping ? "" : "blink"} 
+                      className="blink" 
                       style={{
                         ...dosStyles.cursor,
                         position: 'absolute',
@@ -214,16 +202,6 @@ export function FeedPage() {
                         alignItems: 'center'
                       }}
                     >
-                      {/* This invisible span mirrors the text to push the cursor to the right position */}
-                      <span style={{ 
-                        opacity: 0, 
-                        fontSize: dosStyles.input.fontSize, 
-                        fontWeight: dosStyles.input.fontWeight,
-                        whiteSpace: 'pre',
-                        fontFamily: dosStyles.container.fontFamily
-                      }}>
-                        {inputText}
-                      </span>
                       <div style={{
                         width: '10px',
                         height: '20px',
