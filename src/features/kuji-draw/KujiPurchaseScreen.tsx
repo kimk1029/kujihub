@@ -19,6 +19,17 @@ type KujiDetail = {
   status: string;
 };
 
+const ARCADE_COLORS = {
+  PRIMARY: '#FF00FF', // Magenta
+  SECONDARY: '#00FFFF', // Cyan
+  ACCENT: '#F9D71C', // Yellow/Gold
+  BG: '#05070A',
+  SURFACE: '#121620',
+  TEXT_GRAY: '#718096',
+  WHITE: '#FFFFFF',
+  ERROR: '#FF3131',
+};
+
 export function KujiPurchaseScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<KujiDrawStackParamList>>();
   const route = useRoute<RouteProp<KujiDrawStackParamList, 'KujiPurchase'>>();
@@ -44,7 +55,7 @@ export function KujiPurchaseScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ActivityIndicator color="#F9D71C" size="large" />
+        <ActivityIndicator color={ARCADE_COLORS.ACCENT} size="large" />
       </View>
     );
   }
@@ -66,17 +77,17 @@ export function KujiPurchaseScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.scanlines} pointerEvents="none" />
+      
       <View style={styles.header}>
-        <IconButton
-          icon="chevron-left"
-          iconColor="#FFFFFF"
-          size={32}
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-        />
-        <View>
-          <Text variant="titleLarge" style={styles.headerTitle}>수량 선택</Text>
-          <Text variant="labelMedium" style={styles.headerSubtitle}>SELECT QUANTITY</Text>
+        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={12}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={ARCADE_COLORS.WHITE} />
+        </Pressable>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>PURCHASE</Text>
+          <View style={styles.remainingBadge}>
+            <Text style={styles.headerSubtitle}>POINT BALANCE: {player?.points.toLocaleString()}P</Text>
+          </View>
         </View>
       </View>
 
@@ -88,25 +99,20 @@ export function KujiPurchaseScreen() {
               {kuji.status === 'sold_out' ? 'SOLD OUT' : 'ACTIVE'}
             </Text>
           </View>
-          <Text variant="titleLarge" style={styles.kujiTitle}>{kuji.title}</Text>
-          <Text variant="bodyMedium" style={styles.kujiDesc}>{kuji.description}</Text>
-          {player && (
-            <View style={styles.pointBalance}>
-              <MaterialCommunityIcons name="star-circle" size={18} color="#F9D71C" />
-              <Text style={styles.pointBalanceText}>보유 포인트 {player.points.toLocaleString()}P</Text>
-            </View>
-          )}
+          <Text style={styles.kujiTitle}>{kuji.title}</Text>
+          <Text style={styles.kujiDesc}>{kuji.description}</Text>
+          
           <View style={styles.kujiMeta}>
             <View style={styles.metaItem}>
-              <MaterialCommunityIcons name="ticket-confirmation" size={16} color="#F9D71C" />
-              <Text variant="labelLarge" style={styles.metaLabel}>1회</Text>
-              <Text variant="titleMedium" style={styles.metaValue}>{kuji.price.toLocaleString()}원</Text>
+              <MaterialCommunityIcons name="ticket-confirmation" size={16} color={ARCADE_COLORS.ACCENT} />
+              <Text style={styles.metaLabel}>1회</Text>
+              <Text style={styles.metaValue}>{kuji.price.toLocaleString()}원</Text>
             </View>
             <View style={styles.metaDivider} />
             <View style={styles.metaItem}>
-              <MaterialCommunityIcons name="grid" size={16} color="#00E5FF" />
-              <Text variant="labelLarge" style={styles.metaLabelBlue}>잔여</Text>
-              <Text variant="titleMedium" style={styles.metaValueBlue}>
+              <MaterialCommunityIcons name="grid" size={16} color={ARCADE_COLORS.SECONDARY} />
+              <Text style={styles.metaLabelBlue}>잔여</Text>
+              <Text style={styles.metaValueBlue}>
                 {kuji.remaining} / {kuji.boardSize}
               </Text>
             </View>
@@ -115,13 +121,13 @@ export function KujiPurchaseScreen() {
 
         {/* 수량 조절 */}
         <Surface style={styles.quantityCard} elevation={0}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>구매 수량</Text>
+          <Text style={styles.sectionTitle}>SELECT QUANTITY</Text>
           <View style={styles.quantityControls}>
             <Pressable
               onPress={() => setQuantity(prev => Math.max(prev - 1, 1))}
               style={styles.controlBtn}
             >
-              <MaterialCommunityIcons name="minus" size={26} color="#F9D71C" />
+              <MaterialCommunityIcons name="minus" size={26} color={ARCADE_COLORS.ACCENT} />
             </Pressable>
             <View style={styles.quantityDisplay}>
               <Text style={styles.quantityText}>{quantity}</Text>
@@ -131,19 +137,19 @@ export function KujiPurchaseScreen() {
               onPress={() => setQuantity(prev => Math.min(prev + 1, maxQty))}
               style={styles.controlBtn}
             >
-              <MaterialCommunityIcons name="plus" size={26} color="#F9D71C" />
+              <MaterialCommunityIcons name="plus" size={26} color={ARCADE_COLORS.ACCENT} />
             </Pressable>
           </View>
           <View style={styles.totalRow}>
-            <Text variant="bodyLarge" style={styles.totalLabel}>총 결제 금액</Text>
+            <Text style={styles.totalLabel}>TOTAL PRICE</Text>
             <Text style={styles.totalPrice}>{total.toLocaleString()}원</Text>
           </View>
         </Surface>
 
         {/* 안내 */}
         <View style={styles.infoBox}>
-          <MaterialCommunityIcons name="information-outline" size={16} color="#8A8A8A" />
-          <Text variant="bodySmall" style={styles.infoText}>
+          <MaterialCommunityIcons name="information-outline" size={16} color={ARCADE_COLORS.TEXT_GRAY} />
+          <Text style={styles.infoText}>
             구매 후 뽑기판에서 남은 슬롯 중 원하는 번호를 선택해 뽑기를 진행합니다.
           </Text>
         </View>
@@ -179,9 +185,13 @@ export function KujiPurchaseScreen() {
             }
           }}
         >
-          <MaterialCommunityIcons name="lightning-bolt" size={22} color="#000000" />
-          <Text style={styles.buyBtnText}>
-            {kuji.remaining === 0 ? '매진되었습니다' : !canAfford ? '포인트가 부족합니다' : submitting ? '결제 중...' : `${total.toLocaleString()}P 결제하고 뽑기판으로!`}
+          {submitting ? (
+            <ActivityIndicator color={ARCADE_COLORS.BG} size="small" />
+          ) : (
+            <MaterialCommunityIcons name="lightning-bolt" size={22} color={!submitting && canAfford ? ARCADE_COLORS.BG : ARCADE_COLORS.TEXT_GRAY} />
+          )}
+          <Text style={[styles.buyBtnText, (kuji.remaining === 0 || !canAfford || submitting) && styles.buyBtnDisabledText]}>
+            {kuji.remaining === 0 ? 'SOLD OUT' : !canAfford ? 'INSUFFICIENT POINTS' : submitting ? 'PROCESSING...' : `${total.toLocaleString()}P PAY & DRAW!`}
           </Text>
         </Pressable>
       </View>
@@ -190,67 +200,104 @@ export function KujiPurchaseScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A' },
+  container: { flex: 1, backgroundColor: ARCADE_COLORS.BG },
   center: { alignItems: 'center', justifyContent: 'center', gap: 16 },
-  errorText: { color: '#FF3B30', fontSize: 15 },
-  retryBtn: { borderWidth: 1, borderColor: '#F9D71C', paddingHorizontal: 20, paddingVertical: 8 },
-  retryText: { color: '#F9D71C', fontWeight: '700' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 10, paddingBottom: 16, paddingHorizontal: 10 },
-  backBtn: { marginRight: 0 },
-  headerTitle: { color: '#FFFFFF', fontWeight: '900' },
-  headerSubtitle: { color: '#00E5FF', fontWeight: '700', letterSpacing: 1 },
-  content: { flex: 1, paddingHorizontal: 16, paddingBottom: 24 },
-  kujiInfoCard: {
-    backgroundColor: '#121212',
+  errorText: { color: ARCADE_COLORS.ERROR, fontSize: 15, fontWeight: '900' },
+  retryBtn: { borderWidth: 2, borderColor: ARCADE_COLORS.ACCENT, paddingHorizontal: 20, paddingVertical: 8, backgroundColor: ARCADE_COLORS.SURFACE },
+  retryText: { color: ARCADE_COLORS.ACCENT, fontWeight: '900' },
+  scanlines: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'transparent',
+    zIndex: 10,
+    opacity: 0.1,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: ARCADE_COLORS.BG,
+    borderBottomWidth: 4,
+    borderBottomColor: ARCADE_COLORS.PRIMARY,
+  },
+  backBtn: {
+    padding: 8,
     borderWidth: 2,
-    borderColor: '#2A2A2A',
+    borderColor: ARCADE_COLORS.WHITE,
+    backgroundColor: ARCADE_COLORS.SURFACE,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: ARCADE_COLORS.SECONDARY,
+    fontWeight: '900',
+    fontSize: 22,
+    letterSpacing: 2,
+    textShadowColor: ARCADE_COLORS.PRIMARY,
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 1,
+  },
+  remainingBadge: {
+    backgroundColor: ARCADE_COLORS.PRIMARY,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  headerSubtitle: {
+    color: ARCADE_COLORS.WHITE,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  content: { flex: 1, paddingHorizontal: 16, paddingBottom: 24, paddingTop: 16 },
+  kujiInfoCard: {
+    backgroundColor: ARCADE_COLORS.SURFACE,
+    borderWidth: 2,
+    borderColor: '#333',
     padding: 16,
     marginBottom: 14,
   },
   kujiInfoBadge: {
-    backgroundColor: '#00E5FF',
+    backgroundColor: ARCADE_COLORS.SECONDARY,
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginBottom: 10,
   },
-  badgeText: { color: '#000000', fontWeight: '900' },
-  kujiTitle: { color: '#FFFFFF', fontWeight: '800', lineHeight: 28, marginBottom: 6 },
-  kujiDesc: { color: '#8A8A8A', marginBottom: 14 },
-  pointBalance: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 14,
-  },
-  pointBalanceText: { color: '#F9D71C', fontWeight: '800' },
+  badgeText: { color: ARCADE_COLORS.BG, fontWeight: '900', fontSize: 10 },
+  kujiTitle: { color: ARCADE_COLORS.WHITE, fontWeight: '900', fontSize: 20, lineHeight: 28, marginBottom: 6 },
+  kujiDesc: { color: ARCADE_COLORS.TEXT_GRAY, fontSize: 13, marginBottom: 14 },
   kujiMeta: {
     flexDirection: 'row',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#2A2A2A',
+    borderTopColor: '#333',
     alignItems: 'center',
   },
   metaItem: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaDivider: { width: 1, height: 24, backgroundColor: '#2A2A2A', marginHorizontal: 12 },
-  metaLabel: { color: '#8A8A8A' },
-  metaValue: { color: '#F9D71C', fontWeight: '900' },
-  metaLabelBlue: { color: '#8A8A8A' },
-  metaValueBlue: { color: '#00E5FF', fontWeight: '900' },
+  metaDivider: { width: 1, height: 24, backgroundColor: '#333', marginHorizontal: 12 },
+  metaLabel: { color: ARCADE_COLORS.TEXT_GRAY, fontSize: 11, fontWeight: '900' },
+  metaValue: { color: ARCADE_COLORS.ACCENT, fontWeight: '900', fontSize: 14 },
+  metaLabelBlue: { color: ARCADE_COLORS.TEXT_GRAY, fontSize: 11, fontWeight: '900' },
+  metaValueBlue: { color: ARCADE_COLORS.SECONDARY, fontWeight: '900', fontSize: 14 },
   quantityCard: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: ARCADE_COLORS.SURFACE,
     borderWidth: 2,
-    borderColor: '#F9D71C',
+    borderColor: ARCADE_COLORS.ACCENT,
     padding: 16,
     alignItems: 'center',
     marginBottom: 14,
   },
-  sectionTitle: { color: '#F9D71C', fontWeight: '900', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
+  sectionTitle: { color: ARCADE_COLORS.ACCENT, fontWeight: '900', fontSize: 14, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
   quantityControls: { flexDirection: 'row', alignItems: 'center', gap: 28, marginBottom: 16 },
-  controlBtn: { width: 52, height: 52, borderWidth: 2, borderColor: '#F9D71C', alignItems: 'center', justifyContent: 'center' },
+  controlBtn: { width: 52, height: 52, borderWidth: 2, borderColor: ARCADE_COLORS.ACCENT, alignItems: 'center', justifyContent: 'center', backgroundColor: ARCADE_COLORS.BG },
   quantityDisplay: { flexDirection: 'row', alignItems: 'baseline', gap: 4, minWidth: 80, justifyContent: 'center' },
-  quantityText: { color: '#FFFFFF', fontWeight: '900', fontSize: 52, lineHeight: 60 },
-  unitText: { color: '#F9D71C', fontWeight: '800', fontSize: 18 },
+  quantityText: { color: ARCADE_COLORS.WHITE, fontWeight: '900', fontSize: 52 },
+  unitText: { color: ARCADE_COLORS.ACCENT, fontWeight: '900', fontSize: 18 },
   totalRow: {
     width: '100%',
     flexDirection: 'row',
@@ -260,28 +307,32 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(249,215,28,0.2)',
   },
-  totalLabel: { color: '#8A8A8A' },
-  totalPrice: { color: '#F9D71C', fontWeight: '900', fontSize: 26 },
+  totalLabel: { color: ARCADE_COLORS.TEXT_GRAY, fontWeight: '900', fontSize: 12 },
+  totalPrice: { color: ARCADE_COLORS.ACCENT, fontWeight: '900', fontSize: 26 },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: '#141414',
+    backgroundColor: '#0A0A0A',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: '#333',
     padding: 12,
     marginBottom: 8,
   },
-  infoText: { color: '#8A8A8A', flex: 1, lineHeight: 18 },
+  infoText: { color: ARCADE_COLORS.TEXT_GRAY, flex: 1, fontSize: 11, lineHeight: 18, fontWeight: '600' },
   spacer: { flex: 1 },
   buyBtn: {
-    backgroundColor: '#F9D71C',
+    backgroundColor: ARCADE_COLORS.ACCENT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
     paddingVertical: 18,
+    borderWidth: 2,
+    borderColor: ARCADE_COLORS.WHITE,
   },
-  buyBtnDisabled: { backgroundColor: '#333' },
-  buyBtnText: { color: '#000000', fontWeight: '900', fontSize: 17 },
+  buyBtnDisabled: { backgroundColor: ARCADE_COLORS.SURFACE, borderColor: '#333' },
+  buyBtnText: { color: ARCADE_COLORS.BG, fontWeight: '900', fontSize: 18, letterSpacing: 1 },
+  buyBtnDisabledText: { color: ARCADE_COLORS.TEXT_GRAY },
 });
+
