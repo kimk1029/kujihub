@@ -235,12 +235,15 @@ router.post('/player/ensure', async (req, res) => {
 
   try {
     const now = new Date();
-    const result = await prisma.$transaction(async (tx) => {
-      let player = await tx.kujiPlayer.findUnique({ where: { id } });
-      let earnedToday = false;
+    
+    // 1. 먼저 유저 정보를 가져와서 오늘 보상을 받았는지 확인 (트랜잭션 밖에서 가볍게)
+    let player = await prisma.kujiPlayer.findUnique({ where: { id } });
+    let earnedToday = false;
 
-      if (!player) {
-        player = await tx.kujiPlayer.create({
+    if (!player) {
+      // 신규 가입
+      player = await prisma.$transaction(async (tx) => {
+        const p = await tx.kujiPlayer.create({
           data: {
             id,
             nickname,
@@ -256,16 +259,19 @@ router.post('/player/ensure', async (req, res) => {
             description: '가입 축하 포인트' 
           }
         });
-        earnedToday = true;
-      } else {
-        const lastLogin = player.lastLoginAt;
-        const isNewDay = !lastLogin || 
-          lastLogin.getUTCFullYear() !== now.getUTCFullYear() ||
-          lastLogin.getUTCMonth() !== now.getUTCMonth() ||
-          lastLogin.getUTCDate() !== now.getUTCDate();
+        return p;
+      });
+      earnedToday = true;
+    } else {
+      // 기존 유저 - 날짜 비교
+      const lastLogin = player.lastLoginAt;
+      const isNewDay = !lastLogin || 
+        lastLogin.getUTCFullYear() !== now.getUTCFullYear() ||
+        lastLogin.getUTCMonth() !== now.getUTCMonth() ||
+        lastLogin.getUTCDate() !== now.getUTCDate();
 
-        if (isNewDay) {
-          // 일일 로그인 보상 지급 + 닉네임/마지막 로그인 시간 업데이트 통합
+      if (isNewDay) {
+        player = await prisma.$transaction(async (tx) => {
           await tx.pointTransaction.create({
             data: {
               playerId: id,
@@ -275,7 +281,7 @@ router.post('/player/ensure', async (req, res) => {
             },
           });
           
-          player = await tx.kujiPlayer.update({
+          return tx.kujiPlayer.update({
             where: { id },
             data: {
               points: { increment: REWARDS.DAILY_LOGIN },
@@ -283,33 +289,31 @@ router.post('/player/ensure', async (req, res) => {
               nickname,
             }
           });
-          earnedToday = true;
-        } else {
-          // 로그인 시간만 업데이트 (또는 닉네임)
-          player = await tx.kujiPlayer.update({
-            where: { id },
-            data: { nickname }
-          });
-        }
+        });
+        earnedToday = true;
+      } else {
+        // 같은 날 재접속 - 닉네임만 최신화
+        player = await prisma.kujiPlayer.update({
+          where: { id },
+          data: { nickname }
+        });
       }
-      return { player, earnedToday };
-    });
+    }
 
     res.json({
-      id: result.player.id,
-      nickname: result.player.nickname,
-      points: result.player.points,
-      role: result.player.role,
-      earnedToday: result.earnedToday,
-      createdAt: result.player.createdAt,
-      updatedAt: result.player.updatedAt,
+      id: player.id,
+      nickname: player.nickname,
+      points: player.points,
+      role: player.role,
+      earnedToday,
+      createdAt: player.createdAt,
+      updatedAt: player.updatedAt,
     });
   } catch (e) {
     console.error('[player ensure error detail]:', {
       message: e.message,
       code: e.code,
-      meta: e.meta,
-      stack: e.stack
+      meta: e.meta
     });
     res.status(500).json({ error: 'Internal Server Error', message: e.message });
   }
