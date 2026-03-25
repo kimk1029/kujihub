@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   gradeText: {
     color: '#000000',
-    fontWeight: '950',
+    fontWeight: '900',
     fontSize: 14,
   },
   prizeName: {
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   },
   pullHandleText: {
     color: '#000000',
-    fontWeight: '950',
+    fontWeight: '900',
     letterSpacing: 1,
   },
 });

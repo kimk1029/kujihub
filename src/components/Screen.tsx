@@ -7,9 +7,10 @@ interface ScreenProps {
   children: React.ReactNode;
   scroll?: boolean;
   style?: ViewStyle;
+  contentContainerStyle?: ViewStyle;
 }
 
-export function Screen({ children, scroll = true, style }: ScreenProps) {
+export function Screen({ children, scroll = true, style, contentContainerStyle }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const containerStyle = [
@@ -26,7 +27,7 @@ export function Screen({ children, scroll = true, style }: ScreenProps) {
     return (
       <ScrollView
         style={containerStyle}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, contentContainerStyle]}
         showsVerticalScrollIndicator={false}
       >
         {children}
@@ -34,7 +35,7 @@ export function Screen({ children, scroll = true, style }: ScreenProps) {
     );
   }
 
-  return <View style={[containerStyle, styles.content]}>{children}</View>;
+  return <View style={[containerStyle, styles.content, contentContainerStyle]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({

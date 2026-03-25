@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   },
   topText: {
     color: '#FFFFFF',
-    fontWeight: '950',
+    fontWeight: '900',
     letterSpacing: 6,
   },
   middleSection: {
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   },
   hubText: {
     color: '#FFFFFF',
-    fontWeight: '950',
+    fontWeight: '900',
     letterSpacing: 2,
     fontStyle: 'italic',
   },
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   },
   sealGrade: {
     color: '#000000',
-    fontWeight: '950',
+    fontWeight: '900',
     marginTop: -4,
   },
 });

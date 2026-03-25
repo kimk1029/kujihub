@@ -12,9 +12,20 @@ import { api } from '../../shared/api';
 const BOARD_SIZE = 80;
 const { width } = Dimensions.get('window');
 const BOARD_COLUMNS = 10;
-const BOARD_GAP = 3;
-const BOARD_H_PADDING = 12;
+const BOARD_GAP = 4;
+const BOARD_H_PADDING = 10;
 const SLOT_SIZE = Math.floor((width - BOARD_H_PADDING * 2 - BOARD_GAP * (BOARD_COLUMNS - 1)) / BOARD_COLUMNS);
+
+const ARCADE_COLORS = {
+  PRIMARY: '#FF00FF', // Magenta
+  SECONDARY: '#00FFFF', // Cyan
+  ACCENT: '#F9D71C', // Yellow/Gold
+  BG: '#05070A',
+  SURFACE: '#121620',
+  TEXT_GRAY: '#718096',
+  WHITE: '#FFFFFF',
+  ERROR: '#FF3131',
+};
 
 type SlotStatus = 'locked' | 'drawn';
 type SlotInfo = { status: SlotStatus; grade?: string; color?: string; name?: string };
@@ -116,44 +127,47 @@ export function KujiBoardDrawScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Scanline Overlay Effect */}
+      <View style={styles.scanlines} pointerEvents="none" />
+
       {/* 헤더 */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={12}>
-          <MaterialCommunityIcons name="chevron-left" size={30} color="#FFFFFF" />
+          <MaterialCommunityIcons name="arrow-left" size={24} color={ARCADE_COLORS.WHITE} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>DRAW BOARD</Text>
-          <Text style={styles.headerSubtitle}>남은 슬롯 {remaining}개 중 {quantity}개 선택</Text>
+          <Text style={styles.headerTitle}>KUJI BOARD</Text>
+          <View style={styles.remainingBadge}>
+            <Text style={styles.headerSubtitle}>LEFT: {remaining} / {BOARD_SIZE}</Text>
+          </View>
         </View>
         <View style={styles.headerRight}>
-          <Text style={styles.selectedCount}>{selectedSlots.length}/{quantity}</Text>
+          <Text style={styles.selectedCount}>{selectedSlots.length}</Text>
+          <Text style={styles.targetCount}>/{quantity}</Text>
         </View>
       </View>
 
       {/* 범례 */}
       <View style={styles.legend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#191919', borderColor: '#2E2E2E', borderWidth: 1 }]} />
-          <Text style={styles.legendText}>선택 가능</Text>
+          <View style={[styles.legendBox, { backgroundColor: ARCADE_COLORS.SURFACE, borderColor: '#333' }]} />
+          <Text style={styles.legendText}>TICKET</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#F9D71C' }]} />
-          <Text style={styles.legendText}>내가 선택</Text>
+          <View style={[styles.legendBox, { backgroundColor: ARCADE_COLORS.ACCENT, borderColor: ARCADE_COLORS.WHITE }]} />
+          <Text style={styles.legendText}>SELECTED</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#FF7A00' }]} />
-          <Text style={styles.legendText}>뽑는중</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#2A2A2A' }]} />
-          <Text style={styles.legendText}>이미 뽑힘</Text>
+          <View style={[styles.legendBox, { backgroundColor: '#333', opacity: 0.5 }]} />
+          <Text style={styles.legendText}>SOLD OUT</Text>
         </View>
       </View>
 
       {/* 뽑기판 */}
       {loadingBoard ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#FFD700" size="large" />
+          <ActivityIndicator color={ARCADE_COLORS.ACCENT} size="large" />
+          <Text style={styles.loadingText}>LOADING BOARD...</Text>
         </View>
       ) : (
         <ScrollView
@@ -183,18 +197,23 @@ export function KujiBoardDrawScreen() {
                   disabled={isDrawn}
                 >
                   {isDrawn ? (
-                    <View style={[styles.slotDrawnInner, { backgroundColor: (info!.color ?? '#333') + '22' }]}>
-                      <Text style={[styles.slotGrade, { color: info!.color }]}>{info!.grade}</Text>
+                    <View style={[styles.slotDrawnInner, { backgroundColor: info!.color || '#333' }]}>
+                      <Text style={styles.slotGradeText}>{info!.grade}</Text>
+                      <View style={styles.soldOutSticker}>
+                        <Text style={styles.soldOutText}>HIT!</Text>
+                      </View>
                     </View>
                   ) : isLocked ? (
                     <View style={styles.slotLockedInner}>
-                      <Text style={styles.slotLockedText}>{'...'}</Text>
+                      <ActivityIndicator size="small" color={ARCADE_COLORS.WHITE} />
                     </View>
                   ) : (
                     <View style={[styles.slotCover, isSelected && styles.slotCoverSelected]}>
+                      <View style={styles.perforation} />
                       <Text style={[styles.slotText, isSelected && styles.slotTextSelected]}>
                         {slot}
                       </Text>
+                      <View style={styles.ticketStub} />
                     </View>
                   )}
                 </Pressable>
@@ -208,7 +227,9 @@ export function KujiBoardDrawScreen() {
       <View style={styles.footer}>
         <View style={styles.footerInfo}>
           <Text style={styles.footerSelected}>
-            선택: {selectedSlots.length > 0 ? selectedSlots.slice().sort((a, b) => a - b).join(', ') : '없음'}
+            {selectedSlots.length > 0 
+              ? `SLOTS: ${selectedSlots.slice().sort((a, b) => a - b).join(', ')}` 
+              : 'SELECT TICKETS TO DRAW'}
           </Text>
         </View>
         <Pressable
@@ -217,16 +238,16 @@ export function KujiBoardDrawScreen() {
           disabled={!readyToDraw || reserving}
         >
           {reserving ? (
-            <ActivityIndicator color="#000" size="small" />
+            <ActivityIndicator color={ARCADE_COLORS.BG} size="small" />
           ) : (
             <MaterialCommunityIcons
-              name="lightning-bolt"
-              size={22}
-              color={readyToDraw ? '#000000' : '#555555'}
+              name="ticket-confirmation"
+              size={24}
+              color={readyToDraw ? ARCADE_COLORS.BG : ARCADE_COLORS.TEXT_GRAY}
             />
           )}
           <Text style={[styles.drawBtnText, (!readyToDraw || reserving) && styles.drawBtnTextDisabled]}>
-            {reserving ? '처리 중...' : readyToDraw ? '뽑기!' : `${quantity - selectedSlots.length}개 더 선택하세요`}
+            {reserving ? 'RESERVING...' : readyToDraw ? 'INSERT COIN & DRAW!' : `PICK ${quantity - selectedSlots.length} MORE`}
           </Text>
         </Pressable>
       </View>
@@ -237,7 +258,15 @@ export function KujiBoardDrawScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0D17',
+    backgroundColor: ARCADE_COLORS.BG,
+  },
+  scanlines: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'transparent',
+    zIndex: 10,
+    opacity: 0.1,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   header: {
     flexDirection: 'row',
@@ -245,111 +274,136 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#0B0D17',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E2433',
+    backgroundColor: ARCADE_COLORS.BG,
+    borderBottomWidth: 4,
+    borderBottomColor: ARCADE_COLORS.PRIMARY,
   },
   backBtn: {
     padding: 8,
-    borderRadius: 12,
-    backgroundColor: '#151926',
+    borderWidth: 2,
+    borderColor: ARCADE_COLORS.WHITE,
+    backgroundColor: ARCADE_COLORS.SURFACE,
   },
   headerCenter: {
     flex: 1,
     alignItems: 'center',
   },
   headerTitle: {
-    color: '#FFFFFF',
+    color: ARCADE_COLORS.SECONDARY,
     fontWeight: '900',
-    fontSize: 20,
-    letterSpacing: -0.5,
+    fontSize: 22,
+    letterSpacing: 2,
+    textShadowColor: ARCADE_COLORS.PRIMARY,
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 1,
+  },
+  remainingBadge: {
+    backgroundColor: ARCADE_COLORS.PRIMARY,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 4,
   },
   headerSubtitle: {
-    color: '#718096',
-    fontSize: 13,
-    marginTop: 2,
-    fontWeight: '600',
+    color: ARCADE_COLORS.WHITE,
+    fontSize: 11,
+    fontWeight: '900',
   },
   headerRight: {
-    minWidth: 48,
-    alignItems: 'flex-end',
+    minWidth: 60,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'flex-end',
   },
   selectedCount: {
-    color: '#FFD700',
+    color: ARCADE_COLORS.ACCENT,
     fontWeight: '900',
-    fontSize: 20,
+    fontSize: 24,
+  },
+  targetCount: {
+    color: ARCADE_COLORS.WHITE,
+    fontWeight: '900',
+    fontSize: 14,
   },
   legend: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 14,
+    gap: 16,
     paddingVertical: 12,
-    backgroundColor: '#0B0D17',
-    borderBottomWidth: 1,
+    backgroundColor: ARCADE_COLORS.SURFACE,
+    borderBottomWidth: 2,
     borderBottomColor: '#1E2433',
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
   },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  legendBox: {
+    width: 14,
+    height: 14,
+    borderWidth: 1,
   },
   legendText: {
-    color: '#718096',
-    fontSize: 11,
-    fontWeight: '600',
+    color: ARCADE_COLORS.WHITE,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    color: ARCADE_COLORS.ACCENT,
+    fontWeight: '900',
+    letterSpacing: 2,
   },
   boardScroll: {
     flex: 1,
   },
   boardScrollContent: {
-    paddingVertical: 16,
+    paddingVertical: 20,
   },
   board: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    paddingHorizontal: 12,
+    gap: BOARD_GAP,
+    paddingHorizontal: BOARD_H_PADDING,
     justifyContent: 'center',
   },
   slot: {
-    width: SLOT_SIZE - 2,
-    height: SLOT_SIZE - 2,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: '#1E2433',
-    backgroundColor: '#151926',
+    width: SLOT_SIZE,
+    height: SLOT_SIZE + 4,
+    borderWidth: 2,
+    borderColor: '#333',
+    backgroundColor: ARCADE_COLORS.SURFACE,
     overflow: 'hidden',
+    position: 'relative',
   },
   slotDrawn: {
-    borderColor: '#151926',
-    backgroundColor: '#0B0D17',
-    opacity: 0.6,
+    borderColor: '#222',
+    backgroundColor: '#111',
+    opacity: 0.8,
   },
   slotLocked: {
-    borderColor: '#FF7A00',
-    backgroundColor: '#1A1100',
+    borderColor: ARCADE_COLORS.PRIMARY,
+    backgroundColor: '#200',
   },
   slotSelected: {
-    borderColor: '#FFD700',
-    backgroundColor: '#2D2700',
-    elevation: 8,
-    shadowColor: '#FFD700',
+    borderColor: ARCADE_COLORS.WHITE,
+    backgroundColor: ARCADE_COLORS.ACCENT,
+    transform: [{ scale: 1.05 }],
+    zIndex: 5,
+    elevation: 10,
+    shadowColor: ARCADE_COLORS.ACCENT,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
   },
   slotBlocked: {
-    opacity: 0.2,
+    opacity: 0.3,
   },
   slotCover: {
     flex: 1,
@@ -359,70 +413,104 @@ const styles = StyleSheet.create({
   slotCoverSelected: {
     backgroundColor: 'transparent',
   },
+  perforation: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  ticketStub: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
   slotText: {
-    color: '#4A5568',
+    color: ARCADE_COLORS.TEXT_GRAY,
     fontWeight: '900',
-    fontSize: SLOT_SIZE > 35 ? 12 : 10,
+    fontSize: SLOT_SIZE > 35 ? 14 : 11,
   },
   slotTextSelected: {
-    color: '#FFD700',
+    color: ARCADE_COLORS.BG,
   },
   slotDrawnInner: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 2,
   },
-  slotGrade: {
+  slotGradeText: {
+    color: ARCADE_COLORS.WHITE,
     fontWeight: '900',
-    fontSize: SLOT_SIZE > 35 ? 14 : 12,
+    fontSize: SLOT_SIZE > 35 ? 20 : 16,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  soldOutSticker: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: ARCADE_COLORS.ERROR,
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+    transform: [{ rotate: '15deg' }],
+  },
+  soldOutText: {
+    color: ARCADE_COLORS.WHITE,
+    fontSize: 8,
+    fontWeight: '900',
   },
   slotLockedInner: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  slotLockedText: {
-    color: '#FF7A00',
-    fontWeight: '900',
-    fontSize: 10,
-  },
   footer: {
-    borderTopWidth: 1,
-    borderTopColor: '#1E2433',
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    borderTopWidth: 4,
+    borderTopColor: ARCADE_COLORS.SECONDARY,
+    paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 24,
-    backgroundColor: '#0B0D17',
-    gap: 12,
+    backgroundColor: ARCADE_COLORS.BG,
+    gap: 8,
   },
   footerInfo: {
     alignItems: 'center',
   },
   footerSelected: {
-    color: '#FFD700',
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    color: ARCADE_COLORS.ACCENT,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   drawBtn: {
-    backgroundColor: '#FFD700',
+    backgroundColor: ARCADE_COLORS.ACCENT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 18,
-    borderRadius: 16,
+    gap: 12,
+    paddingVertical: 16,
+    borderWidth: 2,
+    borderColor: ARCADE_COLORS.WHITE,
   },
   drawBtnDisabled: {
-    backgroundColor: '#1E2433',
+    backgroundColor: ARCADE_COLORS.SURFACE,
+    borderColor: '#333',
   },
   drawBtnText: {
-    color: '#000000',
+    color: ARCADE_COLORS.BG,
     fontWeight: '900',
     fontSize: 18,
-    letterSpacing: -0.5,
+    letterSpacing: 1,
   },
   drawBtnTextDisabled: {
-    color: '#4A5568',
+    color: ARCADE_COLORS.TEXT_GRAY,
   },
 });

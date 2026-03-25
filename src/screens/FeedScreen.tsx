@@ -119,7 +119,7 @@ export function FeedScreen() {
           
           <View style={styles.dosBody}>
             <View style={styles.dosInputRow}>
-              <Text style={styles.dosPrompt}>C:\FEED> </Text>
+              <Text style={styles.dosPrompt}>C:\FEED&gt; </Text>
               <TextInput
                 ref={inputRef}
                 style={styles.dosInput}
