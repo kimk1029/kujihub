@@ -113,7 +113,18 @@ export function CommunityPostFormPage() {
   return (
     <div className="animate-in">
       <header style={{ marginBottom: '32px' }}>
-        <h1 style={{ color: 'var(--arcade-secondary)', fontSize: isCompactLayout ? '1.45rem' : '2rem', marginBottom: '8px', fontWeight: 900, lineHeight: 1.2 }}>
+        <h1
+          style={{
+            color: 'var(--arcade-secondary)',
+            fontSize: isCompactLayout ? '1.08rem' : '2rem',
+            marginBottom: '8px',
+            fontWeight: 900,
+            lineHeight: 1.2,
+            letterSpacing: isCompactLayout ? '0.02em' : 'normal',
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
+          }}
+        >
           {editId ? 'MODIFY_MAINFRAME_LOG' : 'INITIALIZE_NEW_BROADCAST'}
         </h1>
         <p style={{ color: '#fff', fontSize: isCompactLayout ? '0.78rem' : '0.9rem', opacity: 0.8, fontWeight: 500, lineHeight: 1.5 }}>

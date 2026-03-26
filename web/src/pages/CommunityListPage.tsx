@@ -108,13 +108,13 @@ export function CommunityListPage() {
         </table>
       )}
 
-      <div className="mobile-only" style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 100 }}>
+      <div className="mobile-only community-compose-fab">
         <ArcadeButton 
           variant="accent" 
           size="lg" 
           onClick={() => navigate('/community/new')}
           className="coin-btn"
-          style={{ borderRadius: '50%', width: '60px', height: '60px', padding: 0, fontSize: '2rem' }}
+          style={{ borderRadius: '50%', width: '60px', height: '60px', padding: 0, fontSize: '2rem', boxShadow: '0 10px 24px rgba(0,0,0,0.42)' }}
         >
           +
         </ArcadeButton>

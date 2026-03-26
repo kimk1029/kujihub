@@ -227,6 +227,13 @@
   display: none !important;
 }
 
+.community-compose-fab {
+  position: fixed;
+  right: 20px;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 120;
+}
+
 .desktop-only {
   display: flex !important; /* or block depending on context, assuming mostly flex for our buttons */
 }
@@ -489,9 +496,9 @@
     gap: 10px !important;
   }
 
-  .mobile-only {
+  .community-compose-fab {
     right: 16px !important;
-    bottom: 78px !important;
+    bottom: calc(82px + env(safe-area-inset-bottom)) !important;
   }
 }
 
