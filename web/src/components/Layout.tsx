@@ -59,6 +59,121 @@ export function Layout() {
     { path: '/profile', label: 'MY', icon: '👤' },
   ];
 
+  function renderUserCard({ sidebar = false } = {}) {
+    return (
+      <div
+        className="layout-usercard"
+        style={{
+          minWidth: 0,
+          maxWidth: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: sidebar ? '12px' : '14px',
+          padding: sidebar ? '12px 14px' : '14px 16px',
+          border: '3px solid var(--arcade-secondary)',
+          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.88), rgba(36, 8, 46, 0.92))',
+          boxShadow: '0 0 24px rgba(255, 0, 255, 0.18)',
+        }}
+      >
+        {session?.user.image ? (
+          <img
+            src={session.user.image}
+            alt={userName}
+            style={{
+              width: sidebar ? '46px' : '52px',
+              height: sidebar ? '46px' : '52px',
+              objectFit: 'cover',
+              borderRadius: '50%',
+              border: '2px solid var(--arcade-primary)',
+              flexShrink: 0,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: sidebar ? '46px' : '52px',
+              height: sidebar ? '46px' : '52px',
+              borderRadius: '50%',
+              border: '2px solid var(--arcade-primary)',
+              display: 'grid',
+              placeItems: 'center',
+              color: 'var(--arcade-primary)',
+              fontWeight: 900,
+              background: 'rgba(6, 10, 16, 0.92)',
+              flexShrink: 0,
+            }}
+          >
+            {getInitials(userName)}
+          </div>
+        )}
+
+        <div className="layout-usercopy" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px', flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <div className="arcade-font-pixel" style={{ color: 'var(--arcade-accent)', fontSize: '0.55rem' }}>
+              {providerLabel} LOGIN
+            </div>
+            {player && (
+              <div
+                style={{
+                  backgroundColor: 'var(--arcade-accent)',
+                  color: '#000',
+                  padding: '1px 6px',
+                  fontSize: '0.65rem',
+                  fontWeight: 900,
+                  borderRadius: '2px'
+                }}
+              >
+                {player.points.toLocaleString()}P
+              </div>
+            )}
+          </div>
+          <div
+            style={{
+              color: '#fff',
+              fontWeight: 900,
+              fontSize: sidebar ? '0.95rem' : '1rem',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              position: 'relative'
+            }}
+          >
+            {userName}
+            {showReward && (
+              <span
+                className="blink"
+                style={{
+                  display: sidebar ? 'block' : 'inline',
+                  position: sidebar ? 'static' : 'absolute',
+                  marginLeft: sidebar ? 0 : '10px',
+                  marginTop: sidebar ? '4px' : 0,
+                  right: sidebar ? 'auto' : '-80px',
+                  top: 0,
+                  color: 'var(--arcade-accent)',
+                  fontSize: '0.7rem',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                +100P LOGIN_REWARD
+              </span>
+            )}
+          </div>
+          <div
+            style={{
+              color: 'rgba(255,255,255,0.72)',
+              fontSize: '0.8rem',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {userEmail}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="layout arcade-body arcade-grid-bg scanlines crt" style={{ minHeight: '100vh', display: 'flex', width: '100vw', overflowX: 'hidden' }}>
       {/* Desktop Sidebar */}
@@ -112,12 +227,16 @@ export function Layout() {
           })}
         </nav>
 
-        <div style={{ padding: '24px', borderTop: '4px solid var(--arcade-secondary)', background: 'rgba(0,0,0,0.5)' }}>
+        <div style={{ padding: '0 24px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {renderUserCard({ sidebar: true })}
+        </div>
+
+        <div style={{ padding: '0 24px 24px', borderTop: '4px solid var(--arcade-secondary)', background: 'rgba(0,0,0,0.5)' }}>
           <ArcadeButton 
             variant="primary" 
             size="sm" 
             className="arcade-font-pixel"
-            style={{ width: '100%', margin: 0 }}
+            style={{ width: '100%', margin: '16px 0 0' }}
             onClick={() => {
               clearWebAuthSession();
               navigate('/');
@@ -149,111 +268,18 @@ export function Layout() {
         marginLeft: '280px', 
         width: 'calc(100% - 280px)',
         minHeight: '100vh',
-        padding: '40px',
+        padding: '18px 32px 32px',
         position: 'relative',
         zIndex: 1,
         boxSizing: 'border-box',
         overflowX: 'hidden'
       }}>
         <div className="page-shell" style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div className="layout-userbar" style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginBottom: '24px',
+          <div className="layout-userbar mobile-only" style={{
+            width: '100%',
+            marginBottom: '12px',
           }}>
-            <div className="layout-usercard" style={{
-              minWidth: '240px',
-              maxWidth: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '14px',
-              padding: '14px 16px',
-              border: '3px solid var(--arcade-secondary)',
-              background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.88), rgba(36, 8, 46, 0.92))',
-              boxShadow: '0 0 24px rgba(255, 0, 255, 0.18)',
-            }}>
-              {session?.user.image ? (
-                <img
-                  src={session.user.image}
-                  alt={userName}
-                  style={{
-                    width: '52px',
-                    height: '52px',
-                    objectFit: 'cover',
-                    borderRadius: '50%',
-                    border: '2px solid var(--arcade-primary)',
-                    flexShrink: 0,
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: '50%',
-                  border: '2px solid var(--arcade-primary)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: 'var(--arcade-primary)',
-                  fontWeight: 900,
-                  background: 'rgba(6, 10, 16, 0.92)',
-                  flexShrink: 0,
-                }}>
-                  {getInitials(userName)}
-                </div>
-              )}
-
-              <div className="layout-usercopy" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div className="arcade-font-pixel" style={{ color: 'var(--arcade-accent)', fontSize: '0.55rem' }}>
-                    {providerLabel} LOGIN
-                  </div>
-                  {player && (
-                    <div style={{ 
-                      backgroundColor: 'var(--arcade-accent)', 
-                      color: '#000', 
-                      padding: '1px 6px', 
-                      fontSize: '0.65rem', 
-                      fontWeight: 900,
-                      borderRadius: '2px'
-                    }}>
-                      {player.points.toLocaleString()}P
-                    </div>
-                  )}
-                </div>
-                <div style={{
-                  color: '#fff',
-                  fontWeight: 900,
-                  fontSize: '1rem',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  position: 'relative'
-                }}>
-                  {userName}
-                  {showReward && (
-                    <span className="blink" style={{ 
-                      position: 'absolute', 
-                      right: '-80px', 
-                      top: 0, 
-                      color: 'var(--arcade-accent)', 
-                      fontSize: '0.7rem',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      +100P LOGIN_REWARD
-                    </span>
-                  )}
-                </div>
-                <div style={{
-                  color: 'rgba(255,255,255,0.72)',
-                  fontSize: '0.8rem',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}>
-                  {userEmail}
-                </div>
-              </div>
-            </div>
+            {renderUserCard()}
           </div>
           <Outlet />
         </div>
