@@ -11,6 +11,13 @@ import type { KujiPlayer } from '../types/kujiDraw';
 
 // Level & Character Logic
 const POINTS_PER_LEVEL = 500;
+const LEVEL_CHARACTER_STAGES = [
+  { minLevel: 1, rank: 'NOVICE', charType: 'egg', summary: '시작 단계입니다. 기본 알 형태 캐릭터로 시작합니다.' },
+  { minLevel: 2, rank: 'ROOKIE', charType: 'slime', summary: '첫 진화 단계입니다. 커뮤니티 활동으로 빠르게 도달할 수 있습니다.' },
+  { minLevel: 5, rank: 'VETERAN', charType: 'robot', summary: '활동이 꾸준한 플레이어 구간입니다.' },
+  { minLevel: 10, rank: 'ELITE', charType: 'knight', summary: '상위권 운영자 단계입니다. 누적 포인트가 많이 필요합니다.' },
+  { minLevel: 20, rank: 'LEGEND', charType: 'dragon', summary: '최종 진화 단계입니다. 장기적인 활동이 필요합니다.' },
+] as const;
 
 function getLevelInfo(points: number) {
   const level = Math.floor(points / POINTS_PER_LEVEL) + 1;
@@ -126,6 +133,7 @@ export function ProfilePage() {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLevelHelpOpen, setIsLevelHelpOpen] = useState(false);
 
   const userName = session?.user.name?.trim() || 'PLAYER';
   const provider = getProviderLabel(session?.provider || 'dev');
@@ -157,6 +165,7 @@ export function ProfilePage() {
 
   const levelInfo = useMemo(() => getLevelInfo(player?.points ?? 0), [player?.points]);
   const joinedLabel = useMemo(() => session?.createdAt ? dayjs(session.createdAt).format('YYYY.MM.DD HH:mm') : '-', [session?.createdAt]);
+  const currentPoints = player?.points ?? 0;
 
   return (
     <div className="animate-in">
@@ -186,6 +195,29 @@ export function ProfilePage() {
         <aside className="profile-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           {/* Level & Character Card */}
           <ArcadeBox label={`LEVEL_${levelInfo.level}_${levelInfo.rank}`} variant="primary" style={{ textAlign: 'center', padding: '30px 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+              <div style={{ fontSize: '1.3rem', color: 'var(--arcade-secondary)', fontWeight: 900 }}>
+                LV.{levelInfo.level}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsLevelHelpOpen(true)}
+                aria-label="레벨 시스템 안내 열기"
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  border: '2px solid var(--arcade-accent)',
+                  background: 'rgba(0, 0, 0, 0.72)',
+                  color: 'var(--arcade-accent)',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  boxShadow: '0 0 10px rgba(57, 255, 20, 0.25)',
+                }}
+              >
+                ?
+              </button>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <PixelCharacter type={levelInfo.charType} />
             </div>
@@ -313,6 +345,110 @@ export function ProfilePage() {
           </ArcadeBox>
         </section>
       </div>
+
+      {isLevelHelpOpen ? (
+        <div
+          onClick={() => setIsLevelHelpOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            background: 'rgba(6, 8, 16, 0.88)',
+            backdropFilter: 'blur(6px)',
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: 'min(920px, 100%)',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              border: '4px solid var(--arcade-secondary)',
+              background: 'linear-gradient(180deg, rgba(9, 12, 22, 0.98), rgba(16, 5, 24, 0.98))',
+              boxShadow: '0 0 32px rgba(255, 0, 255, 0.22)',
+              padding: '24px',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '20px' }}>
+              <div>
+                <div style={{ color: 'var(--arcade-primary)', fontWeight: 900, fontSize: '0.78rem', letterSpacing: '0.08em' }}>
+                  LEVEL SYSTEM GUIDE
+                </div>
+                <h2 style={{ margin: '8px 0 0', color: 'var(--arcade-secondary)', fontSize: '1.8rem' }}>
+                  POINTS / LEVEL / CHARACTER
+                </h2>
+              </div>
+              <ArcadeButton variant="primary" size="sm" onClick={() => setIsLevelHelpOpen(false)} style={{ margin: 0 }}>
+                CLOSE
+              </ArcadeButton>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+              <ArcadeBox label="CURRENT_STATUS" variant="secondary" isChunky={false}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontWeight: 700 }}>
+                  <div>현재 레벨: <span style={{ color: 'var(--arcade-secondary)', fontWeight: 900 }}>LV.{levelInfo.level}</span></div>
+                  <div>현재 포인트: <span style={{ color: 'var(--arcade-accent)', fontWeight: 900 }}>{currentPoints.toLocaleString()}P</span></div>
+                  <div>다음 레벨까지: <span style={{ color: '#fff', fontWeight: 900 }}>{levelInfo.nextLevelPoints}P</span></div>
+                </div>
+              </ArcadeBox>
+              <ArcadeBox label="LEVEL RULE" variant="accent" isChunky={false}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontWeight: 700, lineHeight: 1.6 }}>
+                  <div>레벨은 누적 포인트 기준으로 자동 상승합니다.</div>
+                  <div><span style={{ color: 'var(--arcade-accent)', fontWeight: 900 }}>500P</span>를 모을 때마다 레벨이 1 오릅니다.</div>
+                  <div>공식 계산식: <span style={{ color: '#fff', fontWeight: 900 }}>LV = floor(POINTS / 500) + 1</span></div>
+                </div>
+              </ArcadeBox>
+            </div>
+
+            <ArcadeBox label="HOW_TO_RANK_UP" variant="primary" style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+                <div style={{ border: '2px solid rgba(255,255,255,0.12)', padding: '14px', background: 'rgba(0,0,0,0.28)' }}>
+                  <div style={{ color: 'var(--arcade-accent)', fontWeight: 900, marginBottom: '8px' }}>커뮤니티 글 작성</div>
+                  <div style={{ lineHeight: 1.6 }}>게시글 작성 시 포인트를 획득해 레벨 상승에 가장 빠르게 기여합니다.</div>
+                </div>
+                <div style={{ border: '2px solid rgba(255,255,255,0.12)', padding: '14px', background: 'rgba(0,0,0,0.28)' }}>
+                  <div style={{ color: 'var(--arcade-accent)', fontWeight: 900, marginBottom: '8px' }}>댓글 및 상호작용</div>
+                  <div style={{ lineHeight: 1.6 }}>댓글 작성과 커뮤니티 활동도 누적 포인트에 반영됩니다.</div>
+                </div>
+                <div style={{ border: '2px solid rgba(255,255,255,0.12)', padding: '14px', background: 'rgba(0,0,0,0.28)' }}>
+                  <div style={{ color: 'var(--arcade-accent)', fontWeight: 900, marginBottom: '8px' }}>일일 접속 보상</div>
+                  <div style={{ lineHeight: 1.6 }}>매일 로그인 보상 포인트를 챙기면 안정적으로 다음 레벨에 가까워집니다.</div>
+                </div>
+              </div>
+            </ArcadeBox>
+
+            <ArcadeBox label="CHARACTER EVOLUTION" variant="secondary">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px' }}>
+                {LEVEL_CHARACTER_STAGES.map((stage) => (
+                  <div
+                    key={stage.minLevel}
+                    style={{
+                      padding: '16px 12px',
+                      border: '2px solid rgba(255,255,255,0.12)',
+                      background: levelInfo.level >= stage.minLevel ? 'rgba(255, 0, 255, 0.08)' : 'rgba(0, 0, 0, 0.24)',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                      <PixelCharacter type={stage.charType} />
+                    </div>
+                    <div style={{ color: 'var(--arcade-secondary)', fontWeight: 900, fontSize: '1rem' }}>
+                      LV.{stage.minLevel} {stage.rank}
+                    </div>
+                    <div style={{ marginTop: '8px', fontSize: '0.82rem', lineHeight: 1.6, opacity: 0.82 }}>
+                      {stage.summary}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ArcadeBox>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
