@@ -264,6 +264,14 @@
   align-items: stretch;
 }
 
+.kuji-wallet-box {
+  min-width: 0;
+}
+
+.kuji-wallet-value {
+  white-space: nowrap;
+}
+
 /* Responsive Grid Adjustments */
 @media (max-width: 1024px) {
   .arcade-grid {
@@ -366,6 +374,14 @@
     margin-inline: 0;
   }
 
+  .home-page-header {
+    margin-bottom: 16px !important;
+  }
+
+  .home-overview-stats {
+    margin-top: 18px !important;
+  }
+
   .layout-userbar {
     margin-bottom: 16px !important;
   }
@@ -388,6 +404,29 @@
   .dashboard-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 8px !important;
+  }
+
+  .kuji-list-header {
+    align-items: stretch !important;
+    gap: 14px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .kuji-wallet-box {
+    width: 100%;
+    margin: 0 !important;
+  }
+
+  .kuji-wallet-box .arcade-box-v2 {
+    width: 100%;
+    margin: 0 !important;
+  }
+
+  .kuji-wallet-value {
+    white-space: normal;
+    word-break: break-word;
+    font-size: 0.98rem !important;
+    line-height: 1.25;
   }
 
   /* Fix for detail page sidebars */
@@ -526,6 +565,14 @@
 
   .dashboard-grid {
     gap: 6px !important;
+  }
+
+  .home-overview-stats {
+    margin-top: 24px !important;
+  }
+
+  .kuji-wallet-value {
+    font-size: 0.88rem !important;
   }
 
   .overview-stats-grid .arcade-box-v2 {

@@ -84,7 +84,7 @@ export function HomePage() {
 
   return (
     <div className="animate-in">
-      <header className="page-header" style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header className="page-header home-page-header" style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem' }}>
           SYSTEM_OVERVIEW
         </h1>
@@ -93,7 +93,7 @@ export function HomePage() {
         </ArcadeButton>
       </header>
 
-      <div className="dashboard-grid overview-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
+      <div className="dashboard-grid overview-stats-grid home-overview-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
         <ArcadeBox label="PLAYER_RANK" variant="primary">
           <div className="overview-stat-value" style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>LV.99</div>
         </ArcadeBox>

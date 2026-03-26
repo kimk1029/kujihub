@@ -42,7 +42,7 @@ export function KujiListPage() {
 
   return (
     <div className="animate-in">
-      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <header className="kuji-list-header" style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '16px', fontWeight: 900 }}>
             SELECT MACHINE
@@ -51,8 +51,8 @@ export function KujiListPage() {
             CHOOSE YOUR DESTINY. EVERY DRAW IS A NEW CHANCE.
           </p>
         </div>
-        <ArcadeBox label="PLAYER_WALLET" variant="accent" isChunky={false}>
-          <div style={{ fontSize: '1.25rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
+        <ArcadeBox label="PLAYER_WALLET" variant="accent" isChunky={false} className="kuji-wallet-box">
+          <div className="kuji-wallet-value" style={{ fontSize: '1.25rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
             {player ? `${player.points.toLocaleString()} P` : '0 P'}
           </div>
         </ArcadeBox>
