@@ -11,6 +11,7 @@
 
 const { Router } = require('express');
 const prisma = require('./db');
+const { getDbCapabilities } = require('./db-capabilities');
 const { fetchYouTubeSearch } = require('./youtube-search');
 
 const router = Router();
@@ -25,20 +26,35 @@ const REWARDS = {
 /**
  * 포인트 가감 및 로그 기록 (트랜잭션 내부에서 사용 권장)
  */
-async function addPoints(tx, playerId, amount, type, description = null) {
+function getPlayerSelect(caps, { includeLastLoginAt = false } = {}) {
+  return {
+    id: true,
+    nickname: true,
+    points: true,
+    createdAt: true,
+    updatedAt: true,
+    ...(caps.kujiPlayerHasRole ? { role: true } : {}),
+    ...(includeLastLoginAt && caps.kujiPlayerHasLastLoginAt ? { lastLoginAt: true } : {}),
+  };
+}
+
+async function addPoints(tx, caps, playerId, amount, type, description = null) {
   const updated = await tx.kujiPlayer.update({
     where: { id: playerId },
     data: { points: { increment: amount } },
+    select: getPlayerSelect(caps),
   });
 
-  await tx.pointTransaction.create({
-    data: {
-      playerId,
-      amount,
-      type,
-      description,
-    },
-  });
+  if (caps.hasPointTransactions) {
+    await tx.pointTransaction.create({
+      data: {
+        playerId,
+        amount,
+        type,
+        description,
+      },
+    });
+  }
 
   return updated;
 }
@@ -235,24 +251,27 @@ router.post('/player/ensure', async (req, res) => {
 
   try {
     const now = new Date();
+    const caps = await getDbCapabilities(prisma);
     
-    // 1. 먼저 유저 정보를 가져와서 오늘 보상을 받았는지 확인 (트랜잭션 밖에서 가볍게)
-    let player = await prisma.kujiPlayer.findUnique({ where: { id } });
+    let player = await prisma.kujiPlayer.findUnique({
+      where: { id },
+      select: getPlayerSelect(caps, { includeLastLoginAt: true }),
+    });
     let earnedToday = false;
 
     if (!player) {
-      // 신규 가입
       player = await prisma.$transaction(async (tx) => {
         const p = await tx.kujiPlayer.create({
           data: {
             id,
             nickname,
             points: DEFAULT_PLAYER_POINTS,
-            lastLoginAt: now,
+            ...(caps.kujiPlayerHasLastLoginAt ? { lastLoginAt: now } : {}),
           },
+          select: getPlayerSelect(caps, { includeLastLoginAt: true }),
         });
-        // pointTransaction 테이블이 아직 없을 수 있으므로 예외처리
-        try {
+
+        if (caps.hasPointTransactions) {
           await tx.pointTransaction.create({
             data: { 
               playerId: id, 
@@ -261,24 +280,24 @@ router.post('/player/ensure', async (req, res) => {
               description: '가입 축하 포인트' 
             }
           });
-        } catch (e) {
-          console.warn('[pointTransaction table may be missing]', e.message);
         }
+
         return p;
       });
       earnedToday = true;
     } else {
-      // 기존 유저 - 날짜 비교
-      // lastLoginAt 컬럼이 아직 없을 경우를 대비해 안전하게 접근
-      const lastLogin = player.lastLoginAt;
-      const isNewDay = !lastLogin || 
+      const lastLogin = caps.kujiPlayerHasLastLoginAt ? player.lastLoginAt : null;
+      const canTrackDailyReward = caps.kujiPlayerHasLastLoginAt;
+      const isNewDay = canTrackDailyReward && (
+        !lastLogin ||
         lastLogin.getUTCFullYear() !== now.getUTCFullYear() ||
         lastLogin.getUTCMonth() !== now.getUTCMonth() ||
-        lastLogin.getUTCDate() !== now.getUTCDate();
+        lastLogin.getUTCDate() !== now.getUTCDate()
+      );
 
       if (isNewDay) {
         player = await prisma.$transaction(async (tx) => {
-          try {
+          if (caps.hasPointTransactions) {
             await tx.pointTransaction.create({
               data: {
                 playerId: id,
@@ -287,31 +306,28 @@ router.post('/player/ensure', async (req, res) => {
                 description: '일일 로그인 보상',
               },
             });
-          } catch (e) {
-            console.warn('[pointTransaction table may be missing]', e.message);
           }
           
           const updateData = {
             points: { increment: REWARDS.DAILY_LOGIN },
             nickname,
           };
-          // lastLoginAt 컬럼이 확실히 있는지 알 수 없으므로 필드 존재 여부 확인 로직은 Prisma가 처리하지만,
-          // 여기서 에러가 나면 500이 되므로 catch에서 한 번 더 처리
-          if ('lastLoginAt' in player || true) {
+          if (caps.kujiPlayerHasLastLoginAt) {
             updateData.lastLoginAt = now;
           }
 
           return tx.kujiPlayer.update({
             where: { id },
-            data: updateData
+            data: updateData,
+            select: getPlayerSelect(caps, { includeLastLoginAt: true }),
           });
         });
         earnedToday = true;
       } else {
-        // 같은 날 재접속 - 닉네임만 최신화
         player = await prisma.kujiPlayer.update({
           where: { id },
-          data: { nickname }
+          data: { nickname },
+          select: getPlayerSelect(caps, { includeLastLoginAt: true }),
         });
       }
     }
@@ -320,7 +336,7 @@ router.post('/player/ensure', async (req, res) => {
       id: player.id,
       nickname: player.nickname,
       points: player.points,
-      role: player.role,
+      role: player.role ?? 'user',
       earnedToday,
       createdAt: player.createdAt,
       updatedAt: player.updatedAt,
@@ -340,13 +356,17 @@ router.get('/player/:id', async (req, res) => {
   if (!id) return res.status(400).json({ error: 'invalid id' });
 
   try {
-    const player = await prisma.kujiPlayer.findUnique({ where: { id } });
+    const caps = await getDbCapabilities(prisma);
+    const player = await prisma.kujiPlayer.findUnique({
+      where: { id },
+      select: getPlayerSelect(caps),
+    });
     if (!player) return res.status(404).json({ error: 'Not found' });
     res.json({
       id: player.id,
       nickname: player.nickname,
       points: player.points,
-      role: player.role,
+      role: player.role ?? 'user',
       createdAt: player.createdAt,
       updatedAt: player.updatedAt,
     });
@@ -368,6 +388,7 @@ router.post('/:id/purchase', async (req, res) => {
   }
 
   try {
+    const caps = await getDbCapabilities(prisma);
     const data = await prisma.$transaction(async (tx) => {
       await tx.kujiSlot.deleteMany({
         where: { kujiId, status: 'locked', lockedAt: { lte: lockExpiry() } },
@@ -375,7 +396,7 @@ router.post('/:id/purchase', async (req, res) => {
 
       const [kuji, player, usedCount] = await Promise.all([
         tx.kuji.findUnique({ where: { id: kujiId } }),
-        tx.kujiPlayer.findUnique({ where: { id: playerId } }),
+        tx.kujiPlayer.findUnique({ where: { id: playerId }, select: getPlayerSelect(caps) }),
         tx.kujiSlot.count({ where: { kujiId, ...activeSlotWhere() } }),
       ]);
 
@@ -400,7 +421,7 @@ router.post('/:id/purchase', async (req, res) => {
         },
       });
 
-      const updatedPlayer = await addPoints(tx, playerId, -totalPrice, 'kuji_draw', `${kuji.title} ${quantity}회 뽑기`);
+      const updatedPlayer = await addPoints(tx, caps, playerId, -totalPrice, 'kuji_draw', `${kuji.title} ${quantity}회 뽑기`);
 
       return { kuji, purchase, player: updatedPlayer, remaining: remaining - quantity };
     });

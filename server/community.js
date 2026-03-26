@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const prisma = require('./db');
+const { getDbCapabilities } = require('./db-capabilities');
 const { verifyWebAuthToken } = require('./auth-web');
 
 const router = Router();
@@ -112,23 +113,34 @@ async function createFeedItem(tx, data) {
 async function rewardPoints(nickname, amount, type, description) {
   if (!nickname || nickname === '익명' || nickname === '게스트') return;
   try {
-    const player = await prisma.kujiPlayer.findFirst({ where: { nickname } });
+    const caps = await getDbCapabilities(prisma);
+    const player = await prisma.kujiPlayer.findFirst({
+      where: { nickname },
+      select: {
+        id: true,
+        nickname: true,
+        points: true,
+      },
+    });
     if (!player) return;
 
-    await prisma.$transaction([
-      prisma.kujiPlayer.update({
+    await prisma.$transaction(async (tx) => {
+      await tx.kujiPlayer.update({
         where: { id: player.id },
         data: { points: { increment: amount } },
-      }),
-      prisma.pointTransaction.create({
-        data: {
-          playerId: player.id,
-          amount,
-          type,
-          description,
-        },
-      }),
-    ]);
+      });
+
+      if (caps.hasPointTransactions) {
+        await tx.pointTransaction.create({
+          data: {
+            playerId: player.id,
+            amount,
+            type,
+            description,
+          },
+        });
+      }
+    });
   } catch (err) {
     console.error('[reward points error]', err.message);
   }
