@@ -272,6 +272,10 @@
   white-space: nowrap;
 }
 
+.home-overview-stats {
+  padding-top: 0;
+}
+
 /* Responsive Grid Adjustments */
 @media (max-width: 1024px) {
   .arcade-grid {
@@ -375,11 +379,12 @@
   }
 
   .home-page-header {
-    margin-bottom: 16px !important;
+    margin-bottom: 8px !important;
   }
 
   .home-overview-stats {
-    margin-top: 18px !important;
+    margin-top: 0 !important;
+    padding-top: 28px !important;
   }
 
   .layout-userbar {
@@ -420,13 +425,33 @@
   .kuji-wallet-box .arcade-box-v2 {
     width: 100%;
     margin: 0 !important;
+    padding: 10px 12px !important;
   }
 
   .kuji-wallet-value {
-    white-space: normal;
-    word-break: break-word;
-    font-size: 0.98rem !important;
-    line-height: 1.25;
+    white-space: nowrap;
+    word-break: normal;
+    font-size: 1rem !important;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .kuji-detail-header {
+    margin-bottom: 16px !important;
+    padding-top: 16px;
+  }
+
+  .kuji-detail-shell {
+    padding-top: 6px;
+  }
+
+  .kuji-detail-top-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .kuji-purchase-console .arcade-box-content {
+    overflow: visible;
   }
 
   /* Fix for detail page sidebars */
@@ -568,11 +593,11 @@
   }
 
   .home-overview-stats {
-    margin-top: 24px !important;
+    padding-top: 34px !important;
   }
 
   .kuji-wallet-value {
-    font-size: 0.88rem !important;
+    font-size: 0.92rem !important;
   }
 
   .overview-stats-grid .arcade-box-v2 {

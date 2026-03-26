@@ -10,7 +10,25 @@ export function KujiListPage() {
   const [player, setPlayer] = useState<KujiPlayer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCompactLayout, setIsCompactLayout] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth <= 768
+  );
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const syncLayout = () => setIsCompactLayout(mediaQuery.matches);
+    syncLayout();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', syncLayout);
+      return () => mediaQuery.removeEventListener('change', syncLayout);
+    }
+
+    mediaQuery.addListener(syncLayout);
+    return () => mediaQuery.removeListener(syncLayout);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -51,7 +69,7 @@ export function KujiListPage() {
             CHOOSE YOUR DESTINY. EVERY DRAW IS A NEW CHANCE.
           </p>
         </div>
-        <ArcadeBox label="PLAYER_WALLET" variant="accent" isChunky={false} className="kuji-wallet-box">
+        <ArcadeBox label={isCompactLayout ? undefined : 'PLAYER_WALLET'} variant="accent" isChunky={false} className="kuji-wallet-box">
           <div className="kuji-wallet-value" style={{ fontSize: '1.25rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
             {player ? `${player.points.toLocaleString()} P` : '0 P'}
           </div>

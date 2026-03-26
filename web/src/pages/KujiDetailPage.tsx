@@ -15,6 +15,24 @@ export function KujiDetailPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCompactLayout, setIsCompactLayout] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth <= 768
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const syncLayout = () => setIsCompactLayout(mediaQuery.matches);
+    syncLayout();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', syncLayout);
+      return () => mediaQuery.removeEventListener('change', syncLayout);
+    }
+
+    mediaQuery.addListener(syncLayout);
+    return () => mediaQuery.removeListener(syncLayout);
+  }, []);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -72,24 +90,25 @@ export function KujiDetailPage() {
 
   return (
     <div className="animate-in">
-      <header style={{ marginBottom: '24px' }}>
+      <header className="kuji-detail-header" style={{ marginBottom: '24px' }}>
         <div style={{ color: 'var(--arcade-primary)', fontWeight: 900, marginBottom: '12px' }}>
           KUJI SELECT
         </div>
-        <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem', marginBottom: '14px', fontWeight: 900, lineHeight: 1.25 }}>
+        <h1 style={{ color: 'var(--arcade-secondary)', fontSize: isCompactLayout ? '1.34rem' : '2rem', marginBottom: '14px', fontWeight: 900, lineHeight: 1.25, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           {kuji.title}
         </h1>
-        <p style={{ color: '#fff', fontSize: '1rem', opacity: 0.8, fontWeight: 500, lineHeight: 1.7, maxWidth: '920px' }}>
+        <p style={{ color: '#fff', fontSize: isCompactLayout ? '0.84rem' : '1rem', opacity: 0.8, fontWeight: 500, lineHeight: 1.7, maxWidth: '920px' }}>
           {kuji.description || '쿠지 상세 정보와 보상 목록을 확인한 뒤 원하는 수량만큼 바로 시작할 수 있습니다.'}
         </p>
       </header>
 
-      <div style={{ maxWidth: '1180px', margin: '0 auto' }}>
+      <div className="kuji-detail-shell" style={{ maxWidth: '1180px', margin: '0 auto' }}>
         <div
+          className="kuji-detail-top-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(260px, 0.85fr) minmax(320px, 1.1fr) minmax(220px, 0.85fr)',
-            gap: '20px',
+            gridTemplateColumns: isCompactLayout ? '1fr' : 'minmax(260px, 0.85fr) minmax(320px, 1.1fr) minmax(220px, 0.85fr)',
+            gap: isCompactLayout ? '14px' : '20px',
             alignItems: 'stretch',
             marginBottom: '22px',
           }}
@@ -121,8 +140,8 @@ export function KujiDetailPage() {
             </div>
           </ArcadeBox>
 
-          <ArcadeBox label="PURCHASE CONSOLE" variant="primary" style={{ width: '100%', margin: '0 auto' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <ArcadeBox label="PURCHASE CONSOLE" variant="primary" className="kuji-purchase-console" style={{ width: '100%', margin: '0 auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isCompactLayout ? '16px' : '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 900 }}>PLAYER_CREDITS</span>
                 <span style={{ fontSize: '1.1rem', color: 'var(--arcade-accent)', fontWeight: 900 }}>
@@ -136,35 +155,35 @@ export function KujiDetailPage() {
                 </span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', gap: '14px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isCompactLayout ? 'stretch' : 'center', flexDirection: isCompactLayout ? 'column' : 'row', padding: '8px 0', gap: '14px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 900 }}>QUANTITY</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: isCompactLayout ? 'space-between' : 'flex-start', gap: '16px', width: isCompactLayout ? '100%' : 'auto' }}>
                   <ArcadeButton
                     variant="secondary"
                     size="sm"
                     onClick={() => setQuantity((v) => Math.max(1, v - 1))}
-                    style={{ padding: '4px 12px' }}
+                    style={{ padding: isCompactLayout ? '6px 14px' : '4px 12px' }}
                   >-</ArcadeButton>
                   <span style={{ fontSize: '1.25rem', fontWeight: 900 }}>{quantity}</span>
                   <ArcadeButton
                     variant="secondary"
                     size="sm"
                     onClick={() => setQuantity((v) => Math.min(Math.min(10, kuji.remaining), v + 1))}
-                    style={{ padding: '4px 12px' }}
+                    style={{ padding: isCompactLayout ? '6px 14px' : '4px 12px' }}
                   >+</ArcadeButton>
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', border: '2px solid var(--arcade-primary)', marginTop: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: isCompactLayout ? '14px' : '16px', border: '2px solid var(--arcade-primary)', marginTop: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isCompactLayout ? 'stretch' : 'center', flexDirection: isCompactLayout ? 'column' : 'row', gap: '10px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '1rem', fontWeight: 900 }}>TOTAL_COST</span>
-                  <span style={{ fontSize: '1.5rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>
+                  <span style={{ fontSize: isCompactLayout ? '1.2rem' : '1.5rem', color: 'var(--arcade-primary)', fontWeight: 900 }}>
                     {total.toLocaleString()} P
                   </span>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isCompactLayout ? '1fr' : '1fr 1fr', gap: '12px' }}>
                 <ArcadeButton
                   variant="accent"
                   className="coin-btn"
@@ -186,11 +205,11 @@ export function KujiDetailPage() {
                       setSubmitting(false);
                     }
                   }}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', minHeight: isCompactLayout ? '48px' : undefined }}
                 >
                   {submitting ? 'SYNCING...' : kuji.remaining === 0 ? 'SOLD_OUT' : !canAfford ? 'NO_CREDITS' : 'START_GAME'}
                 </ArcadeButton>
-                <ArcadeButton variant="secondary" size="sm" onClick={() => navigate('/kuji')} style={{ width: '100%' }}>
+                <ArcadeButton variant="secondary" size="sm" onClick={() => navigate('/kuji')} style={{ width: '100%', minHeight: isCompactLayout ? '46px' : undefined }}>
                   EXIT_MACHINE
                 </ArcadeButton>
               </div>
