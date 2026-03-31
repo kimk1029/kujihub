@@ -245,8 +245,8 @@ export function KujiDetailPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '12px',
+              gridTemplateColumns: `repeat(auto-fit, minmax(${isCompactLayout ? '140px' : '220px'}, 1fr))`,
+              gap: isCompactLayout ? '8px' : '12px',
             }}
           >
               {kuji.prizes.map((prize, idx) => (

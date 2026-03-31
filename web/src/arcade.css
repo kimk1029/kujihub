@@ -441,12 +441,16 @@
   }
 
   .kuji-detail-header {
-    margin-bottom: 16px !important;
-    padding-top: 16px;
+    margin-bottom: 14px !important;
+    padding-top: 8px;
   }
 
   .kuji-detail-shell {
-    padding-top: 6px;
+    padding-top: 4px;
+  }
+
+  .kuji-purchase-console .arcade-box-content {
+    overflow: visible;
   }
 
   .kuji-detail-top-grid {
@@ -465,7 +469,7 @@
   }
 
   .overview-stats-grid .arcade-box-v2 {
-    padding: 10px 8px !important;
+    padding: 24px 8px 10px !important;
     margin: 4px !important;
   }
 
@@ -639,7 +643,7 @@
   }
 
   .overview-stats-grid .arcade-box-v2 {
-    padding: 9px 6px !important;
+    padding: 22px 6px 9px !important;
   }
 
   .overview-stats-grid .arcade-box-label {
