@@ -56,6 +56,12 @@ const { fetchTakaratomyArts } = require('./lineup-takaratomy');
 const { fetchKitan } = require('./lineup-kitan');
 const { fetchGashapon } = require('./lineup-gashapon');
 const { fetchTaito } = require('./lineup-taito');
+const { fetchSanrio } = require('./lineup-sanrio');
+const { fetchDmm } = require('./lineup-dmm');
+const { fetchBanpre } = require('./lineup-banpre');
+const { fetchKujibikido } = require('./lineup-kujibikido');
+const { fetchFuryu } = require('./lineup-furyu');
+const { fetchSega } = require('./lineup-sega');
 const { PrismaClient: _PrismaForLineup } = require('@prisma/client');
 const _lineupPrisma = new _PrismaForLineup();
 
@@ -65,13 +71,23 @@ app.get('/api/kuji-lineup', async (req, res) => {
   if (month < 1 || month > 12) return res.status(400).json({ error: 'month must be 1-12' });
   try {
     // 모든 소스 병렬 조회
-    const [lineup, customEntries, takaratomyItems, kitanItems, gashaponItems, taitoItems] = await Promise.all([
+    const [
+      lineup, customEntries,
+      takaratomyItems, kitanItems, gashaponItems, taitoItems,
+      sanrioItems, dmmItems, banpreItems, kujibikidoItems, furyuItems, segaItems,
+    ] = await Promise.all([
       fetchLineupForMonth(year, month).catch(() => ({ year, month, items: [] })),
       _lineupPrisma.lineupCustomEntry.findMany({ where: { year, month }, orderBy: { createdAt: 'asc' } }),
       fetchTakaratomyArts(year, month).catch((e) => { console.warn('takaratomy-arts skip:', e.message); return []; }),
       fetchKitan(year, month).catch((e) => { console.warn('kitan skip:', e.message); return []; }),
       fetchGashapon(year, month).catch((e) => { console.warn('gashapon skip:', e.message); return []; }),
       fetchTaito(year, month).catch((e) => { console.warn('taito skip:', e.message); return []; }),
+      fetchSanrio(year, month).catch((e) => { console.warn('sanrio skip:', e.message); return []; }),
+      fetchDmm(year, month).catch((e) => { console.warn('dmm skip:', e.message); return []; }),
+      fetchBanpre(year, month).catch((e) => { console.warn('banpre skip:', e.message); return []; }),
+      fetchKujibikido(year, month).catch((e) => { console.warn('kujibikido skip:', e.message); return []; }),
+      fetchFuryu(year, month).catch((e) => { console.warn('furyu skip:', e.message); return []; }),
+      fetchSega(year, month).catch((e) => { console.warn('sega skip:', e.message); return []; }),
     ]);
 
     const translatedLineup = await translateLineupMonth(lineup);
@@ -101,9 +117,16 @@ app.get('/api/kuji-lineup', async (req, res) => {
     }));
 
     // 스크래핑 항목 (category는 각 스크래퍼에서 지정)
-    const scrapedItems = [...takaratomyItems, ...kitanItems, ...gashaponItems, ...taitoItems];
+    const scrapedItems = [
+      ...takaratomyItems, ...kitanItems, ...gashaponItems, ...taitoItems,
+      ...sanrioItems, ...dmmItems, ...banpreItems, ...kujibikidoItems, ...furyuItems, ...segaItems,
+    ];
 
-    const allBrands = [...KNOWN_BRANDS, 'タカラトミーアーツ', 'キタンクラブ', 'ガシャポン', 'タイトー'];
+    const allBrands = [
+      ...KNOWN_BRANDS,
+      'タカラトミーアーツ', 'キタンクラブ', 'ガシャポン', 'タイトー',
+      'サンリオ', 'DMMスクラッチ', 'DMMくじ', 'バンプレくじ', 'くじ引き堂', 'フリューくじ', 'セガ ラッキーくじ',
+    ];
 
     res.json({
       year,
