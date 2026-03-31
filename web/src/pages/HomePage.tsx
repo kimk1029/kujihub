@@ -14,15 +14,29 @@ import { getWebAuthSession } from '../auth/webAuth';
 
 dayjs.extend(relativeTime);
 
-// 브랜드별 색상
+// 카테고리별 색상 (캘린더 도트 & 뱃지)
+const CATEGORY_COLOR: Record<string, string> = {
+  kuji: 'var(--arcade-primary)',   // #ff00ff — 쿠지
+  gacha: '#f97316',                // orange  — 가챠
+  crane: '#3b82f6',               // blue    — 크레인
+};
+
+function categoryColor(item: KujiLineupItem): string {
+  return CATEGORY_COLOR[item.category ?? 'kuji'] ?? CATEGORY_COLOR.kuji;
+}
+
+// 브랜드별 색상 (필터 버튼 등에 사용)
 const BRAND_COLOR: Record<string, string> = {
   '이치방쿠지': 'var(--arcade-primary)',
   'くじ引き堂': '#f97316',
-  'BANDAI SPIRITS': '#3b82f6',
-  'SEGA LUCKY LOT': '#8b5cf6',
-  'アミューズ': '#ec4899',
-  'タイトー': '#14b8a6',
-  'フリュー': '#eab308',
+  'BANDAI SPIRITS': '#f97316',
+  'ガシャポン': '#f97316',
+  'タカラトミーアーツ': '#f97316',
+  'キタンクラブ': '#f97316',
+  'SEGA LUCKY LOT': '#3b82f6',
+  'アミューズ': '#3b82f6',
+  'タイトー': '#3b82f6',
+  'フリュー': '#3b82f6',
   '기타': 'rgba(255,255,255,0.5)',
 };
 
@@ -34,6 +48,9 @@ const KNOWN_BRANDS = [
   '이치방쿠지',
   'くじ引き堂',
   'BANDAI SPIRITS',
+  'ガシャポン',
+  'タカラトミーアーツ',
+  'キタンクラブ',
   'SEGA LUCKY LOT',
   'アミューズ',
   'タイトー',
@@ -360,8 +377,8 @@ export function HomePage() {
                 const events = eventsByDay[day] || [];
                 const hasEvent = events.length > 0;
                 const isSelected = selectedDay === day;
-                // 브랜드별 점 색상
-                const dotColors = [...new Set(events.map(e => brandColor(e.brand)))].slice(0, 3);
+                // 카테고리별 점 색상
+                const dotColors = [...new Set(events.map(e => categoryColor(e)))].slice(0, 3);
                 return (
                   <button
                     key={i}
@@ -398,6 +415,23 @@ export function HomePage() {
                 );
               })}
             </div>
+            {/* 카테고리 범례 */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
+              {[
+                { key: 'kuji', label: '쿠지' },
+                { key: 'gacha', label: '가챠' },
+                { key: 'crane', label: '크레인' },
+              ].map(({ key, label }) => (
+                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{
+                    width: '8px', height: '8px', borderRadius: '50%',
+                    backgroundColor: CATEGORY_COLOR[key],
+                    boxShadow: `0 0 5px ${CATEGORY_COLOR[key]}`,
+                  }} />
+                  <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.6)', fontWeight: 900 }}>{label}</span>
+                </div>
+              ))}
+            </div>
             <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
               {year} - {String(month).padStart(2, '0')} - SELECT A DATE
             </p>
@@ -407,21 +441,33 @@ export function HomePage() {
         <ArcadeBox label="EVENT_INTEL" variant="primary">
           {selectedEvent ? (
             <div className="animate-in" key={`${selectedDay}-${selectedEvent.slug}`}>
-              {/* 브랜드 뱃지 */}
-              <div style={{
-                display: 'inline-block',
-                padding: '2px 8px',
-                border: `2px solid ${brandColor(selectedEvent.brand)}`,
-                color: brandColor(selectedEvent.brand),
-                fontSize: '0.6rem',
-                fontWeight: 900,
-                marginBottom: '10px',
-                letterSpacing: '0.06em',
-              }}>
-                {selectedEvent.brand ?? '이치방쿠지'}
-                {selectedEvent.source === 'custom' && (
-                  <span style={{ opacity: 0.7, marginLeft: '6px' }}>[ 제보 ]</span>
-                )}
+              {/* 카테고리 + 브랜드 뱃지 */}
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
+                <div style={{
+                  display: 'inline-block',
+                  padding: '2px 8px',
+                  border: `2px solid ${categoryColor(selectedEvent)}`,
+                  color: categoryColor(selectedEvent),
+                  fontSize: '0.6rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.06em',
+                }}>
+                  {selectedEvent.category === 'gacha' ? '가챠' : selectedEvent.category === 'crane' ? '크레인' : '쿠지'}
+                </div>
+                <div style={{
+                  display: 'inline-block',
+                  padding: '2px 8px',
+                  border: `2px solid ${brandColor(selectedEvent.brand)}`,
+                  color: brandColor(selectedEvent.brand),
+                  fontSize: '0.6rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.06em',
+                }}>
+                  {selectedEvent.brand ?? '이치방쿠지'}
+                  {selectedEvent.source === 'custom' && (
+                    <span style={{ opacity: 0.7, marginLeft: '6px' }}>[ 제보 ]</span>
+                  )}
+                </div>
               </div>
 
               <div style={{

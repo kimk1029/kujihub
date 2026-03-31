@@ -16,6 +16,8 @@ export interface KujiLineupItem {
   customId?: number;
   /** 제보자 */
   submittedBy?: string;
+  /** 카테고리: 쿠지 / 가챠 / 크레인 */
+  category?: 'kuji' | 'gacha' | 'crane';
 }
 
 export interface KujiLineupMonth {

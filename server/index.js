@@ -52,6 +52,10 @@ const { fetchLineupForMonth } = require('./kuji-lineup');
 const { hasPapagoConfig, translateLineupMonth } = require('./kuji-translate');
 const { fetchYouTubeSearch } = require('./youtube-search');
 const { fetchAnimeCategories } = require('./anime-media');
+const { fetchTakaratomyArts } = require('./lineup-takaratomy');
+const { fetchKitan } = require('./lineup-kitan');
+const { fetchGashapon } = require('./lineup-gashapon');
+const { fetchTaito } = require('./lineup-taito');
 const { PrismaClient: _PrismaForLineup } = require('@prisma/client');
 const _lineupPrisma = new _PrismaForLineup();
 
@@ -60,22 +64,27 @@ app.get('/api/kuji-lineup', async (req, res) => {
   const month = parseInt(req.query.month, 10) || new Date().getMonth() + 1;
   if (month < 1 || month > 12) return res.status(400).json({ error: 'month must be 1-12' });
   try {
-    // 1kuji.com 크롤링 + DB 커스텀 항목 병렬 조회
-    const [lineup, customEntries] = await Promise.all([
+    // 모든 소스 병렬 조회
+    const [lineup, customEntries, takaratomyItems, kitanItems, gashaponItems, taitoItems] = await Promise.all([
       fetchLineupForMonth(year, month).catch(() => ({ year, month, items: [] })),
       _lineupPrisma.lineupCustomEntry.findMany({ where: { year, month }, orderBy: { createdAt: 'asc' } }),
+      fetchTakaratomyArts(year, month).catch((e) => { console.warn('takaratomy-arts skip:', e.message); return []; }),
+      fetchKitan(year, month).catch((e) => { console.warn('kitan skip:', e.message); return []; }),
+      fetchGashapon(year, month).catch((e) => { console.warn('gashapon skip:', e.message); return []; }),
+      fetchTaito(year, month).catch((e) => { console.warn('taito skip:', e.message); return []; }),
     ]);
 
     const translatedLineup = await translateLineupMonth(lineup);
 
-    // 이치방쿠지 항목에 source/brand 추가
+    // 이치방쿠지 항목에 source/brand/category 추가
     const ichibanItems = (translatedLineup.items || []).map((item) => ({
       ...item,
       source: 'ichiban',
       brand: '이치방쿠지',
+      category: 'kuji',
     }));
 
-    // 커스텀 항목을 동일 형식으로 변환
+    // 커스텀 항목을 동일 형식으로 변환 (category는 brand로 추론)
     const customItems = customEntries.map((e) => ({
       title: e.title,
       translatedTitle: e.title,
@@ -88,13 +97,19 @@ app.get('/api/kuji-lineup', async (req, res) => {
       brand: e.brand,
       customId: e.id,
       submittedBy: e.submittedBy,
+      category: _inferCategory(e.brand),
     }));
+
+    // 스크래핑 항목 (category는 각 스크래퍼에서 지정)
+    const scrapedItems = [...takaratomyItems, ...kitanItems, ...gashaponItems, ...taitoItems];
+
+    const allBrands = [...KNOWN_BRANDS, 'タカラトミーアーツ', 'キタンクラブ', 'ガシャポン', 'タイトー'];
 
     res.json({
       year,
       month,
-      items: [...ichibanItems, ...customItems],
-      brands: KNOWN_BRANDS,
+      items: [...ichibanItems, ...scrapedItems, ...customItems],
+      brands: allBrands,
       translationProvider: hasPapagoConfig() ? 'papago' : 'fallback',
     });
   } catch (e) {
@@ -102,6 +117,14 @@ app.get('/api/kuji-lineup', async (req, res) => {
     res.status(502).json({ error: 'Failed to fetch lineup', message: e.message });
   }
 });
+
+function _inferCategory(brand) {
+  if (!brand) return 'kuji';
+  const b = brand.trim();
+  if (b === 'タイトー' || b === 'SEGA LUCKY LOT' || b === 'アミューズ' || b === 'フリュー') return 'crane';
+  if (b === 'ガシャポン' || b === 'タカラトミーアーツ' || b === 'キタンクラブ' || b === 'BANDAI SPIRITS') return 'gacha';
+  return 'kuji';
+}
 
 app.get('/api/media/anime-categories', async (_req, res) => {
   try {
