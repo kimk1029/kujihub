@@ -225,12 +225,13 @@ export function HomePage() {
         <ArcadeBox label="LATEST_SIGNALS" variant="primary">
           <div className="signal-feed-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
             {(overview?.feed || []).map(item => (
-              <div key={item.id} style={{ 
-                padding: '12px', 
-                border: '2px solid rgba(255,255,255,0.1)', 
-                display: 'flex', 
-                gap: '16px',
-                background: 'rgba(0,0,0,0.2)'
+              <div key={item.id} style={{
+                padding: '12px',
+                border: '2px solid rgba(255,255,255,0.1)',
+                display: 'flex',
+                gap: '12px',
+                background: 'rgba(0,0,0,0.2)',
+                minWidth: 0,
               }}>
                 <div style={{ width: '48px', height: '48px', background: '#111', flexShrink: 0, imageRendering: 'pixelated', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', border: '1px solid #333' }}>
                   {item.imageUrl ? <img src={item.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📡'}

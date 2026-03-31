@@ -301,17 +301,18 @@ export function FeedPage() {
             }}
             style={{ cursor: item.postId || item.imageUrl ? 'pointer' : 'default' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: '1.1rem', color: 'var(--arcade-secondary)', marginBottom: '12px', fontWeight: 900 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h2 style={{ fontSize: '1.1rem', color: 'var(--arcade-secondary)', marginBottom: '12px', fontWeight: 900, wordBreak: 'break-word' }}>
                   {item.title}
                 </h2>
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                   {item.imageUrl && (
-                    <div 
+                    <div
                       style={{
                         ...dosStyles.itemImageFrame,
-                        cursor: 'zoom-in'
+                        cursor: 'zoom-in',
+                        flexShrink: 0,
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -321,12 +322,12 @@ export function FeedPage() {
                       <img src={item.imageUrl} alt="feed-content" style={dosStyles.itemPreviewImage} />
                     </div>
                   )}
-                  <p style={{ fontSize: '0.95rem', color: '#fff', opacity: 0.8, lineHeight: '1.4', flex: 1 }}>
+                  <p style={{ fontSize: '0.95rem', color: '#fff', opacity: 0.8, lineHeight: '1.4', flex: 1, minWidth: 0, wordBreak: 'break-word' }}>
                     {item.body}
                   </p>
                 </div>
               </div>
-              <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', marginLeft: '24px', fontWeight: 700 }}>
+              <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, flexShrink: 0 }}>
                 {dayjs(item.createdAt).format('HH:mm:ss')}
               </div>
             </div>

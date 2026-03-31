@@ -109,6 +109,11 @@
   color: var(--arcade-text);
   background-color: rgba(26, 26, 46, 0.9);
   backdrop-filter: blur(8px);
+  min-width: 0;
+}
+
+.arcade-box-content {
+  min-width: 0;
 }
 
 .arcade-box-label {

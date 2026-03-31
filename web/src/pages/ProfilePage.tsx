@@ -173,7 +173,7 @@ export function ProfilePage() {
         <h1 style={{ color: 'var(--arcade-secondary)', fontSize: '2rem' }}>
           PLAYER_DASHBOARD
         </h1>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <ArcadeButton variant="secondary" size="sm" onClick={() => navigate('/community/new')}>
             NEW_LOG
           </ArcadeButton>

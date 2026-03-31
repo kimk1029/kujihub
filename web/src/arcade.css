@@ -245,6 +245,8 @@
 
 .page-shell {
   width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .layout-userbar {
@@ -349,7 +351,9 @@
   .main-content {
     margin-left: 0 !important;
     width: 100% !important;
+    max-width: 100vw !important;
     padding: 16px 12px 92px 12px !important; /* Extra padding for bottom nav */
+    overflow-x: hidden !important;
   }
 
   .mobile-nav {
@@ -563,6 +567,40 @@
   .community-compose-fab {
     right: 16px !important;
     bottom: calc(82px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* ── Mobile overflow prevention ─────────────────────────────── */
+
+  /* Images never exceed container width */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Top-level page containers must not exceed viewport */
+  .animate-in {
+    min-width: 0;
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* Arcade box content shrinks inside flex/grid */
+  .arcade-box-content {
+    min-width: 0;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Page header: wrap buttons on narrow screens */
+  .page-header > div {
+    flex-wrap: wrap;
+  }
+
+  /* Multiple buttons in a row should each take full width */
+  .page-header > div .arcade-btn-v2 {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 !important;
   }
 }
 

@@ -170,12 +170,59 @@ export function Layout() {
             {userEmail}
           </div>
         </div>
+
+        {!sidebar && (
+          <button
+            className="arcade-font-pixel"
+            onClick={() => {
+              clearWebAuthSession();
+              navigate('/');
+            }}
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '3px',
+              padding: '6px 8px',
+              background: 'rgba(255, 0, 0, 0.12)',
+              border: '2px solid #ff0033',
+              boxShadow: '0 3px 0 #7a0015, inset 0 1px 0 rgba(255,255,255,0.1)',
+              color: '#ff4455',
+              fontSize: '0.42rem',
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+              transform: 'translateY(-2px)',
+              transition: 'all 0.08s steps(2, end)',
+            }}
+            onMouseDown={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(1px)';
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0px 0 #7a0015';
+            }}
+            onMouseUp={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 3px 0 #7a0015, inset 0 1px 0 rgba(255,255,255,0.1)';
+            }}
+            onTouchStart={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(1px)';
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0px 0 #7a0015';
+            }}
+            onTouchEnd={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 3px 0 #7a0015, inset 0 1px 0 rgba(255,255,255,0.1)';
+            }}
+          >
+            <span style={{ fontSize: '1rem', lineHeight: 1 }}>⏻</span>
+            QUIT
+          </button>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="layout arcade-body arcade-grid-bg scanlines crt" style={{ minHeight: '100vh', display: 'flex', width: '100vw', overflowX: 'hidden' }}>
+    <div className="layout arcade-body arcade-grid-bg scanlines crt" style={{ minHeight: '100vh', display: 'flex', width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
       {/* Desktop Sidebar */}
       <aside className="sidebar" style={{ 
         width: '280px', 
