@@ -1,6 +1,14 @@
 /**
  * タカラトミーアーツ ガチャ 라인업 스크래퍼
  * URL: https://www.takaratomy-arts.co.jp/items/gacha/?year=YYYY
+ * 실제 HTML:
+ *   Hot ITEM 섹션: a[href*="/items/item.html"] >
+ *     div.right > img
+ *     div.left >
+ *       pre > p.name.black  (제목)
+ *       p.price_and_release.semibold  ("●発売時期：2026年2月" 포함)
+ *
+ *   swiper-slide 아이템은 날짜 정보 없음 (출하 완료 상품)
  * 카테고리: gacha
  */
 
@@ -13,7 +21,7 @@ async function fetchTakaratomyArts(year, month) {
     res = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; KujiHub/1.0)',
-        'Accept': 'text/html,application/xhtml+xml',
+        Accept: 'text/html,application/xhtml+xml',
         'Accept-Language': 'ja,en;q=0.9',
       },
       signal: AbortSignal.timeout(10000),
@@ -22,11 +30,7 @@ async function fetchTakaratomyArts(year, month) {
     console.warn('takaratomy-arts fetch error:', e.message);
     return [];
   }
-
-  if (!res.ok) {
-    console.warn(`takaratomy-arts returned ${res.status}`);
-    return [];
-  }
+  if (!res.ok) { console.warn(`takaratomy-arts returned ${res.status}`); return []; }
 
   const html = await res.text();
   const { load } = require('cheerio');
@@ -34,45 +38,40 @@ async function fetchTakaratomyArts(year, month) {
   const items = [];
   const seen = new Set();
 
-  // タカラトミーアーツ item cards — try multiple possible selectors
-  const $cards = $('li.swiper-slide, .item_list li, .gacha-item, article.item, .item-card');
+  // Hot ITEM / 発売予定 섹션: a[href*="/items/item.html"] with price_and_release
+  $('a[href*="/items/item.html"]').each((_, el) => {
+    const $a = $(el);
+    const dateText = $a.find('p.price_and_release').text();
+    if (!dateText) return; // 날짜 없는 swiper 항목 제외
 
-  $cards.each((_, el) => {
-    const $el = $(el);
-
-    // Title: try various selectors
-    const title = (
-      $el.find('p.black, .item_name, .product-title, h3, h2').first().text()
-    ).replace(/\s+/g, ' ').trim();
+    // 제목: p.name.black 또는 p.black
+    const title = $a.find('p.name, p.black').first().text().replace(/\s+/g, ' ').trim();
     if (!title || seen.has(title)) return;
 
-    // Date text: look for 発売時期 / 発売日
-    const dateText = $el.find('p.price_and_release, .release, .date, [class*="date"], [class*="release"]')
-      .text()
-      .replace(/\s+/g, ' ').trim();
+    // 날짜: "●発売時期：2026年4月" or "●発売時期：2026年4月10日"
+    const fullDate = dateText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    const monthDate = dateText.match(/(\d{4})年(\d{1,2})月/);
 
-    // Parse YYYY年M月 from date text
-    const dateMatch = dateText.match(/(\d{4})年(\d{1,2})月/);
-    if (dateMatch) {
-      const itemYear = parseInt(dateMatch[1]);
-      const itemMonth = parseInt(dateMatch[2]);
-      // Only include items for the requested year+month
-      if (itemYear !== year || itemMonth !== month) return;
+    let itemYear, itemMonth, storeDate;
+    if (fullDate) {
+      itemYear = +fullDate[1]; itemMonth = +fullDate[2];
+      storeDate = `${fullDate[1]}年${fullDate[2]}月${fullDate[3]}日`;
+    } else if (monthDate) {
+      itemYear = +monthDate[1]; itemMonth = +monthDate[2];
+      storeDate = `${monthDate[1]}年${monthDate[2]}月`;
     } else {
-      // No date found — skip to avoid flooding calendar with undated items
       return;
     }
 
+    if (itemYear !== year || itemMonth !== month) return;
     seen.add(title);
 
-    const img = $el.find('img').first();
-    let imgSrc = img.attr('src') || img.attr('data-src') || '';
+    const img = $a.find('img').first();
+    let imgSrc = img.attr('src') || '';
     if (imgSrc && !imgSrc.startsWith('http')) imgSrc = BASE + imgSrc;
 
-    const link = $el.find('a').first().attr('href') || '';
-    const fullUrl = link.startsWith('http') ? link : link ? BASE + link : '';
-
-    const storeDate = dateMatch ? `${dateMatch[1]}年${dateMatch[2]}月` : undefined;
+    const href = $a.attr('href') || '';
+    const fullUrl = href.startsWith('http') ? href : href ? BASE + href : BASE;
 
     items.push({
       title,
@@ -86,40 +85,6 @@ async function fetchTakaratomyArts(year, month) {
       category: 'gacha',
     });
   });
-
-  // Fallback: if no cards matched, try a looser selector
-  if (items.length === 0) {
-    $('a[href*="/items/gacha/"]').each((_, el) => {
-      const $a = $(el);
-      const href = $a.attr('href') || '';
-      if (href === url || href.includes('year=')) return;
-
-      const text = $a.text().replace(/\s+/g, ' ').trim();
-      if (!text || text.length < 3 || seen.has(text)) return;
-
-      const dateText = $a.closest('li, div, article').find('[class*="date"],[class*="release"]').text();
-      const dateMatch = dateText.match(/(\d{4})年(\d{1,2})月/);
-      if (dateMatch) {
-        if (parseInt(dateMatch[1]) !== year || parseInt(dateMatch[2]) !== month) return;
-      } else {
-        return;
-      }
-
-      seen.add(text);
-      const fullUrl2 = href.startsWith('http') ? href : BASE + href;
-      items.push({
-        title: text,
-        translatedTitle: text,
-        slug: `takaratomy-${Buffer.from(text).toString('hex').slice(0, 16)}`,
-        url: fullUrl2,
-        image: '',
-        storeDate: dateMatch ? `${dateMatch[1]}年${dateMatch[2]}月` : undefined,
-        source: 'takaratomy',
-        brand: 'タカラトミーアーツ',
-        category: 'gacha',
-      });
-    });
-  }
 
   return items;
 }

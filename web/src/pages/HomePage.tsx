@@ -3,6 +3,7 @@ import { ArcadeBox } from '../components/arcade/ArcadeBox';
 import { ArcadeButton } from '../components/arcade/ArcadeButton';
 import { ArcadeTicker } from '../components/arcade/ArcadeTicker';
 import { fetchLineup, addCustomLineup } from '../api/kujiLineup';
+import { parseKujiDateString } from '../utils/parseKujiDate';
 import { communityApi } from '../api/community';
 import { ensureKujiPlayer } from '../api/kujiDraw';
 import type { KujiLineupItem } from '../types/kuji';
@@ -290,20 +291,24 @@ export function HomePage() {
       const byDay: Record<number, KujiLineupItem[]> = {};
       lineupData.items.forEach(item => {
         const dateStr = item.storeDate || item.onlineDate;
-        if (dateStr) {
-          const match = dateStr.match(/(\d{1,2})日/);
-          if (match) {
-            const day = parseInt(match[1], 10);
-            if (!byDay[day]) byDay[day] = [];
-            byDay[day].push(item);
-          } else {
-            let d = 15;
-            if (dateStr.includes('上旬')) d = 5;
-            if (dateStr.includes('下旬')) d = 25;
-            if (!byDay[d]) byDay[d] = [];
-            byDay[d].push(item);
-          }
+        if (!dateStr) return;
+
+        // parseKujiDateString: YYYY年M月D日 → YYYY-MM-DD, YYYY年M月 → YYYY-MM-01
+        const parsed = parseKujiDateString(dateStr);
+        if (parsed) {
+          const [, , , d] = parsed.split('-');
+          const day = parseInt(d, 10);
+          if (!byDay[day]) byDay[day] = [];
+          byDay[day].push(item);
+          return;
         }
+
+        // 파싱 실패 → 旬 / 上旬 / 下旬 폴백
+        let d = 15;
+        if (dateStr.includes('上旬')) d = 5;
+        else if (dateStr.includes('下旬')) d = 25;
+        if (!byDay[d]) byDay[d] = [];
+        byDay[d].push(item);
       });
       setEventsByDay(byDay);
 

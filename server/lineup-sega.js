@@ -1,10 +1,16 @@
 /**
  * セガ ラッキーくじ 라인업 스크래퍼
  * URL: https://www.sega.jp/segaluckykuji/
- * 렌더링: 정적 HTML 위주
+ * 실제 HTML:
+ *   div.lottery_item >
+ *     figure > img
+ *     div.lottery_body >
+ *       p.lottery_name  (제목, <br> 포함)
+ *       div.lottery_infos > dl.lottery_info > dt "発売日" + dd "2026年3月6日(金)より順次発売"
+ *       div.lottery_btn > a[href]
  * 카테고리: kuji
  *
- * 온라인 버전: https://www.segaluckykujionline.net/ (JS 렌더링 — Playwright)
+ * 온라인 버전 (segaluckykujionline.net) 은 JS 렌더링 — Playwright
  */
 
 const { withPage } = require('./playwright-browser');
@@ -30,24 +36,29 @@ async function fetchSegaOffline(year, month) {
     const items = [];
     const seen = new Set();
 
-    $('.item, article, li.product, [class*="kuji-item"], [class*="lineup"]').each((_, el) => {
+    $('.lottery_item').each((_, el) => {
       const $el = $(el);
-      const title = $el.find('h2, h3, .title, [class*="title"]').first()
-        .text().replace(/\s+/g, ' ').trim();
+
+      // 제목: p.lottery_name (br로 구분된 경우 합치기)
+      const title = $el.find('p.lottery_name').text().replace(/\s+/g, ' ').trim();
       if (!title || seen.has(title)) return;
 
-      const allText = $el.text().replace(/\s+/g, ' ');
-      const fullDate = allText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-      const dotDate = allText.match(/(\d{4})\.(\d{2})\.(\d{2})/);
-      const monthDate = allText.match(/(\d{4})年(\d{1,2})月/);
+      // 발매일: dl.lottery_info에서 dt="発売日" 인 dd 값
+      let dateText = '';
+      $el.find('dl.lottery_info').each((_, dl) => {
+        const dt = $(dl).find('dt').text().trim();
+        if (dt.includes('発売')) {
+          dateText = $(dl).find('dd').text().trim();
+        }
+      });
+
+      const fullDate = dateText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+      const monthDate = dateText.match(/(\d{4})年(\d{1,2})月/);
 
       let itemYear, itemMonth, storeDate;
       if (fullDate) {
         itemYear = +fullDate[1]; itemMonth = +fullDate[2];
         storeDate = `${fullDate[1]}年${fullDate[2]}月${fullDate[3]}日`;
-      } else if (dotDate) {
-        itemYear = +dotDate[1]; itemMonth = +dotDate[2];
-        storeDate = `${dotDate[1]}年${+dotDate[2]}月${+dotDate[3]}日`;
       } else if (monthDate) {
         itemYear = +monthDate[1]; itemMonth = +monthDate[2];
         storeDate = `${monthDate[1]}年${monthDate[2]}月`;
@@ -58,18 +69,17 @@ async function fetchSegaOffline(year, month) {
       if (itemYear !== year || itemMonth !== month) return;
       seen.add(title);
 
-      const img = $el.find('img').first();
-      let imgSrc = img.attr('src') || img.attr('data-src') || '';
+      const img = $el.find('figure img').first();
+      let imgSrc = img.attr('src') || '';
       if (imgSrc && !imgSrc.startsWith('http')) imgSrc = 'https://www.sega.jp' + imgSrc;
 
-      const link = $el.find('a').first().attr('href') || '';
-      const fullUrl = link.startsWith('http') ? link : link ? 'https://www.sega.jp' + link : OFFLINE_URL;
+      const href = $el.find('.lottery_btn a').attr('href') || OFFLINE_URL;
 
       items.push({
         title,
         translatedTitle: title,
         slug: `sega-${Buffer.from(title).toString('hex').slice(0, 16)}`,
-        url: fullUrl,
+        url: href,
         image: imgSrc,
         storeDate,
         source: 'sega',
@@ -89,23 +99,19 @@ async function fetchSegaOnline(year, month) {
   try {
     return await withPage(async (page) => {
       await page.goto(ONLINE_URL, { waitUntil: 'networkidle', timeout: 25000 });
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(2500);
 
-      const items = await page.evaluate(
+      return await page.evaluate(
         ({ year, month }) => {
           const results = [];
           const seen = new Set();
 
-          const cards = document.querySelectorAll(
-            '[class*="item"], article, li, [class*="product"], [class*="kuji"]'
-          );
-
-          cards.forEach((el) => {
+          document.querySelectorAll('[class*="item"], [class*="product"], [class*="kuji"], article').forEach((el) => {
             const text = el.textContent || '';
-            if (text.length < 5) return;
+            if (text.length < 10) return;
 
-            const titleEl = el.querySelector('h2, h3, [class*="title"], [class*="name"]');
-            const title = (titleEl?.textContent || '').trim().replace(/\s+/g, ' ');
+            const titleEl = el.querySelector('[class*="title"], [class*="name"], h2, h3');
+            const title = (titleEl?.textContent || '').replace(/\s+/g, ' ').trim();
             if (!title || title.length < 3 || seen.has(title)) return;
 
             const fullDate = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
@@ -131,12 +137,10 @@ async function fetchSegaOnline(year, month) {
 
             const img = el.querySelector('img');
             const link = el.querySelector('a');
-
             results.push({
-              title,
-              translatedTitle: title,
+              title, translatedTitle: title,
               slug: `sega-online-${encodeURIComponent(title).slice(0, 28)}`,
-              url: link?.href || 'https://www.segaluckykujionline.net/',
+              url: link?.href || ONLINE_URL,
               image: img?.src || '',
               storeDate,
               onlineDate: storeDate,
@@ -150,8 +154,6 @@ async function fetchSegaOnline(year, month) {
         },
         { year, month }
       );
-
-      return items;
     });
   } catch (e) {
     console.warn('sega online playwright error:', e.message);
@@ -164,8 +166,6 @@ async function fetchSega(year, month) {
     fetchSegaOffline(year, month),
     fetchSegaOnline(year, month),
   ]);
-
-  // 중복 제목 제거
   const seen = new Set();
   return [...offline, ...online].filter((item) => {
     if (seen.has(item.title)) return false;

@@ -1,7 +1,12 @@
 /**
  * フリューくじ (みんなのくじ) 라인업 스크래퍼
- * URL: https://charahiroba.com/minkuji/lineup/
- * 렌더링: 정적 HTML + JS 보조 (robots.txt 전체 허용)
+ * URL: https://charahiroba.com/minkuji/lineup/?page=N
+ * 실제 HTML:
+ *   li.product-list__item >
+ *     div.product-list__image > a > img[data-src]
+ *     div.product-list__body >
+ *       h2.product-list__title  (제목)
+ *       p.product-list__text    (■発売日\n　2026年6月発売決定 포함)
  * 카테고리: kuji
  */
 
@@ -11,8 +16,7 @@ async function fetchFuryu(year, month) {
   const items = [];
   const seen = new Set();
 
-  // 최대 3페이지 확인 (20건씩)
-  for (let page = 1; page <= 3; page++) {
+  for (let page = 1; page <= 4; page++) {
     const url = `${BASE}/minkuji/lineup/?page=${page}`;
     let res;
     try {
@@ -25,7 +29,7 @@ async function fetchFuryu(year, month) {
         signal: AbortSignal.timeout(10000),
       });
     } catch (e) {
-      console.warn(`furyu page ${page} fetch error:`, e.message);
+      console.warn(`furyu page ${page} error:`, e.message);
       break;
     }
     if (!res.ok) break;
@@ -36,18 +40,16 @@ async function fetchFuryu(year, month) {
 
     let foundOnPage = 0;
 
-    $('.p-lineup-item, .lineup-item, article, li.item, [class*="lineup"]').each((_, el) => {
+    $('li.product-list__item').each((_, el) => {
       const $el = $(el);
-
-      const title = $el.find('h2, h3, .title, .name, [class*="title"], [class*="name"]').first()
-        .text().replace(/\s+/g, ' ').trim();
+      const title = $el.find('h2.product-list__title').text().replace(/\s+/g, ' ').trim();
       if (!title || seen.has(title)) return;
 
-      const allText = $el.text().replace(/\s+/g, ' ');
+      // p.product-list__text 안에 "■発売日\n　2026年6月発売決定" 형식
+      const bodyText = $el.find('p.product-list__text').text().replace(/\s+/g, ' ').trim();
 
-      // 날짜: "2026年3月14日（土）" or "2026年6月発売決定"
-      const fullDate = allText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-      const monthDate = allText.match(/(\d{4})年(\d{1,2})月/);
+      const fullDate = bodyText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+      const monthDate = bodyText.match(/(\d{4})年(\d{1,2})月/);
 
       let itemYear, itemMonth, storeDate;
       if (fullDate) {
@@ -64,12 +66,14 @@ async function fetchFuryu(year, month) {
       seen.add(title);
       foundOnPage++;
 
+      // img[data-src] 사용
       const img = $el.find('img').first();
-      let imgSrc = img.attr('src') || img.attr('data-src') || '';
-      if (imgSrc && !imgSrc.startsWith('http')) imgSrc = BASE + imgSrc;
+      let imgSrc = img.attr('data-src') || img.attr('src') || '';
+      if (imgSrc.startsWith('//')) imgSrc = 'https:' + imgSrc;
+      else if (imgSrc && !imgSrc.startsWith('http')) imgSrc = BASE + imgSrc;
 
-      const link = $el.find('a').first().attr('href') || '';
-      const fullUrl = link.startsWith('http') ? link : link ? BASE + link : `${BASE}/minkuji/lineup/`;
+      const href = $el.find('a').first().attr('href') || '';
+      const fullUrl = href.startsWith('http') ? href : href ? BASE + href : `${BASE}/minkuji/lineup/`;
 
       items.push({
         title,
@@ -84,7 +88,6 @@ async function fetchFuryu(year, month) {
       });
     });
 
-    // 이 페이지에 해당 월 항목이 없으면 조기 종료
     if (foundOnPage === 0 && page > 1) break;
   }
 

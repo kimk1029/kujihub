@@ -1,15 +1,19 @@
 /**
- * くじ引き堂 (BANDAI) 라인업 스크래퍼
+ * くじ引き堂 라인업 스크래퍼
  * URL: https://kujibikido.com/
- * 렌더링: 정적 HTML + 부분 JS
+ * 실제 HTML:
+ *   div#entry_list_more.planList > ul > li.fadein > a >
+ *     div.planImage > img
+ *     div.planDetail >
+ *       p.planStatus  (販売中!! / comingsoon)
+ *       p.planTitle   (제목)
+ *       p.planSchedule (e.g. "2026.4.28(火) まで" or "近日公開")
  * 카테고리: kuji
  */
 
 const BASE = 'https://kujibikido.com';
 
 async function fetchKujibikido(year, month) {
-  // くじ引き堂는 메인에 판매중/예정 상품이 나열됨
-  // 월별 파라미터가 없어 전체에서 날짜 필터
   const url = `${BASE}/`;
   let res;
   try {
@@ -34,22 +38,19 @@ async function fetchKujibikido(year, month) {
   const items = [];
   const seen = new Set();
 
-  // 상품 카드 — 다양한 구조 시도
-  $('article, .p-item, .kuji-item, [class*="item"], li.product, .product-card').each((_, el) => {
+  // 현재 판매중 & 예정 모두 수집 (날짜 기준 필터)
+  $('li.fadein').each((_, el) => {
     const $el = $(el);
+    const title = $el.find('p.planTitle').text().replace(/\s+/g, ' ').trim();
+    if (!title || seen.has(title)) return;
 
-    const title = $el.find('h2, h3, .title, .name, [class*="title"], [class*="name"]').first()
-      .text().replace(/\s+/g, ' ').trim();
-    if (!title || title.length < 3 || seen.has(title)) return;
+    const scheduleRaw = $el.find('p.planSchedule').text().replace(/\s+/g, ' ').trim();
 
-    const allText = $el.text().replace(/\s+/g, ' ');
-
-    // 날짜: "2026.4.28(火)" or "2026年4月28日" or "4月28日"
-    const dotDate = allText.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})/);
-    const jpFullDate = allText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-    const jpMonthDate = allText.match(/(\d{4})年(\d{1,2})月/);
-    // 연도 없이 "4月28日" 형식
-    const shortDate = allText.match(/(\d{1,2})月(\d{1,2})日/);
+    // 날짜 형식: "2026.4.28(火) まで" / "2026.4.1(水)より" / "2026.4.28"
+    // 또는 "2026年4月" 등
+    const dotDate = scheduleRaw.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})/);
+    const jpFullDate = scheduleRaw.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    const jpMonthDate = scheduleRaw.match(/(\d{4})年(\d{1,2})月/);
 
     let itemYear, itemMonth, storeDate;
     if (dotDate) {
@@ -61,23 +62,22 @@ async function fetchKujibikido(year, month) {
     } else if (jpMonthDate) {
       itemYear = +jpMonthDate[1]; itemMonth = +jpMonthDate[2];
       storeDate = `${jpMonthDate[1]}年${jpMonthDate[2]}月`;
-    } else if (shortDate) {
-      // 연도 없음 → 요청 연도로 추정
-      itemYear = year; itemMonth = +shortDate[1];
-      storeDate = `${year}年${shortDate[1]}月${shortDate[2]}日`;
     } else {
-      return;
+      return; // 날짜 없으면 제외
     }
 
     if (itemYear !== year || itemMonth !== month) return;
     seen.add(title);
 
-    const img = $el.find('img').first();
-    let imgSrc = img.attr('src') || img.attr('data-src') || '';
+    const img = $el.find('div.planImage img').first();
+    let imgSrc = img.attr('src') || '';
     if (imgSrc && !imgSrc.startsWith('http')) imgSrc = BASE + imgSrc;
 
-    const link = $el.find('a').first().attr('href') || '';
-    const fullUrl = link.startsWith('http') ? link : link ? BASE + link : BASE;
+    const href = $el.find('a').first().attr('href') || '';
+    // href: "../lp/xxx/" → https://kujibikido.com/lp/xxx/
+    const fullUrl = href.startsWith('http') ? href
+      : href.startsWith('../') ? BASE + '/' + href.slice(3)
+      : href ? BASE + href : BASE;
 
     items.push({
       title,

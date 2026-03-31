@@ -1,7 +1,10 @@
 /**
  * バンプレくじ 라인업 스크래퍼
  * URL: https://bsp-prize.jp/schedule/?d=YYYY-MM
- * 렌더링: 정적 HTML (robots.txt 없음)
+ * 실제 HTML:
+ *   div.products_item > a > figure.products_img img
+ *                          + p.products_name
+ *                          + p.products_date  (e.g. "2026年4月\n登場予定")
  * 카테고리: kuji
  */
 
@@ -33,19 +36,14 @@ async function fetchBanpre(year, month) {
   const items = [];
   const seen = new Set();
 
-  // 각 상품 카드
-  $('.products_item, .schedule-item, article, li.item, [class*="product"]').each((_, el) => {
+  $('.products_item').each((_, el) => {
     const $el = $(el);
-
-    const title = $el.find('h2, h3, .title, .name, [class*="title"]').first()
-      .text().replace(/\s+/g, ' ').trim();
+    const title = $el.find('p.products_name').text().replace(/\s+/g, ' ').trim();
     if (!title || seen.has(title)) return;
 
-    const allText = $el.text().replace(/\s+/g, ' ');
-
-    // 날짜: "2026年5月30日（土）発売予定"
-    const fullDate = allText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-    const monthDate = allText.match(/(\d{4})年(\d{1,2})月/);
+    const dateRaw = $el.find('p.products_date').text().replace(/\s+/g, ' ').trim();
+    const fullDate = dateRaw.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    const monthDate = dateRaw.match(/(\d{4})年(\d{1,2})月/);
 
     let storeDate;
     if (fullDate) {
@@ -60,12 +58,13 @@ async function fetchBanpre(year, month) {
 
     seen.add(title);
 
-    const img = $el.find('img').first();
-    let imgSrc = img.attr('src') || img.attr('data-src') || '';
-    if (imgSrc && !imgSrc.startsWith('http')) imgSrc = BASE + imgSrc;
+    const imgSrc = (() => {
+      let s = $el.find('figure.products_img img').attr('src') || '';
+      return s.startsWith('http') ? s : s ? BASE + s : '';
+    })();
 
-    const link = $el.find('a').first().attr('href') || '';
-    const fullUrl = link.startsWith('http') ? link : link ? BASE + link : url;
+    const href = $el.find('a').first().attr('href') || '';
+    const fullUrl = href.startsWith('http') ? href : href ? BASE + href : url;
 
     items.push({
       title,
