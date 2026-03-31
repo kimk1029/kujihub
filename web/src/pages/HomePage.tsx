@@ -254,14 +254,72 @@ function SubmitModal({
   );
 }
 
+// ── 픽셀 스피너 ───────────────────────────────────────────────
+function PixelSpinner() {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', gap: '18px', padding: '32px 0',
+    }}>
+      {/* 8픽셀 블록 회전링 */}
+      <div style={{ position: 'relative', width: '60px', height: '60px' }}>
+        {Array.from({ length: 8 }).map((_, i) => {
+          const angle = (i / 8) * 2 * Math.PI - Math.PI / 2;
+          const x = 26 + 22 * Math.cos(angle);
+          const y = 26 + 22 * Math.sin(angle);
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: x, top: y,
+                width: 7, height: 7,
+                background: 'var(--arcade-primary)',
+                imageRendering: 'pixelated',
+                animation: `pixelSpinFade 1s steps(1, end) infinite`,
+                animationDelay: `${-(8 - i) * 0.125}s`,
+              }}
+            />
+          );
+        })}
+      </div>
+      {/* 스캔라인 진행 바 */}
+      <div style={{ width: '120px', height: '6px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
+        <div style={{
+          height: '100%',
+          background: 'var(--arcade-secondary)',
+          boxShadow: '0 0 8px var(--arcade-secondary)',
+          animation: 'pixelScan 1.2s steps(12, end) infinite',
+        }} />
+      </div>
+      <div className="arcade-font-pixel" style={{
+        color: 'var(--arcade-secondary)', fontSize: '0.55rem', letterSpacing: '0.15em',
+        animation: 'blink 0.8s steps(1, end) infinite',
+      }}>
+        NOW_LOADING...
+      </div>
+    </div>
+  );
+}
+
 // ── 메인 페이지 ───────────────────────────────────────────────
 export function HomePage() {
-  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
+  const now = new Date();
+  const [selectedDay, setSelectedDay] = useState<number>(now.getDate());
   const [eventsByDay, setEventsByDay] = useState<Record<number, KujiLineupItem[]>>({});
   const [allItems, setAllItems] = useState<KujiLineupItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [year] = useState(new Date().getFullYear());
-  const [month] = useState(new Date().getMonth() + 1);
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
+
+  const prevMonth = () => {
+    if (viewMonth === 1) { setViewYear(y => y - 1); setViewMonth(12); }
+    else setViewMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 12) { setViewYear(y => y + 1); setViewMonth(1); }
+    else setViewMonth(m => m + 1);
+  };
 
   const [overview, setOverview] = useState<CommunityOverview | null>(null);
   const [player, setPlayer] = useState<KujiPlayer | null>(null);
@@ -278,7 +336,7 @@ export function HomePage() {
     setLoading(true);
     try {
       const [lineupData, commOverview, playerData] = await Promise.all([
-        fetchLineup(year, month),
+        fetchLineup(viewYear, viewMonth),
         communityApi.getOverview(0, 6),
         ensureKujiPlayer(userName)
       ]);
@@ -311,19 +369,25 @@ export function HomePage() {
       });
       setEventsByDay(byDay);
 
-      const currentDay = new Date().getDate();
-      if (!byDay[currentDay]) {
+      // 현재 달이면 오늘 날짜, 다른 달이면 첫 이벤트로 이동
+      const todayDate = new Date();
+      const isCurrentMonth = viewYear === todayDate.getFullYear() && viewMonth === todayDate.getMonth() + 1;
+      const anchorDay = isCurrentMonth ? todayDate.getDate() : 1;
+      if (!byDay[anchorDay]) {
         const sortedDays = Object.keys(byDay).map(Number).sort((a, b) => a - b);
-        const nextDay = sortedDays.find(d => d >= currentDay);
+        const nextDay = sortedDays.find(d => d >= anchorDay);
         if (nextDay) setSelectedDay(nextDay);
         else if (sortedDays.length > 0) setSelectedDay(sortedDays[0]);
+        else setSelectedDay(1);
+      } else {
+        setSelectedDay(anchorDay);
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [year, month, userName]);
+  }, [viewYear, viewMonth, userName]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -336,9 +400,10 @@ export function HomePage() {
   // 브랜드 목록 (실제 데이터에서 추출)
   const availableBrands = [...new Set(allItems.map(i => i.brand ?? '이치방쿠지'))].filter(Boolean);
 
-  const daysInMonth = new Date(year, month, 0).getDate();
+  const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
   // 1일의 요일 오프셋 (0=일, 1=월 ... 6=토)
-  const firstDayOffset = new Date(year, month - 1, 1).getDay();
+  const firstDayOffset = new Date(viewYear, viewMonth - 1, 1).getDay();
+  const MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
   return (
     <div className="animate-in">
@@ -374,7 +439,56 @@ export function HomePage() {
       <div className="detail-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '32px', marginBottom: '16px' }}>
         <ArcadeBox label="EVENT_CALENDAR" variant="secondary">
           <div style={{ padding: '8px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '12px' }}>
+
+            {/* 월 네비게이션 헤더 */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <button
+                onClick={prevMonth}
+                disabled={loading}
+                className="arcade-font-pixel"
+                style={{
+                  background: 'none', border: '2px solid rgba(0,255,255,0.3)',
+                  color: 'var(--arcade-secondary)', cursor: 'pointer',
+                  padding: '4px 8px', fontSize: '0.65rem', letterSpacing: '0.05em',
+                  opacity: loading ? 0.4 : 1,
+                  transition: 'border-color 0.15s',
+                }}
+              >◀ PREV</button>
+
+              <div style={{ textAlign: 'center' }}>
+                <div className="arcade-font-pixel" style={{ color: 'var(--arcade-primary)', fontSize: '0.5rem', letterSpacing: '0.12em', marginBottom: '2px' }}>
+                  YEAR {viewYear}
+                </div>
+                <div className="arcade-font-pixel" style={{
+                  color: 'var(--arcade-secondary)', fontSize: '1.1rem', letterSpacing: '0.08em',
+                  textShadow: '0 0 12px var(--arcade-secondary)',
+                }}>
+                  {MONTH_NAMES[viewMonth - 1]}
+                </div>
+              </div>
+
+              <button
+                onClick={nextMonth}
+                disabled={loading}
+                className="arcade-font-pixel"
+                style={{
+                  background: 'none', border: '2px solid rgba(0,255,255,0.3)',
+                  color: 'var(--arcade-secondary)', cursor: 'pointer',
+                  padding: '4px 8px', fontSize: '0.65rem', letterSpacing: '0.05em',
+                  opacity: loading ? 0.4 : 1,
+                  transition: 'border-color 0.15s',
+                }}
+              >NEXT ▶</button>
+            </div>
+
+            {/* 로딩 스피너 오버레이 */}
+            {loading && (
+              <div style={{ minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <PixelSpinner />
+              </div>
+            )}
+
+            {!loading && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '12px' }}>
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
                 <div key={i} style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', fontWeight: 900 }}>{d}</div>
               ))}
@@ -424,9 +538,9 @@ export function HomePage() {
                   </button>
                 );
               })}
-            </div>
+            </div>}
             {/* 카테고리 범례 */}
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
+            {!loading && <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
               {[
                 { key: 'kuji', label: '쿠지' },
                 { key: 'gacha', label: '가챠' },
@@ -434,17 +548,14 @@ export function HomePage() {
               ].map(({ key, label }) => (
                 <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <div style={{
-                    width: '8px', height: '8px', borderRadius: '50%',
+                    width: '8px', height: '8px',
                     backgroundColor: CATEGORY_COLOR[key],
                     boxShadow: `0 0 5px ${CATEGORY_COLOR[key]}`,
                   }} />
-                  <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.6)', fontWeight: 900 }}>{label}</span>
+                  <span className="arcade-font-pixel" style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.6)' }}>{label}</span>
                 </div>
               ))}
-            </div>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
-              {year} - {String(month).padStart(2, '0')} - SELECT A DATE
-            </p>
+            </div>}
           </div>
         </ArcadeBox>
 
@@ -632,8 +743,8 @@ export function HomePage() {
       {/* 제보 모달 */}
       {showSubmitModal && (
         <SubmitModal
-          year={year}
-          month={month}
+          year={viewYear}
+          month={viewMonth}
           onClose={() => setShowSubmitModal(false)}
           onSubmitted={() => {
             setShowSubmitModal(false);

@@ -186,6 +186,24 @@
   100% { filter: brightness(1); }
 }
 
+/* ── 픽셀 스피너 애니메이션 ─────────────────────────────────── */
+@keyframes pixelSpinFade {
+  0%   { opacity: 1;    box-shadow: 0 0 6px var(--arcade-primary); }
+  12%  { opacity: 0.75; }
+  25%  { opacity: 0.5;  box-shadow: none; }
+  50%  { opacity: 0.15; }
+  75%  { opacity: 0.08; }
+  100% { opacity: 1;    box-shadow: 0 0 6px var(--arcade-primary); }
+}
+@keyframes pixelScan {
+  0%   { width: 0%; }
+  100% { width: 100%; }
+}
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 /* Mobile Navigation Bar */
 .mobile-nav {
   display: none;
