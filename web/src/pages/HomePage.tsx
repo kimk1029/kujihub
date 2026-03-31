@@ -296,8 +296,7 @@ export function HomePage() {
         // parseKujiDateString: YYYY年M月D日 → YYYY-MM-DD, YYYY年M月 → YYYY-MM-01
         const parsed = parseKujiDateString(dateStr);
         if (parsed) {
-          const [, , , d] = parsed.split('-');
-          const day = parseInt(d, 10);
+          const day = parseInt(parsed.split('-')[2], 10);
           if (!byDay[day]) byDay[day] = [];
           byDay[day].push(item);
           return;
@@ -338,6 +337,8 @@ export function HomePage() {
   const availableBrands = [...new Set(allItems.map(i => i.brand ?? '이치방쿠지'))].filter(Boolean);
 
   const daysInMonth = new Date(year, month, 0).getDate();
+  // 1일의 요일 오프셋 (0=일, 1=월 ... 6=토)
+  const firstDayOffset = new Date(year, month - 1, 1).getDay();
 
   return (
     <div className="animate-in">
@@ -376,6 +377,10 @@ export function HomePage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '12px' }}>
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
                 <div key={i} style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', fontWeight: 900 }}>{d}</div>
+              ))}
+              {/* 1일 전까지 빈 칸 */}
+              {Array.from({ length: firstDayOffset }).map((_, i) => (
+                <div key={`empty-${i}`} />
               ))}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
