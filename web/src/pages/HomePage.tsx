@@ -481,14 +481,7 @@ export function HomePage() {
               >NEXT ▶</button>
             </div>
 
-            {/* 로딩 스피너 오버레이 */}
-            {loading && (
-              <div style={{ minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <PixelSpinner />
-              </div>
-            )}
-
-            {!loading && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '12px' }}>
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
                 <div key={i} style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', fontWeight: 900 }}>{d}</div>
               ))}
@@ -520,9 +513,7 @@ export function HomePage() {
                       cursor: 'pointer',
                       position: 'relative',
                       fontWeight: isSelected ? 900 : 500,
-                      opacity: loading ? 0.5 : 1,
                     }}
-                    disabled={loading}
                   >
                     {day}
                     {hasEvent && (
@@ -538,9 +529,9 @@ export function HomePage() {
                   </button>
                 );
               })}
-            </div>}
+            </div>
             {/* 카테고리 범례 */}
-            {!loading && <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
                 { key: 'kuji', label: '쿠지' },
                 { key: 'gacha', label: '가챠' },
@@ -548,19 +539,58 @@ export function HomePage() {
               ].map(({ key, label }) => (
                 <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <div style={{
-                    width: '8px', height: '8px',
+                    width: '7px', height: '7px',
                     backgroundColor: CATEGORY_COLOR[key],
                     boxShadow: `0 0 5px ${CATEGORY_COLOR[key]}`,
                   }} />
-                  <span className="arcade-font-pixel" style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.6)' }}>{label}</span>
+                  <span className="arcade-font-pixel" style={{ fontSize: '0.52rem', color: 'rgba(255,255,255,0.6)' }}>{label}</span>
                 </div>
               ))}
-            </div>}
+            </div>
+
+            {/* 데이터 소스 리스팅 */}
+            <div style={{
+              borderTop: '1px dashed rgba(255,255,255,0.1)',
+              paddingTop: '10px',
+              marginTop: '2px',
+            }}>
+              <div className="arcade-font-pixel" style={{ fontSize: '0.48rem', color: 'rgba(255,255,255,0.3)', marginBottom: '6px', letterSpacing: '0.1em' }}>
+                DATA_SOURCES
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {[
+                  { name: '一番くじ',      cat: 'kuji'  },
+                  { name: 'バンプレくじ',  cat: 'kuji'  },
+                  { name: 'くじ引き堂',    cat: 'kuji'  },
+                  { name: 'フリューくじ',  cat: 'kuji'  },
+                  { name: 'セガくじ',      cat: 'kuji'  },
+                  { name: 'サンリオ',      cat: 'kuji'  },
+                  { name: 'DMMくじ',       cat: 'kuji'  },
+                  { name: 'タカラトミー',  cat: 'gacha' },
+                  { name: 'ガシャポン',    cat: 'gacha' },
+                  { name: 'キタンクラブ',  cat: 'gacha' },
+                  { name: 'タイトー',      cat: 'crane' },
+                ].map(({ name, cat }) => (
+                  <span key={name} className="arcade-font-pixel" style={{
+                    fontSize: '0.48rem',
+                    padding: '2px 5px',
+                    border: `1px solid ${CATEGORY_COLOR[cat]}44`,
+                    color: `${CATEGORY_COLOR[cat]}99`,
+                    background: `${CATEGORY_COLOR[cat]}0a`,
+                    whiteSpace: 'nowrap',
+                  }}>{name}</span>
+                ))}
+              </div>
+            </div>
           </div>
         </ArcadeBox>
 
         <ArcadeBox label="EVENT_INTEL" variant="primary">
-          {selectedEvent ? (
+          {loading ? (
+            <div style={{ minHeight: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <PixelSpinner />
+            </div>
+          ) : selectedEvent ? (
             <div className="animate-in" key={`${selectedDay}-${selectedEvent.slug}`}>
               {/* 카테고리 + 브랜드 뱃지 */}
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
@@ -642,6 +672,7 @@ export function HomePage() {
             </div>
           )}
         </ArcadeBox>
+
       </div>
 
       {/* ── 브랜드 필터 + 제보 버튼 ──────────────────────────── */}

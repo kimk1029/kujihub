@@ -71,7 +71,9 @@ async function fetchKujibikido(year, month) {
 
     const img = $el.find('div.planImage img').first();
     let imgSrc = img.attr('src') || '';
-    if (imgSrc && !imgSrc.startsWith('http')) imgSrc = BASE + imgSrc;
+    if (imgSrc && !imgSrc.startsWith('http')) {
+      imgSrc = imgSrc.startsWith('/') ? BASE + imgSrc : BASE + '/' + imgSrc;
+    }
 
     const href = $el.find('a').first().attr('href') || '';
     // href: "../lp/xxx/" → https://kujibikido.com/lp/xxx/
