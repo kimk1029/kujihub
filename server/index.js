@@ -43,21 +43,58 @@ app.use('/api/kujis', kujiRouter);
 const communityRouter = require('./community');
 app.use('/api/community', communityRouter);
 
+// ── 커스텀 라인업 (PostgreSQL) ────────────────────────────────
+const { router: lineupCustomRouter, KNOWN_BRANDS } = require('./lineup-custom');
+app.use('/api/lineup-custom', lineupCustomRouter);
+
 // ── 외부 API ───────────────────────────────────────────────────
 const { fetchLineupForMonth } = require('./kuji-lineup');
 const { hasPapagoConfig, translateLineupMonth } = require('./kuji-translate');
 const { fetchYouTubeSearch } = require('./youtube-search');
 const { fetchAnimeCategories } = require('./anime-media');
+const { PrismaClient: _PrismaForLineup } = require('@prisma/client');
+const _lineupPrisma = new _PrismaForLineup();
 
 app.get('/api/kuji-lineup', async (req, res) => {
   const year = parseInt(req.query.year, 10) || new Date().getFullYear();
   const month = parseInt(req.query.month, 10) || new Date().getMonth() + 1;
   if (month < 1 || month > 12) return res.status(400).json({ error: 'month must be 1-12' });
   try {
-    const lineup = await fetchLineupForMonth(year, month);
+    // 1kuji.com 크롤링 + DB 커스텀 항목 병렬 조회
+    const [lineup, customEntries] = await Promise.all([
+      fetchLineupForMonth(year, month).catch(() => ({ year, month, items: [] })),
+      _lineupPrisma.lineupCustomEntry.findMany({ where: { year, month }, orderBy: { createdAt: 'asc' } }),
+    ]);
+
     const translatedLineup = await translateLineupMonth(lineup);
+
+    // 이치방쿠지 항목에 source/brand 추가
+    const ichibanItems = (translatedLineup.items || []).map((item) => ({
+      ...item,
+      source: 'ichiban',
+      brand: '이치방쿠지',
+    }));
+
+    // 커스텀 항목을 동일 형식으로 변환
+    const customItems = customEntries.map((e) => ({
+      title: e.title,
+      translatedTitle: e.title,
+      slug: `custom-${e.id}`,
+      url: e.url || '',
+      storeDate: e.storeDate || undefined,
+      onlineDate: e.onlineDate || undefined,
+      image: e.imageUrl || '',
+      source: 'custom',
+      brand: e.brand,
+      customId: e.id,
+      submittedBy: e.submittedBy,
+    }));
+
     res.json({
-      ...translatedLineup,
+      year,
+      month,
+      items: [...ichibanItems, ...customItems],
+      brands: KNOWN_BRANDS,
       translationProvider: hasPapagoConfig() ? 'papago' : 'fallback',
     });
   } catch (e) {

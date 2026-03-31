@@ -1,6 +1,27 @@
 import { api } from './client';
 import { parseKujiDateString } from '../utils/parseKujiDate';
-import type { KujiLineupMonth, ScheduleByDate } from '../types/kuji';
+import type { KujiLineupMonth, KujiLineupItem, ScheduleByDate } from '../types/kuji';
+
+export interface CustomLineupPayload {
+  brand: string;
+  title: string;
+  imageUrl?: string;
+  storeDate?: string;
+  onlineDate?: string;
+  url?: string;
+  submittedBy?: string;
+  year: number;
+  month: number;
+}
+
+export async function addCustomLineup(payload: CustomLineupPayload): Promise<KujiLineupItem> {
+  const { data } = await api.post('/api/lineup-custom', payload);
+  return data;
+}
+
+export async function deleteCustomLineup(id: number): Promise<void> {
+  await api.delete(`/api/lineup-custom/${id}`);
+}
 
 export async function fetchLineup(year: number, month: number): Promise<KujiLineupMonth> {
   const { data } = await api.get<KujiLineupMonth>('/api/kuji-lineup', { params: { year, month } });

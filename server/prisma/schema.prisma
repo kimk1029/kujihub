@@ -132,6 +132,23 @@ model KujiPrize {
   @@map("kuji_prizes")
 }
 
+model LineupCustomEntry {
+  id          Int      @id @default(autoincrement())
+  brand       String   @default("기타")
+  title       String
+  imageUrl    String?  @map("image_url")
+  storeDate   String?  @map("store_date")
+  onlineDate  String?  @map("online_date")
+  url         String?
+  submittedBy String?  @map("submitted_by")
+  year        Int
+  month       Int
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([year, month])
+  @@map("lineup_custom_entries")
+}
+
 model KujiSlot {
   kujiId       Int       @map("kuji_id")
   slotNumber   Int       @map("slot_number")
