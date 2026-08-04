@@ -11,6 +11,7 @@ import { CommunityListPage } from './pages/CommunityListPage';
 import { CommunityDetailPage } from './pages/CommunityDetailPage';
 import { CommunityPostFormPage } from './pages/CommunityPostFormPage';
 import { MediaPage } from './pages/MediaPage';
+import { CalculatorPage } from './pages/CalculatorPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { getWebAuthSession } from './auth/webAuth';
 import { getClientEnv } from './config/runtimeConfig';
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="kuji" element={<KujiListPage />} />
             <Route path="kuji/:id" element={<KujiDetailPage />} />
             <Route path="kuji/:id/board/:purchaseId" element={<KujiBoardPage />} />
+            <Route path="calc" element={<CalculatorPage />} />
             <Route path="feed" element={<FeedPage />} />
             <Route path="media" element={<MediaPage />} />
             <Route path="community" element={<CommunityListPage />} />
