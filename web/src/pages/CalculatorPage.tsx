@@ -26,21 +26,22 @@ const stepBtn: CSSProperties = {
 };
 
 const numRowBtn: CSSProperties = {
-  width: 48,
+  width: 44,
   border: 'none',
   borderLeft: '1px solid #2b2b52',
   background: '#12122c',
-  fontSize: 20,
+  fontSize: 18,
 };
 
 const numRowInput: CSSProperties = {
-  width: 64,
+  width: 56,
   background: '#0a0a1e',
   border: 'none',
   borderLeft: '1px solid #2b2b52',
   color: '#f2f3ff',
-  fontSize: 20,
+  fontSize: 18,
   textAlign: 'center',
+  padding: '6px 0',
 };
 
 interface CalcState {
@@ -88,16 +89,16 @@ function NumRow({
         style={{
           flex: 1,
           minWidth: 0,
-          padding: '10px 12px',
+          padding: '6px 10px',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          gap: 2,
+          alignItems: 'center',
+          gap: 6,
           borderLeft: `3px solid ${edge}`,
+          overflow: 'hidden',
         }}
       >
-        <span style={{ fontSize: 13, color: '#e8e9ff', whiteSpace: 'nowrap' }}>{label}</span>
-        <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>{code}</span>
+        <span style={{ fontSize: 12, color: '#e8e9ff', whiteSpace: 'nowrap' }}>{label}</span>
+        <span style={{ fontSize: 8, color: '#6f74b8', letterSpacing: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{code}</span>
       </div>
       <button type="button" onClick={() => onBump(-1)} style={{ ...numRowBtn, color: '#8f93d6' }}>
         −
@@ -197,10 +198,10 @@ export function CalculatorPage() {
         style={{
           width: '100%',
           maxWidth: 440,
-          padding: '16px 14px 80px',
+          padding: '12px 14px 76px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 16,
+          gap: 10,
         }}
       >
         {/* Header */}
@@ -235,7 +236,7 @@ export function CalculatorPage() {
         />
 
         {/* 위시 그룹 */}
-        <div style={{ border: '1px solid rgba(255,61,245,.4)', background: 'rgba(255,61,245,.03)', padding: 10, display: 'flex', flexDirection: 'column', gap: 10, position: 'relative' }}>
+        <div style={{ border: '1px solid rgba(255,61,245,.4)', background: 'rgba(255,61,245,.03)', padding: 8, display: 'flex', flexDirection: 'column', gap: 6, position: 'relative', marginTop: 4 }}>
           <span style={{ position: 'absolute', top: -8, left: 10, background: '#0a0a1e', padding: '0 6px', fontSize: 9, color: '#ff3df5', letterSpacing: 1 }}>
             WISH :: 위시
           </span>
@@ -250,13 +251,13 @@ export function CalculatorPage() {
           />
 
           {/* 이미 뽑힌 위시 — 슬라이더 */}
-          <div style={{ border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)', padding: '10px 12px', borderLeft: '3px solid #ffd23d' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontSize: 13, color: '#e8e9ff', whiteSpace: 'nowrap' }}>이미 뽑힌 위시</span>
-                <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>WISH_DRAWN</span>
-              </div>
-              <span style={{ fontSize: 18, color: '#ffd23d' }}>
+          <div style={{ border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)', padding: '6px 10px 8px', borderLeft: '3px solid #ffd23d' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, overflow: 'hidden' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0, overflow: 'hidden' }}>
+                <span style={{ fontSize: 12, color: '#e8e9ff', whiteSpace: 'nowrap' }}>이미 뽑힌 위시</span>
+                <span style={{ fontSize: 8, color: '#6f74b8', letterSpacing: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>WISH_DRAWN</span>
+              </span>
+              <span style={{ fontSize: 16, color: '#ffd23d', whiteSpace: 'nowrap', flexShrink: 0 }}>
                 {state.wishDrawn}
                 <span style={{ fontSize: 11, color: '#6f74b8' }}> / {wishNum}</span>
               </span>
@@ -276,31 +277,22 @@ export function CalculatorPage() {
                   : '#1a1a38',
               }}
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#6f74b8', marginTop: 4 }}>
-              <span>0</span>
-              <span>{wishNum}</span>
-            </div>
           </div>
         </div>
 
         {/* 하위 그룹 */}
-        <div style={{ border: '1px solid #2b2b52', background: 'rgba(111,116,184,.04)', padding: 10, position: 'relative' }}>
+        <div style={{ border: '1px solid #2b2b52', background: 'rgba(111,116,184,.04)', padding: 8, position: 'relative', marginTop: 4 }}>
           <span style={{ position: 'absolute', top: -8, left: 10, background: '#0a0a1e', padding: '0 6px', fontSize: 9, color: '#8f93d6', letterSpacing: 1 }}>
             LOWER :: 하위
           </span>
           <NumRow
             label="뽑힌 하위"
-            code="LOWER_DRAWN"
+            code={state.total !== '' ? `LOWER_DRAWN · MAX ${maxOther}` : 'LOWER_DRAWN'}
             edge="#6f74b8"
             value={state.otherDrawn}
             onChange={raw => update({ otherDrawn: clean(raw) })}
             onBump={d => update({ otherDrawn: String(Math.min(Math.max(num(state.otherDrawn) + d, 0), maxOther)) })}
           />
-          {state.total !== '' && (
-            <div style={{ fontSize: 9, color: '#6f74b8', marginTop: 6, letterSpacing: 1 }}>
-              MAX {maxOther} (전체 − 위시)
-            </div>
-          )}
         </div>
 
         {/* STEP 02 */}
