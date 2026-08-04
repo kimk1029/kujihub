@@ -226,7 +226,7 @@ export function CalculatorPage() {
 
         {/* 전체 장수 */}
         <NumRow
-          label="전체 장수"
+          label="총 갯수"
           code="TOTAL_TICKETS"
           edge="#4ff5e8"
           value={state.total}
@@ -241,7 +241,7 @@ export function CalculatorPage() {
           </span>
 
           <NumRow
-            label="총 위시 장수"
+            label="총 위시 갯수"
             code="WISH_PRIZES"
             edge="#ff3df5"
             value={state.wish}
@@ -311,7 +311,7 @@ export function CalculatorPage() {
 
         {calc.showEmpty && (
           <div style={{ textAlign: 'center', padding: '30px 12px', border: '1px dashed #2b2b52', fontSize: 12, color: '#8f93d6', lineHeight: 1.8 }}>
-            전체 장수와 총 위시 장수를 입력하세요
+            총 갯수와 총 위시 갯수를 입력하세요
             <br />
             <span style={{ fontSize: 10, color: '#6f74b8' }}>AWAITING_INPUT</span>
             <span className="calcv2-cursor" />
@@ -339,7 +339,7 @@ export function CalculatorPage() {
             {/* NEXT_DRAW */}
             <div style={{ border: '1px solid rgba(255,61,245,.5)', background: 'rgba(255,61,245,.05)', padding: '16px 14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 11, color: '#ffb3fb', letterSpacing: 1 }}>NEXT_DRAW :: 다음 1장</span>
+                <span style={{ fontSize: 11, color: '#ffb3fb', letterSpacing: 1 }}>NEXT_DRAW :: 다음 1개</span>
                 <span style={{ fontSize: 36, color: '#ff3df5', textShadow: '0 0 16px rgba(255,61,245,.55)' }}>
                   {pct(calc.pNext)}
                   <span style={{ fontSize: 16 }}>%</span>
@@ -360,10 +360,10 @@ export function CalculatorPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 11, color: '#8f93d6' }}>
                 <span>
-                  남은 티켓 <b style={{ color: '#f2f3ff' }}>{calc.remainTotal}</b>장
+                  남은 티켓 <b style={{ color: '#f2f3ff' }}>{calc.remainTotal}</b>개
                 </span>
                 <span>
-                  남은 위시 <b style={{ color: '#4ff5e8' }}>{calc.remainWish}</b>장
+                  남은 위시 <b style={{ color: '#4ff5e8' }}>{calc.remainWish}</b>개
                 </span>
               </div>
             </div>
@@ -371,10 +371,10 @@ export function CalculatorPage() {
             {/* SIMULATION */}
             <div style={{ border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)', padding: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#4ff5e8', letterSpacing: 1 }}>SIMULATION :: 몇 장 뽑지?</span>
+                <span style={{ fontSize: 11, color: '#4ff5e8', letterSpacing: 1 }}>SIMULATION :: 몇 개 뽑지?</span>
                 <span style={{ fontSize: 24, color: '#f2f3ff' }}>
                   {calc.n}
-                  <span style={{ fontSize: 11, color: '#6f74b8' }}> 장</span>
+                  <span style={{ fontSize: 11, color: '#6f74b8' }}> 개</span>
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginTop: 12 }}>
@@ -425,7 +425,7 @@ export function CalculatorPage() {
                         padding: '2px 4px',
                       }}
                     />
-                    원/장)
+                    원/개)
                   </span>
                   <span style={{ color: '#ffd23d' }}>{(calc.n * price).toLocaleString()}원</span>
                 </div>
