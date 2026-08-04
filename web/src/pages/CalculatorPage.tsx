@@ -2,20 +2,15 @@ import { useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import './calculator.css';
 
-type FieldKey = 'total' | 'wish' | 'wishDrawn' | 'otherDrawn';
-
-const FIELDS: { key: FieldKey; label: string; code: string; edge: string }[] = [
-  { key: 'total', label: '전체 장수', code: 'TOTAL_TICKETS', edge: '#4ff5e8' },
-  { key: 'wish', label: '위시 상 장수', code: 'WISH_PRIZES', edge: '#ff3df5' },
-  { key: 'wishDrawn', label: '뽑힌 위시 상', code: 'WISH_DRAWN', edge: '#ffd23d' },
-  { key: 'otherDrawn', label: '뽑힌 나머지 상', code: 'OTHER_DRAWN', edge: '#6f74b8' },
-];
-
 const DEFAULT_TICKET_PRICE = 1000;
 
 function num(s: string): number {
   const v = parseInt(String(s).replace(/[^0-9]/g, ''), 10);
   return Number.isNaN(v) ? 0 : v;
+}
+
+function clean(raw: string): string {
+  return raw.replace(/[^0-9]/g, '').slice(0, 6);
 }
 
 function pct(v: number): string {
@@ -30,35 +25,121 @@ const stepBtn: CSSProperties = {
   fontSize: 16,
 };
 
+const numRowBtn: CSSProperties = {
+  width: 48,
+  border: 'none',
+  borderLeft: '1px solid #2b2b52',
+  background: '#12122c',
+  fontSize: 20,
+};
+
+const numRowInput: CSSProperties = {
+  width: 64,
+  background: '#0a0a1e',
+  border: 'none',
+  borderLeft: '1px solid #2b2b52',
+  color: '#f2f3ff',
+  fontSize: 20,
+  textAlign: 'center',
+};
+
+interface CalcState {
+  total: string;
+  wish: string;
+  wishDrawn: number;
+  otherDrawn: string;
+}
+
+/** 전체 장수를 기준으로 모든 하위 값을 범위 안으로 클램핑 */
+function normalize(next: CalcState): CalcState {
+  const tn = num(next.total);
+  let wish = next.wish;
+  if (next.total !== '' && tn >= 0 && wish !== '' && num(wish) > tn) {
+    wish = String(tn);
+  }
+  const wn = num(wish);
+  const wishDrawn = Math.min(Math.max(next.wishDrawn, 0), wn);
+  let otherDrawn = next.otherDrawn;
+  if (next.total !== '' && otherDrawn !== '') {
+    const maxOther = Math.max(tn - wn, 0);
+    if (num(otherDrawn) > maxOther) otherDrawn = String(maxOther);
+  }
+  return { total: next.total, wish, wishDrawn, otherDrawn };
+}
+
+function NumRow({
+  label,
+  code,
+  edge,
+  value,
+  onChange,
+  onBump,
+}: {
+  label: string;
+  code: string;
+  edge: string;
+  value: string;
+  onChange: (raw: string) => void;
+  onBump: (delta: number) => void;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)' }}>
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          padding: '10px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          gap: 2,
+          borderLeft: `3px solid ${edge}`,
+        }}
+      >
+        <span style={{ fontSize: 13, color: '#e8e9ff' }}>{label}</span>
+        <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1 }}>{code}</span>
+      </div>
+      <button type="button" onClick={() => onBump(-1)} style={{ ...numRowBtn, color: '#8f93d6' }}>
+        −
+      </button>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder="0"
+        style={numRowInput}
+      />
+      <button type="button" onClick={() => onBump(1)} style={{ ...numRowBtn, color: '#4ff5e8' }}>
+        ＋
+      </button>
+    </div>
+  );
+}
+
 export function CalculatorPage() {
-  const [values, setValues] = useState<Record<FieldKey, string>>({
-    total: '',
-    wish: '',
-    wishDrawn: '',
-    otherDrawn: '',
-  });
+  const [state, setState] = useState<CalcState>({ total: '', wish: '', wishDrawn: 0, otherDrawn: '' });
   const [nRaw, setNRaw] = useState(10);
   const [priceRaw, setPriceRaw] = useState(String(DEFAULT_TICKET_PRICE));
 
-  const setField = (key: FieldKey, raw: string) => {
-    setValues(prev => ({ ...prev, [key]: raw.replace(/[^0-9]/g, '').slice(0, 6) }));
+  const update = (patch: Partial<CalcState>) => {
+    setState(prev => normalize({ ...prev, ...patch }));
   };
-  const bump = (key: FieldKey, delta: number) => {
-    setValues(prev => ({ ...prev, [key]: String(Math.max(num(prev[key]) + delta, 0)) }));
-  };
+
+  const totalNum = num(state.total);
+  const wishNum = num(state.wish);
+  const maxOther = state.total !== '' ? Math.max(totalNum - wishNum, 0) : 999999;
 
   const calc = useMemo(() => {
-    const total = num(values.total);
-    const wish = num(values.wish);
-    const wishDrawn = num(values.wishDrawn);
-    const otherDrawn = num(values.otherDrawn);
-    const entered = values.total !== '' && values.wish !== '' && total > 0 && wish > 0;
+    const total = num(state.total);
+    const wish = num(state.wish);
+    const wishDrawn = Math.min(state.wishDrawn, wish);
+    const otherDrawn = num(state.otherDrawn);
+    const entered = state.total !== '' && state.wish !== '' && total > 0 && wish > 0;
 
     let errorMsg = '';
-    if (entered) {
-      if (wish > total) errorMsg = '위시 상이 전체 장수보다 많습니다';
-      else if (wishDrawn > wish) errorMsg = '뽑힌 위시 상이 위시 상 장수보다 많습니다';
-      else if (wishDrawn + otherDrawn >= total) errorMsg = '남은 티켓이 없습니다';
+    if (entered && wishDrawn + otherDrawn >= total) {
+      errorMsg = '남은 티켓이 없습니다';
     }
     const valid = entered && !errorMsg;
 
@@ -102,11 +183,12 @@ export function CalculatorPage() {
       expected,
       verdict,
     };
-  }, [values, nRaw]);
+  }, [state, nRaw]);
 
   const price = num(priceRaw) || DEFAULT_TICKET_PRICE;
   const filled = Math.round(calc.pNext * 20);
   const meterCells = Array.from({ length: 20 }, (_, i) => i < filled);
+  const sliderPct = wishNum > 0 ? (state.wishDrawn / wishNum) * 100 : 0;
 
   return (
     <div className="calcv2">
@@ -142,56 +224,83 @@ export function CalculatorPage() {
           <span style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(79,245,232,.5), transparent)' }} />
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {FIELDS.map(f => (
-            <div key={f.key} style={{ display: 'flex', alignItems: 'stretch', border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)' }}>
-              <div
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: '10px 12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  gap: 2,
-                  borderLeft: `3px solid ${f.edge}`,
-                }}
-              >
-                <span style={{ fontSize: 13, color: '#e8e9ff' }}>{f.label}</span>
-                <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1 }}>{f.code}</span>
+        {/* 전체 장수 */}
+        <NumRow
+          label="전체 장수"
+          code="TOTAL_TICKETS"
+          edge="#4ff5e8"
+          value={state.total}
+          onChange={raw => update({ total: clean(raw) })}
+          onBump={d => update({ total: String(Math.max(totalNum + d, 0)) })}
+        />
+
+        {/* 위시 그룹 */}
+        <div style={{ border: '1px solid rgba(255,61,245,.4)', background: 'rgba(255,61,245,.03)', padding: 10, display: 'flex', flexDirection: 'column', gap: 10, position: 'relative' }}>
+          <span style={{ position: 'absolute', top: -8, left: 10, background: '#0a0a1e', padding: '0 6px', fontSize: 9, color: '#ff3df5', letterSpacing: 1 }}>
+            WISH :: 위시
+          </span>
+
+          <NumRow
+            label="총 위시 장수"
+            code="WISH_PRIZES"
+            edge="#ff3df5"
+            value={state.wish}
+            onChange={raw => update({ wish: clean(raw) })}
+            onBump={d => update({ wish: String(Math.max(wishNum + d, 0)) })}
+          />
+
+          {/* 이미 뽑힌 위시 — 슬라이더 */}
+          <div style={{ border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)', padding: '10px 12px', borderLeft: '3px solid #ffd23d' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 13, color: '#e8e9ff' }}>이미 뽑힌 위시</span>
+                <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1 }}>WISH_DRAWN</span>
               </div>
-              <button
-                type="button"
-                onClick={() => bump(f.key, -1)}
-                style={{ width: 48, border: 'none', borderLeft: '1px solid #2b2b52', background: '#12122c', color: '#8f93d6', fontSize: 20 }}
-              >
-                −
-              </button>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={values[f.key]}
-                onChange={e => setField(f.key, e.target.value)}
-                placeholder="0"
-                style={{
-                  width: 64,
-                  background: '#0a0a1e',
-                  border: 'none',
-                  borderLeft: '1px solid #2b2b52',
-                  color: '#f2f3ff',
-                  fontSize: 20,
-                  textAlign: 'center',
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => bump(f.key, 1)}
-                style={{ width: 48, border: 'none', borderLeft: '1px solid #2b2b52', background: '#12122c', color: '#4ff5e8', fontSize: 20 }}
-              >
-                ＋
-              </button>
+              <span style={{ fontSize: 18, color: '#ffd23d' }}>
+                {state.wishDrawn}
+                <span style={{ fontSize: 11, color: '#6f74b8' }}> / {wishNum}</span>
+              </span>
             </div>
-          ))}
+            <input
+              type="range"
+              className="calcv2-slider"
+              min={0}
+              max={Math.max(wishNum, 0)}
+              step={1}
+              value={state.wishDrawn}
+              disabled={wishNum <= 0}
+              onChange={e => update({ wishDrawn: Number(e.target.value) })}
+              style={{
+                background: wishNum > 0
+                  ? `linear-gradient(90deg, #ffd23d ${sliderPct}%, #1a1a38 ${sliderPct}%)`
+                  : '#1a1a38',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#6f74b8', marginTop: 4 }}>
+              <span>0</span>
+              <span>{wishNum}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 하위 그룹 */}
+        <div style={{ border: '1px solid #2b2b52', background: 'rgba(111,116,184,.04)', padding: 10, position: 'relative' }}>
+          <span style={{ position: 'absolute', top: -8, left: 10, background: '#0a0a1e', padding: '0 6px', fontSize: 9, color: '#8f93d6', letterSpacing: 1 }}>
+            LOWER :: 하위
+          </span>
+          <NumRow
+            label="뽑힌 하위"
+            code="LOWER_DRAWN"
+            edge="#6f74b8"
+            value={state.otherDrawn}
+            onChange={raw => update({ otherDrawn: clean(raw) })}
+            onBump={d => update({ otherDrawn: String(Math.min(Math.max(num(state.otherDrawn) + d, 0), maxOther)) })}
+          />
+          {state.total !== '' && (
+            <div style={{ fontSize: 9, color: '#6f74b8', marginTop: 6, letterSpacing: 1 }}>
+              MAX {maxOther} (전체 − 위시)
+            </div>
+          )}
         </div>
 
         {/* STEP 02 */}
@@ -202,7 +311,7 @@ export function CalculatorPage() {
 
         {calc.showEmpty && (
           <div style={{ textAlign: 'center', padding: '30px 12px', border: '1px dashed #2b2b52', fontSize: 12, color: '#8f93d6', lineHeight: 1.8 }}>
-            전체 장수와 위시 상 장수를 입력하세요
+            전체 장수와 총 위시 장수를 입력하세요
             <br />
             <span style={{ fontSize: 10, color: '#6f74b8' }}>AWAITING_INPUT</span>
             <span className="calcv2-cursor" />
@@ -305,7 +414,7 @@ export function CalculatorPage() {
                       type="text"
                       inputMode="numeric"
                       value={priceRaw}
-                      onChange={e => setPriceRaw(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                      onChange={e => setPriceRaw(clean(e.target.value))}
                       style={{
                         width: 52,
                         background: '#0a0a1e',
