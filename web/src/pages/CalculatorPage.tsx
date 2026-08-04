@@ -1,248 +1,346 @@
 import { useMemo, useState } from 'react';
-import '../glitch-terminal.css';
+import type { CSSProperties } from 'react';
+import './calculator.css';
 
-type FieldKey = 'total' | 'wishTotal' | 'wishDrawn' | 'lowerDrawn';
+type FieldKey = 'total' | 'wish' | 'wishDrawn' | 'otherDrawn';
 
-const FIELDS: { key: FieldKey; label: string; hint: string }[] = [
-  { key: 'total', label: '전체 장수', hint: 'TOTAL_TICKETS' },
-  { key: 'wishTotal', label: '위시 상 장수', hint: 'WISH_PRIZES' },
-  { key: 'wishDrawn', label: '뽑힌 위시 상', hint: 'WISH_DRAWN' },
-  { key: 'lowerDrawn', label: '뽑힌 하위 상', hint: 'LOWER_DRAWN' },
+const FIELDS: { key: FieldKey; label: string; code: string; edge: string }[] = [
+  { key: 'total', label: '전체 장수', code: 'TOTAL_TICKETS', edge: '#4ff5e8' },
+  { key: 'wish', label: '위시 상 장수', code: 'WISH_PRIZES', edge: '#ff3df5' },
+  { key: 'wishDrawn', label: '뽑힌 위시 상', code: 'WISH_DRAWN', edge: '#ffd23d' },
+  { key: 'otherDrawn', label: '뽑힌 나머지 상', code: 'OTHER_DRAWN', edge: '#6f74b8' },
 ];
 
-function parseCount(value: string): number | null {
-  if (value.trim() === '') return null;
-  const n = Number(value);
-  if (!Number.isInteger(n) || n < 0) return null;
-  return n;
+const DEFAULT_TICKET_PRICE = 1000;
+
+function num(s: string): number {
+  const v = parseInt(String(s).replace(/[^0-9]/g, ''), 10);
+  return Number.isNaN(v) ? 0 : v;
 }
 
-/** k장 뽑을 때 위시 상이 1개 이상 나올 확률 (하이퍼지오메트릭) */
-function atLeastOneWish(remainWish: number, remainTotal: number, k: number): number {
-  if (remainTotal <= 0 || k <= 0) return 0;
-  if (k >= remainTotal) return remainWish > 0 ? 1 : 0;
-  const remainLower = remainTotal - remainWish;
-  let pNone = 1;
-  for (let i = 0; i < k; i += 1) {
-    pNone *= (remainLower - i) / (remainTotal - i);
-    if (pNone <= 0) return 1;
-  }
-  return 1 - pNone;
+function pct(v: number): string {
+  return v >= 0.9995 ? '100' : (v * 100).toFixed(1);
 }
 
-function formatPct(p: number): string {
-  const pct = p * 100;
-  return Number.isInteger(pct) ? `${pct}%` : `${pct.toFixed(1)}%`;
-}
+const stepBtn: CSSProperties = {
+  height: 44,
+  border: '1px solid #2b2b52',
+  background: '#12122c',
+  color: '#4ff5e8',
+  fontSize: 16,
+};
 
 export function CalculatorPage() {
   const [values, setValues] = useState<Record<FieldKey, string>>({
     total: '',
-    wishTotal: '',
+    wish: '',
     wishDrawn: '',
-    lowerDrawn: '',
+    otherDrawn: '',
   });
-  const [drawCount, setDrawCount] = useState(1);
+  const [nRaw, setNRaw] = useState(10);
+  const [priceRaw, setPriceRaw] = useState(String(DEFAULT_TICKET_PRICE));
 
   const setField = (key: FieldKey, raw: string) => {
-    setValues(prev => ({ ...prev, [key]: raw.replace(/[^\d]/g, '') }));
+    setValues(prev => ({ ...prev, [key]: raw.replace(/[^0-9]/g, '').slice(0, 6) }));
+  };
+  const bump = (key: FieldKey, delta: number) => {
+    setValues(prev => ({ ...prev, [key]: String(Math.max(num(prev[key]) + delta, 0)) }));
   };
 
-  const result = useMemo(() => {
-    const total = parseCount(values.total);
-    const wishTotal = parseCount(values.wishTotal);
-    const wishDrawn = parseCount(values.wishDrawn);
-    const lowerDrawn = parseCount(values.lowerDrawn);
+  const calc = useMemo(() => {
+    const total = num(values.total);
+    const wish = num(values.wish);
+    const wishDrawn = num(values.wishDrawn);
+    const otherDrawn = num(values.otherDrawn);
+    const entered = values.total !== '' && values.wish !== '' && total > 0 && wish > 0;
 
-    if (total === null || wishTotal === null || wishDrawn === null || lowerDrawn === null) {
-      return { status: 'empty' as const };
+    let errorMsg = '';
+    if (entered) {
+      if (wish > total) errorMsg = '위시 상이 전체 장수보다 많습니다';
+      else if (wishDrawn > wish) errorMsg = '뽑힌 위시 상이 위시 상 장수보다 많습니다';
+      else if (wishDrawn + otherDrawn >= total) errorMsg = '남은 티켓이 없습니다';
     }
-    if (total <= 0) return { status: 'error' as const, message: '전체 장수는 1장 이상이어야 합니다.' };
-    if (wishTotal > total) return { status: 'error' as const, message: '위시 상 장수가 전체 장수보다 많을 수 없습니다.' };
-    if (wishDrawn > wishTotal) return { status: 'error' as const, message: '뽑힌 위시 상이 위시 상 장수보다 많을 수 없습니다.' };
-    if (lowerDrawn > total - wishTotal) return { status: 'error' as const, message: '뽑힌 하위 상이 하위 상 전체 수를 초과했습니다.' };
+    const valid = entered && !errorMsg;
 
-    const drawn = wishDrawn + lowerDrawn;
-    const remainTotal = total - drawn;
-    const remainWish = wishTotal - wishDrawn;
-    const initialProb = wishTotal / total;
-    const currentProb = remainTotal > 0 ? remainWish / remainTotal : 0;
+    const remainTotal = valid ? total - wishDrawn - otherDrawn : 0;
+    const remainWish = valid ? Math.min(wish - wishDrawn, remainTotal) : 0;
+    const pNext = remainTotal > 0 ? remainWish / remainTotal : 0;
+    const nMax = Math.max(remainTotal, 1);
+    const n = Math.min(Math.max(nRaw || 1, 1), nMax);
+
+    let pNone = 1;
+    for (let i = 0; i < n && remainTotal > 0; i += 1) {
+      const numer = remainTotal - remainWish - i;
+      if (numer <= 0) {
+        pNone = 0;
+        break;
+      }
+      pNone *= numer / (remainTotal - i);
+    }
+    const pAtLeast = remainWish > 0 ? 1 - pNone : 0;
+    const expected = remainTotal > 0 ? (n * remainWish) / remainTotal : 0;
+
+    let verdict = '';
+    if (valid) {
+      if (pAtLeast >= 0.9) verdict = '확률 매우 높음. 지금이 기회다!';
+      else if (pAtLeast >= 0.6) verdict = '나쁘지 않다. 도전해볼 만하다.';
+      else if (pAtLeast >= 0.3) verdict = '운에 맡기는 구간. 신중하게.';
+      else verdict = '확률 낮음. 다음 기회를 노리자.';
+    }
 
     return {
-      status: 'ok' as const,
-      total,
-      wishTotal,
-      drawn,
+      showEmpty: !entered && !errorMsg,
+      showError: !!errorMsg,
+      errorMsg,
+      showResult: valid,
       remainTotal,
       remainWish,
-      remainLower: remainTotal - remainWish,
-      initialProb,
-      currentProb,
-      deltaPct: (currentProb - initialProb) * 100,
+      pNext,
+      n,
+      nMax,
+      pAtLeast,
+      expected,
+      verdict,
     };
-  }, [values]);
+  }, [values, nRaw]);
 
-  const ok = result.status === 'ok' ? result : null;
-  const soldOut = ok !== null && ok.remainTotal === 0;
-  const maxDraw = ok ? Math.max(1, Math.min(ok.remainTotal, 10)) : 10;
-  const effectiveDraw = Math.min(drawCount, maxDraw);
-
-  const verdict = (() => {
-    if (!ok || soldOut) return null;
-    if (ok.remainWish === 0) return { cls: 'err', label: 'WISH_DEPLETED', text: '위시 상이 모두 소진되었습니다. 철수를 권장합니다.' };
-    if (ok.deltaPct > 0) return { cls: 'good', label: 'ADVANTAGE_DETECTED', text: '초기 확률보다 유리한 상태입니다. 지금이 기회!' };
-    if (ok.deltaPct === 0) return { cls: 'even', label: 'NEUTRAL_STATE', text: '초기 확률과 동일한 상태입니다.' };
-    return { cls: 'warn', label: 'DISADVANTAGE', text: '초기 확률보다 불리한 상태입니다. 신중히 판단하세요.' };
-  })();
+  const price = num(priceRaw) || DEFAULT_TICKET_PRICE;
+  const filled = Math.round(calc.pNext * 20);
+  const meterCells = Array.from({ length: 20 }, (_, i) => i < filled);
 
   return (
-    <div className="gt-page">
-      <div className="scan-line gt-scanline-fixed" />
-      <div className="gt-container-narrow">
-        <header className="gt-page-head">
-          <div className="gt-page-tag">PROB_ENGINE_V.1.0</div>
-          <h1 className="gt-page-title">KUJI_CALCULATOR</h1>
-          <div className="gt-page-sub">
-            <span className="gt-pulse-dot" />
-            현장 확률 분석: 남은 티켓 기준 위시 상 획득 확률을 계산합니다
+    <div className="calcv2">
+      <div className="calcv2-scanlines" />
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 440,
+          padding: '16px 14px 80px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 2 }}>KUJIHUB // PROB_ENGINE</div>
+            <h1 className="calcv2-title">확률계산기</h1>
           </div>
-        </header>
-
-        {/* 입력 콘솔 */}
-        <div className="gt-pconsole" style={{ marginTop: 24 }}>
-          <div className="gt-pconsole-tag">INPUT_PARAMS</div>
-          <div className="gt-calc-grid">
-            {FIELDS.map(field => (
-              <label key={field.key} className="gt-calc-field">
-                <span className="gt-calc-label">{field.label}</span>
-                <span className="gt-calc-hint">{field.hint}</span>
-                <div className="gt-calc-inputwrap">
-                  <input
-                    className="gt-calc-input"
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="0"
-                    value={values[field.key]}
-                    onChange={e => setField(field.key, e.target.value)}
-                  />
-                  <span className="gt-calc-unit">장</span>
-                </div>
-              </label>
-            ))}
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9, color: '#3dff8e', letterSpacing: 1 }}>
+              <span className="calcv2-blink" style={{ width: 6, height: 6, background: '#3dff8e', boxShadow: '0 0 8px #3dff8e' }} />
+              LIVE
+            </span>
+            <div style={{ fontSize: 9, color: '#6f74b8', marginTop: 4 }}>HYPERGEO_MODE</div>
           </div>
         </div>
 
-        {result.status === 'error' && <div className="gt-err-box">ERROR: {result.message}</div>}
+        {/* STEP 01 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 10, color: '#4ff5e8', letterSpacing: 1, whiteSpace: 'nowrap' }}>▚ STEP_01 :: 현장 입력</span>
+          <span style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(79,245,232,.5), transparent)' }} />
+        </div>
 
-        {result.status === 'empty' && (
-          <div className="gt-empty">
-            네 개의 값을 모두 입력하면 확률 분석이 시작됩니다_<span className="gt-blink">█</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {FIELDS.map(f => (
+            <div key={f.key} style={{ display: 'flex', alignItems: 'stretch', border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)' }}>
+              <div
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '10px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  gap: 2,
+                  borderLeft: `3px solid ${f.edge}`,
+                }}
+              >
+                <span style={{ fontSize: 13, color: '#e8e9ff' }}>{f.label}</span>
+                <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1 }}>{f.code}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => bump(f.key, -1)}
+                style={{ width: 48, border: 'none', borderLeft: '1px solid #2b2b52', background: '#12122c', color: '#8f93d6', fontSize: 20 }}
+              >
+                −
+              </button>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={values[f.key]}
+                onChange={e => setField(f.key, e.target.value)}
+                placeholder="0"
+                style={{
+                  width: 64,
+                  background: '#0a0a1e',
+                  border: 'none',
+                  borderLeft: '1px solid #2b2b52',
+                  color: '#f2f3ff',
+                  fontSize: 20,
+                  textAlign: 'center',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => bump(f.key, 1)}
+                style={{ width: 48, border: 'none', borderLeft: '1px solid #2b2b52', background: '#12122c', color: '#4ff5e8', fontSize: 20 }}
+              >
+                ＋
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* STEP 02 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+          <span style={{ fontSize: 10, color: '#ff3df5', letterSpacing: 1, whiteSpace: 'nowrap' }}>▞ STEP_02 :: 분석 결과</span>
+          <span style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(255,61,245,.5), transparent)' }} />
+        </div>
+
+        {calc.showEmpty && (
+          <div style={{ textAlign: 'center', padding: '30px 12px', border: '1px dashed #2b2b52', fontSize: 12, color: '#8f93d6', lineHeight: 1.8 }}>
+            전체 장수와 위시 상 장수를 입력하세요
+            <br />
+            <span style={{ fontSize: 10, color: '#6f74b8' }}>AWAITING_INPUT</span>
+            <span className="calcv2-cursor" />
           </div>
         )}
 
-        {ok && (
-          <>
-            {/* 현황 */}
-            <div className="gt-status-grid" style={{ marginTop: 24 }}>
-              <div className="gt-status-cell prim">
-                <small>남은 장수</small>
-                <strong>{ok.remainTotal}</strong>
-              </div>
-              <div className="gt-status-cell">
-                <small>남은 위시</small>
-                <strong>{ok.remainWish}</strong>
-              </div>
-              <div className="gt-status-cell ter">
-                <small>남은 하위</small>
-                <strong>{ok.remainLower}</strong>
-              </div>
-            </div>
+        {calc.showError && (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '18px 12px',
+              border: '1px solid rgba(255,77,90,.6)',
+              background: 'rgba(255,77,90,.08)',
+              fontSize: 12,
+              color: '#ff8d96',
+              lineHeight: 1.7,
+            }}
+          >
+            ⚠ ERROR :: {calc.errorMsg}
+          </div>
+        )}
 
-            {/* 확률 비교 */}
-            <div className="gt-pconsole">
-              <div className="gt-pconsole-tag">PROBABILITY_SCAN</div>
-
-              <div className="gt-pconsole-row">
-                <div>
-                  <small>초기 위시 확률</small>
-                  <strong>
-                    {formatPct(ok.initialProb)}{' '}
-                    <span>({ok.wishTotal}/{ok.total})</span>
-                  </strong>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <small>확률 변화</small>
-                  <strong className={ok.deltaPct >= 0 ? 'sec' : ''} style={ok.deltaPct < 0 ? { color: 'var(--gt-error)' } : undefined}>
-                    {ok.deltaPct >= 0 ? '+' : ''}{Number.isInteger(ok.deltaPct) ? ok.deltaPct : ok.deltaPct.toFixed(1)}%p
-                  </strong>
-                </div>
+        {calc.showResult && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* NEXT_DRAW */}
+            <div style={{ border: '1px solid rgba(255,61,245,.5)', background: 'rgba(255,61,245,.05)', padding: '16px 14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: 11, color: '#ffb3fb', letterSpacing: 1 }}>NEXT_DRAW :: 다음 1장</span>
+                <span style={{ fontSize: 36, color: '#ff3df5', textShadow: '0 0 16px rgba(255,61,245,.55)' }}>
+                  {pct(calc.pNext)}
+                  <span style={{ fontSize: 16 }}>%</span>
+                </span>
               </div>
-
-              <div className="gt-calc-current">
-                <small>현재 1장 뽑을 때 위시 확률</small>
-                <div className="gt-calc-current-value">
-                  {soldOut ? 'SOLD OUT' : formatPct(ok.currentProb)}
-                  {!soldOut && (
-                    <span className="gt-calc-current-frac">{ok.remainWish}/{ok.remainTotal}</span>
-                  )}
-                </div>
-                <div className="gt-calc-bar">
-                  <div
-                    className="gt-calc-bar-fill"
-                    style={{ width: `${Math.min(100, ok.currentProb * 100)}%` }}
+              <div style={{ display: 'flex', gap: 3, marginTop: 12 }}>
+                {meterCells.map((on, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 14,
+                      background: on ? '#ff3df5' : '#1a1a38',
+                      boxShadow: on ? '0 0 6px rgba(255,61,245,.6)' : 'none',
+                    }}
                   />
-                </div>
+                ))}
               </div>
-
-              {verdict && (
-                <div className={`gt-calc-verdict ${verdict.cls}`}>
-                  <strong>{verdict.label}</strong>
-                  <p>{verdict.text}</p>
-                </div>
-              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 11, color: '#8f93d6' }}>
+                <span>
+                  남은 티켓 <b style={{ color: '#f2f3ff' }}>{calc.remainTotal}</b>장
+                </span>
+                <span>
+                  남은 위시 <b style={{ color: '#4ff5e8' }}>{calc.remainWish}</b>장
+                </span>
+              </div>
             </div>
 
-            {/* 연속 뽑기 시뮬레이션 */}
-            {!soldOut && ok.remainWish > 0 && (
-              <div className="gt-pconsole">
-                <div className="gt-pconsole-tag">MULTI_DRAW_SIM</div>
-                <div className="gt-qty-row" style={{ marginBottom: 0 }}>
-                  <div className="gt-qty-box">
-                    <button
-                      type="button"
-                      className="gt-qty-btn"
-                      onClick={() => setDrawCount(Math.max(1, effectiveDraw - 1))}
-                    >
-                      −
-                    </button>
-                    <div className="gt-qty-value">
-                      <small>뽑을 장수</small>
-                      <strong>{effectiveDraw}</strong>
-                    </div>
-                    <button
-                      type="button"
-                      className="gt-qty-btn"
-                      onClick={() => setDrawCount(Math.min(maxDraw, effectiveDraw + 1))}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <div className="gt-total-box">
-                    <small>위시 1개 이상 확률</small>
-                    <strong>{formatPct(atLeastOneWish(ok.remainWish, ok.remainTotal, effectiveDraw))}</strong>
-                  </div>
+            {/* SIMULATION */}
+            <div style={{ border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)', padding: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 11, color: '#4ff5e8', letterSpacing: 1 }}>SIMULATION :: 몇 장 뽑지?</span>
+                <span style={{ fontSize: 24, color: '#f2f3ff' }}>
+                  {calc.n}
+                  <span style={{ fontSize: 11, color: '#6f74b8' }}> 장</span>
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginTop: 12 }}>
+                <button type="button" onClick={() => setNRaw(Math.max(calc.n - 1, 1))} style={{ ...stepBtn, color: '#8f93d6' }}>
+                  −1
+                </button>
+                <button type="button" onClick={() => setNRaw(Math.min(calc.n + 1, calc.nMax))} style={stepBtn}>
+                  +1
+                </button>
+                <button type="button" onClick={() => setNRaw(Math.min(calc.n + 5, calc.nMax))} style={stepBtn}>
+                  +5
+                </button>
+                <button type="button" onClick={() => setNRaw(Math.min(calc.n + 10, calc.nMax))} style={stepBtn}>
+                  +10
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNRaw(1)}
+                  style={{ height: 44, border: '1px solid rgba(255,61,245,.5)', background: 'rgba(255,61,245,.08)', color: '#ff3df5', fontSize: 12 }}
+                >
+                  RESET
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 14, fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #2b2b52', paddingTop: 11 }}>
+                  <span style={{ color: '#8f93d6' }}>위시 1개 이상 뜰 확률</span>
+                  <span style={{ color: '#3dff8e', fontSize: 16 }}>{pct(calc.pAtLeast)}%</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#8f93d6' }}>기대 위시 획득</span>
+                  <span style={{ color: '#f2f3ff' }}>{calc.expected.toFixed(1)} 개</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#8f93d6', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    예상 비용 (
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={priceRaw}
+                      onChange={e => setPriceRaw(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                      style={{
+                        width: 52,
+                        background: '#0a0a1e',
+                        border: '1px solid #2b2b52',
+                        color: '#cfd2ff',
+                        fontSize: 12,
+                        textAlign: 'right',
+                        padding: '2px 4px',
+                      }}
+                    />
+                    원/장)
+                  </span>
+                  <span style={{ color: '#ffd23d' }}>{(calc.n * price).toLocaleString()}원</span>
                 </div>
               </div>
-            )}
-          </>
+            </div>
+
+            {/* VERDICT */}
+            <div style={{ border: '1px solid #2b2b52', background: '#0a0a1e', padding: '12px 14px', fontSize: 11, lineHeight: 1.9, color: '#8f93d6' }}>
+              <span style={{ color: '#4ff5e8' }}>&gt; VERDICT ::</span> {calc.verdict}
+            </div>
+          </div>
         )}
 
-        <div className="gt-term-bar">
-          <span>&gt; PROB_ENGINE :: HYPERGEOMETRIC_MODE</span>
-          <div className="gt-term-nodes">
-            <span>REMAIN_BASED</span>
-            <span>NO_REPLACEMENT</span>
-          </div>
+        <div
+          style={{
+            fontSize: 9,
+            color: '#4a4e86',
+            letterSpacing: 1,
+            lineHeight: 1.8,
+            borderTop: '1px solid #1a1a38',
+            paddingTop: 10,
+          }}
+        >
+          &gt; HYPERGEOMETRIC · REMAIN_BASED · NO_REPLACEMENT
         </div>
       </div>
     </div>
