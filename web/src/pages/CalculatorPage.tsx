@@ -96,8 +96,8 @@ function NumRow({
           borderLeft: `3px solid ${edge}`,
         }}
       >
-        <span style={{ fontSize: 13, color: '#e8e9ff' }}>{label}</span>
-        <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1 }}>{code}</span>
+        <span style={{ fontSize: 13, color: '#e8e9ff', whiteSpace: 'nowrap' }}>{label}</span>
+        <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>{code}</span>
       </div>
       <button type="button" onClick={() => onBump(-1)} style={{ ...numRowBtn, color: '#8f93d6' }}>
         −
@@ -207,7 +207,7 @@ export function CalculatorPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 2 }}>KUJIHUB // PROB_ENGINE</div>
-            <h1 className="calcv2-title">확률계산기</h1>
+            <h1 className="calcv2-title">쿠지확률계산기</h1>
           </div>
           <div style={{ textAlign: 'right' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9, color: '#3dff8e', letterSpacing: 1 }}>
@@ -253,8 +253,8 @@ export function CalculatorPage() {
           <div style={{ border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)', padding: '10px 12px', borderLeft: '3px solid #ffd23d' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontSize: 13, color: '#e8e9ff' }}>이미 뽑힌 위시</span>
-                <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1 }}>WISH_DRAWN</span>
+                <span style={{ fontSize: 13, color: '#e8e9ff', whiteSpace: 'nowrap' }}>이미 뽑힌 위시</span>
+                <span style={{ fontSize: 9, color: '#6f74b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>WISH_DRAWN</span>
               </div>
               <span style={{ fontSize: 18, color: '#ffd23d' }}>
                 {state.wishDrawn}
@@ -311,9 +311,8 @@ export function CalculatorPage() {
 
         {calc.showEmpty && (
           <div style={{ textAlign: 'center', padding: '30px 12px', border: '1px dashed #2b2b52', fontSize: 12, color: '#8f93d6', lineHeight: 1.8 }}>
-            총 갯수와 총 위시 갯수를 입력하세요
-            <br />
-            <span style={{ fontSize: 10, color: '#6f74b8' }}>AWAITING_INPUT</span>
+            <span style={{ whiteSpace: 'nowrap' }}>총 갯수와 총 위시 갯수를 입력하세요</span>{' '}
+            <span style={{ fontSize: 10, color: '#6f74b8', whiteSpace: 'nowrap' }}>AWAITING_INPUT</span>
             <span className="calcv2-cursor" />
           </div>
         )}
@@ -339,7 +338,7 @@ export function CalculatorPage() {
             {/* NEXT_DRAW */}
             <div style={{ border: '1px solid rgba(255,61,245,.5)', background: 'rgba(255,61,245,.05)', padding: '16px 14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 11, color: '#ffb3fb', letterSpacing: 1 }}>NEXT_DRAW :: 다음 1개</span>
+                <span style={{ fontSize: 11, color: '#ffb3fb', letterSpacing: 1, whiteSpace: 'nowrap' }}>NEXT_DRAW :: 다음 1개</span>
                 <span style={{ fontSize: 36, color: '#ff3df5', textShadow: '0 0 16px rgba(255,61,245,.55)' }}>
                   {pct(calc.pNext)}
                   <span style={{ fontSize: 16 }}>%</span>
@@ -359,10 +358,10 @@ export function CalculatorPage() {
                 ))}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 11, color: '#8f93d6' }}>
-                <span>
+                <span style={{ whiteSpace: 'nowrap' }}>
                   남은 티켓 <b style={{ color: '#f2f3ff' }}>{calc.remainTotal}</b>개
                 </span>
-                <span>
+                <span style={{ whiteSpace: 'nowrap' }}>
                   남은 위시 <b style={{ color: '#4ff5e8' }}>{calc.remainWish}</b>개
                 </span>
               </div>
@@ -371,8 +370,8 @@ export function CalculatorPage() {
             {/* SIMULATION */}
             <div style={{ border: '1px solid #2b2b52', background: 'rgba(12,12,32,.75)', padding: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#4ff5e8', letterSpacing: 1 }}>SIMULATION :: 몇 개 뽑지?</span>
-                <span style={{ fontSize: 24, color: '#f2f3ff' }}>
+                <span style={{ fontSize: 11, color: '#4ff5e8', letterSpacing: 1, whiteSpace: 'nowrap' }}>SIMULATION :: 몇 개 뽑지?</span>
+                <span style={{ fontSize: 24, color: '#f2f3ff', whiteSpace: 'nowrap' }}>
                   {calc.n}
                   <span style={{ fontSize: 11, color: '#6f74b8' }}> 개</span>
                 </span>
@@ -400,15 +399,15 @@ export function CalculatorPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 14, fontSize: 13 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #2b2b52', paddingTop: 11 }}>
-                  <span style={{ color: '#8f93d6' }}>위시 1개 이상 뜰 확률</span>
-                  <span style={{ color: '#3dff8e', fontSize: 16 }}>{pct(calc.pAtLeast)}%</span>
+                  <span style={{ color: '#8f93d6', whiteSpace: 'nowrap' }}>위시 1개 이상 뜰 확률</span>
+                  <span style={{ color: '#3dff8e', fontSize: 16, whiteSpace: 'nowrap' }}>{pct(calc.pAtLeast)}%</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#8f93d6' }}>기대 위시 획득</span>
-                  <span style={{ color: '#f2f3ff' }}>{calc.expected.toFixed(1)} 개</span>
+                  <span style={{ color: '#8f93d6', whiteSpace: 'nowrap' }}>기대 위시 획득</span>
+                  <span style={{ color: '#f2f3ff', whiteSpace: 'nowrap' }}>{calc.expected.toFixed(1)} 개</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#8f93d6', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ color: '#8f93d6', display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
                     예상 비용 (
                     <input
                       type="text"
@@ -427,13 +426,13 @@ export function CalculatorPage() {
                     />
                     원/개)
                   </span>
-                  <span style={{ color: '#ffd23d' }}>{(calc.n * price).toLocaleString()}원</span>
+                  <span style={{ color: '#ffd23d', whiteSpace: 'nowrap' }}>{(calc.n * price).toLocaleString()}원</span>
                 </div>
               </div>
             </div>
 
             {/* VERDICT */}
-            <div style={{ border: '1px solid #2b2b52', background: '#0a0a1e', padding: '12px 14px', fontSize: 11, lineHeight: 1.9, color: '#8f93d6' }}>
+            <div style={{ border: '1px solid #2b2b52', background: '#0a0a1e', padding: '12px 14px', fontSize: 11, lineHeight: 1.9, color: '#8f93d6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <span style={{ color: '#4ff5e8' }}>&gt; VERDICT ::</span> {calc.verdict}
             </div>
           </div>

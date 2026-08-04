@@ -61,6 +61,112 @@ export function Layout() {
   ];
 
   function renderUserCard({ sidebar = false } = {}) {
+    if (!sidebar) {
+      // 상단 컴팩트 바: 아바타 + 이름/제공자/포인트 한 줄
+      return (
+        <div
+          className="layout-usercard"
+          style={{
+            minWidth: 0,
+            maxWidth: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '5px 10px',
+            border: '2px solid var(--arcade-secondary)',
+            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.88), rgba(36, 8, 46, 0.92))',
+            boxShadow: '0 0 16px rgba(255, 0, 255, 0.15)',
+          }}
+        >
+          {session?.user.image ? (
+            <img
+              src={session.user.image}
+              alt={userName}
+              style={{
+                width: '28px',
+                height: '28px',
+                objectFit: 'cover',
+                borderRadius: '50%',
+                border: '2px solid var(--arcade-primary)',
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                border: '2px solid var(--arcade-primary)',
+                display: 'grid',
+                placeItems: 'center',
+                color: 'var(--arcade-primary)',
+                fontWeight: 900,
+                fontSize: '0.6rem',
+                background: 'rgba(6, 10, 16, 0.92)',
+                flexShrink: 0,
+              }}
+            >
+              {getInitials(userName)}
+            </div>
+          )}
+
+          <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            <span style={{ color: '#fff', fontWeight: 900, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {userName}
+            </span>
+            <span className="arcade-font-pixel" style={{ color: 'var(--arcade-accent)', fontSize: '0.5rem', flexShrink: 0 }}>
+              {providerLabel}
+            </span>
+            {player && (
+              <span
+                style={{
+                  backgroundColor: 'var(--arcade-accent)',
+                  color: '#000',
+                  padding: '1px 6px',
+                  fontSize: '0.6rem',
+                  fontWeight: 900,
+                  borderRadius: '2px',
+                  flexShrink: 0,
+                }}
+              >
+                {player.points.toLocaleString()}P
+              </span>
+            )}
+            {showReward && (
+              <span className="blink" style={{ color: 'var(--arcade-accent)', fontSize: '0.6rem', flexShrink: 0 }}>
+                +100P
+              </span>
+            )}
+          </div>
+
+          <button
+            className="arcade-font-pixel"
+            onClick={() => {
+              clearWebAuthSession();
+              navigate('/');
+            }}
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '4px 8px',
+              background: 'rgba(255, 0, 0, 0.12)',
+              border: '2px solid #ff0033',
+              color: '#ff4455',
+              fontSize: '0.42rem',
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ fontSize: '0.8rem', lineHeight: 1 }}>⏻</span>
+            QUIT
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div
         className="layout-usercard"
@@ -69,8 +175,8 @@ export function Layout() {
           maxWidth: '100%',
           display: 'flex',
           alignItems: 'center',
-          gap: sidebar ? '12px' : '14px',
-          padding: sidebar ? '12px 14px' : '14px 16px',
+          gap: '12px',
+          padding: '12px 14px',
           border: '3px solid var(--arcade-secondary)',
           background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.88), rgba(36, 8, 46, 0.92))',
           boxShadow: '0 0 24px rgba(255, 0, 255, 0.18)',
@@ -172,52 +278,6 @@ export function Layout() {
           </div>
         </div>
 
-        {!sidebar && (
-          <button
-            className="arcade-font-pixel"
-            onClick={() => {
-              clearWebAuthSession();
-              navigate('/');
-            }}
-            style={{
-              flexShrink: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '3px',
-              padding: '6px 8px',
-              background: 'rgba(255, 0, 0, 0.12)',
-              border: '2px solid #ff0033',
-              boxShadow: '0 3px 0 #7a0015, inset 0 1px 0 rgba(255,255,255,0.1)',
-              color: '#ff4455',
-              fontSize: '0.42rem',
-              letterSpacing: '0.04em',
-              cursor: 'pointer',
-              transform: 'translateY(-2px)',
-              transition: 'all 0.08s steps(2, end)',
-            }}
-            onMouseDown={e => {
-              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(1px)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0px 0 #7a0015';
-            }}
-            onMouseUp={e => {
-              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 3px 0 #7a0015, inset 0 1px 0 rgba(255,255,255,0.1)';
-            }}
-            onTouchStart={e => {
-              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(1px)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0px 0 #7a0015';
-            }}
-            onTouchEnd={e => {
-              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 3px 0 #7a0015, inset 0 1px 0 rgba(255,255,255,0.1)';
-            }}
-          >
-            <span style={{ fontSize: '1rem', lineHeight: 1 }}>⏻</span>
-            QUIT
-          </button>
-        )}
       </div>
     );
   }
